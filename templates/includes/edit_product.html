@@ -1,0 +1,16 @@
+<div class="xl-add-product">
+    <h2>Edit Product</h2>
+    <form action="{% url 'edit_single_product' product.pk %}" method="POST">
+        {% csrf_token %}
+        {{edit_product}}
+        <button type="submit" style="background:lightgreen;">Save</button>
+        <button type="button" style="background:red;" id="close_edit_product">Cancel</button>
+    </form>
+    <script type="text/javascript">
+        CKEDITOR.replace('id_description_edit');
+        $("#close_edit_product").click(function(){
+            $(".mfp-close").click();
+        });
+        hideLoadLinkSpinner();
+    </script>
+</div>

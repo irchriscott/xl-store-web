@@ -1,0 +1,41 @@
+<div class="xl-add-category" id="send_user_mail">
+    <h2>Send Mail to <span>@{{user.user_name}}</span></h2>
+    <form id="user_mail_form" method="post" action="{% url 'managment_msc_send_mail' user.pk %}" >
+        {% csrf_token %}
+        <input type="hidden" id="mail" name="email" value="{{user.email}}" />
+        <label for="subject">Subject :</label>
+        <input type="text" name="subject" placeholder="Enter Subject" id="subject" required />
+        <label for="message">Message :</label>
+        <textarea name="message" id="message" placeholder="Enter Message" required></textarea>
+        <br/>
+        <button type="submit" style="background:lightgreen;">Save</button>
+        <button type="button" style="background:red;" id="close_send_mail">Cancel</button>
+    </form>
+    <script type="text/javascript">
+        $("#close_send_mail").click(function(){
+            $(".mfp-close").click();
+        });
+        CKEDITOR.replace( 'message' );
+        $("#user_mail_form").submit(function(ev){
+            ev.preventDefault();
+            var mailData = new FormData($(this)[0]);
+            $.ajax({
+                type:'POST',
+                url:$(this).attr("action"),
+                data:mailData,
+                processData: false,
+                async: false,
+                cache: false,
+                contentType: false,
+                success:function(success){
+                    $("#user_mail_form").get(0).reset();
+                    $(".mfp-close").click();
+                    $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:success,type: 'green'});
+                },
+                error: function(error){
+                    showErrorMessage("error", error);
+                }
+            });
+        });
+    </script>
+</div>

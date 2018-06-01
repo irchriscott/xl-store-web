@@ -1,0 +1,135 @@
+{% load staticfiles %}
+{% include '../css.html' %}
+{% load tz %}
+{% load humanize %}
+    <body>
+        {% include '../header.html' %}
+
+        <section class="xl-navbar-down">
+            <div class="xl-navbar-content" style="margin:auto !important; width:425px;">
+                <ul>
+                    <li class="activate"><a href="{% url 'home' %}">Home</a></li>
+                    <li><a href="{% url 'products' %}">Products</a></li>
+                    <li><a href="{% url 'posts' %}">Posts</a></li>
+                    <li><a href="{% url 'advertisments' %}">Advertisments</a></li>
+                </ul>
+            </div>
+        </section>
+        <section class="xl-products xl-user" style="margin-top: 110px;">
+            <div class="xl-main-section" style="width: calc(45% + (27.5% - 10px));">
+                <div class="xl-followers-users">
+                    <div class="xl-category-detail">
+                        <img src="{{category.image.url}}" />
+                        <h2>{{category.name}}</h2>
+                        <p class="all_others">
+                            <span>{{category.get_sum_category_companies}} Companies</span><span class="sum_users">{{category.get_sum_category_users}} Users</span>
+                        </p>
+                        {% if category.get_category_users_list %}
+                            {% if session_profile.pk in category.get_category_users_list %}
+                                <button class="liked"><i class="icon ion-heart"></i> Liked</button>
+                            {% else %}
+                                {% csrf_token %}
+                                <button class="like_category" data-url="{% url 'user_company_categories' %}" data-category="{{category.pk}}"><i class="icon ion-heart"></i> Like</button>
+                            {% endif %}
+                        {% else %}
+                            {% csrf_token %}
+                            <button class="like_category" data-url="{% url 'user_company_categories' %}" data-category="{{category.pk}}"><i class="icon ion-heart"></i> Like</button>
+                        {% endif %}
+                    </div>
+
+                    {% if companies %}
+                        <ul>
+                            {% for company in companies %}
+                                <li>
+                                    <div class="xl-user-follower">
+                                        <img src="{{company.profile_image.url}}" alt="{{company.name_dotted}}" />
+                                        <div class="user-about">
+                                            <h3><a href="{% url 'comp_profile_2' company.name_dotted %}">{{company.name}}</a></h3>
+                                            <p class="user-location"><i class="icon ion-ios-location"></i> {{company.town}}, {{company.country.name}}</p>
+                                            <p class="user-data"><span><a href="{% url 'comp_categories' company.name_dotted %}">{{company.get_sum_categories}} Categories</a></span><span><a href="{% url 'comp_profile_2' company.name_dotted %}">{{company.get_sum_products}} Products</a></span><span><a href="{% url 'comp_followers' company.name_dotted %}">{{company.get_sum_followers}} Followers</a></span></p>
+                                        </div>
+                                        <span id="follow_success{{company.pk}}">
+                                        {% if session_company %}
+                                            {% if user_company.company.pk == company.pk %}
+                                                <button style="background:lightgreen; margin-top:-20px;" type="button"><i class="icon ion-person"></i> Session</button>
+                                            {% else %}{% endif %}
+                                        {% elif session_user %}
+                                            {% if session_profile.pk == user_company.user.pk %}
+                                                <button style="background:lightgreen; margin-top:-20px;" type="button"><i class="icon ion-checkmark-round"></i> Follow</button>
+                                            {% elif company.get_followers %}
+                                                {% for follow in company.get_followers %}
+                                                    {% if follow.follower_user == session_profile.pk %}
+                                                        <button style="background:lightgreen; margin-top:-20px;" type="button"><i class="icon ion-checkmark-round"></i> Follow</button>
+                                                    {% else %}
+                                                        <form id="follow_company{{company.pk}}" data-url="{% url 'user_follow_company' %}" method="post">{% csrf_token %}
+                                                            <input type="hidden" name="company" id="company{{company.pk}}" value="{{company.company.pk}}" />
+                                                            <button type="submit"><i class="icon ion-person-add"></i> Follow</button>
+                                                        </form>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% else %}
+                                                <form id="follow_company{{company.pk}}" data-url="{% url 'user_follow_company' %}" method="post">{% csrf_token %}
+                                                    <input type="hidden" name="company" id="company{{company.pk}}" value="{{company.company.pk}}" />
+                                                    <button type="submit"><i class="icon ion-person-add"></i> Follow</button>
+                                                </form>
+                                            {% endif %}
+                                        {% else %}
+                                            <button class="login_first" type="submit" style="margin-top:0;"><i class="icon ion-person-add"></i> Follow</button>
+                                        {% endif %}
+                                        <script type="text/javascript">
+                                            $("#follow_company{{company.pk}}").submit(function(ev){
+                                                ev.preventDefault();
+                                                var url = $(this).attr("data-url");
+                                                $.ajax({
+                                                    type:"POST",
+                                                    url:url,
+                                                    data:{
+                                                        'company': $("#company{{company.pk}}").val(),
+                                                        'csrfmiddlewaretoken':$("input[name=csrfmiddlewaretoken]").val()
+                                                    },
+                                                    success:function(success){
+                                                        showSuccessMessage("success", "Company Followed !!!");
+                                                        $("#follow_success{{company.pk}}").html('<button type="button"><i class="icon ion-checkmark-round"></i> Follower</button>');
+                                                    },
+                                                    error: function(error){
+                                                        showErrorMessage("error", error);
+                                                    }
+                                                });
+                                            });
+                                        </script>
+                                        </span>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="xl-error">NO COMPANY YET</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div id="xl-else-wrapper-else">
+                <div class="xl-else-section" id="xl-else-section-2">
+                    <h3>Company Categories</h3>
+                    <div class="xl-trades-list-else" data-status="{{category.pk}}" id="category_list">
+                        {% if categories %}
+                            <ul>
+                                {% for category in categories %}
+                                    <li id="category_{{category.pk}}">
+                                        <a data-status="{{category.pk}}" href="{% url 'user_company_category' category.pk %}">
+                                            <img src="{{category.image.url}}" alt="{{category.name}}" />
+                                            <span class="prod-name">{{category.name}}</span>
+                                            <span class="float-side" style="margin-top:-35px;"><span>{{category.get_sum_category_companies}}</span><i class="icon ion-ios-arrow-right"></i></span>
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="xl-error">NO CUSTOMERS</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </section>
+    </body>
+</html>

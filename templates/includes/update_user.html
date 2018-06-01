@@ -1,0 +1,47 @@
+<div class="xl-update-user xl-update-profile xl-add-category">
+    <h2>Update User Profile</h2>
+    <form action="{% url 'user_profile_edit' %}" method="post">
+        {% csrf_token %}
+        {{update_user_profile}}
+        <button type="submit" style="background:lightgreen;">Save</button>
+        <button type="button" style="background:red;" id="close_edit_profile">Cancel</button>
+    </form>
+    <script type="text/javascript">
+        hideLoadLinkSpinner();
+        var set_country_code = setInterval(function(){
+            if($(".intl-tel-input .country-list").length > 0){
+                $(".intl-tel-input .country-list li").each(function(){
+                    if($(this).hasClass('active')){
+                        var country_code = $(this).attr("data-dial-code");
+                        $("#id_phone_number").val("+"+country_code);
+                    }
+                });
+            }
+        });
+
+        setInterval(function(){
+            if($("#id_phone_number").val() != ""){
+                clearInterval(set_country_code);
+            }else{
+                setInterval(set_country_code);
+            }
+        });
+
+        $(".intl-tel-input .country-list li").click(function(){
+            var country_code = $(this).attr("data-dial-code");
+            $("#id_phone_number").val("+" + country_code);
+        });
+
+        $("#id_phone_number").intlTelInput({
+            initialCountry: "auto",
+            geoIpLookup: function(callback) {
+                $.get('http://ipinfo.io', function() {}, "jsonp").always(function(resp) {
+                    var countryCode = (resp && resp.country) ? resp.country : "";
+                    callback(countryCode);
+                });
+            },
+        });
+
+        $("#close_edit_profile").click(function(){$(".mfp-close").click()});
+    </script>
+</div>

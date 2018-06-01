@@ -1,0 +1,52 @@
+{% load staticfiles %}
+{% load humanize %}
+<h3>Use E-Commerce Mobile Money</h3>
+<div class="xl-ms-setting">
+    <p>{{text|safe}}</p>
+    <input type="checkbox" id="use-mobile-service" {% if setting.mobile == True %}checked{% endif %} />
+    {% csrf_token %}
+    <p id="use-value" style="margin-top:10px;">{{setting.mobile}}</p>
+    <input type="password" id="ms-password-auth" placeholder="Enter MS Password" />
+
+    <button id="save-mobile-set" style="margin-right: 10px;">Save</button>
+    <button style="background:red;">Cancel</button>
+    <script type="text/javascript">
+
+        var checkbox = document.querySelector('#use-mobile-service');
+        var init = new Switchery(checkbox);
+
+        checkbox.onchange = function(){
+            document.getElementById("use-value").innerHTML = capitalize(checkbox.checked);
+        }
+
+        $("#save-mobile-set").click(function(e){
+
+            e.preventDefault();
+            var setting = capitalize(checkbox.checked);
+            var password = $("#ms-password-auth").val();
+            var url = "{% url 'use_mobile_settings' %}";
+            var csrf_token = $("input[name=csrfmiddlewaretoken]").val();
+
+            $.ajax({
+                type:"POST",
+                url:url,
+                data:{
+                    'setting':setting,
+                    'password':password,
+                    'csrfmiddlewaretoken':csrf_token
+                },
+                success:function(res){
+                    if(res == 'ok'){
+                        $("#trade_list_loader").show();
+                        load_msp_products(url);
+                        $("#mobile-set").text(setting);
+                        $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:'Setting Changed Successfully !!!',type: 'green'});
+                    } else{
+                        load_msp_products(url);
+                        $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:res,type: 'red'});
+                    }
+                }
+            });
+        });
+    </script>
+</div>

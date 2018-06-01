@@ -1,0 +1,45 @@
+{% load staticfiles %}
+{% if not_owner == 1 %}
+<h2>Edit Comment</h2>
+    <form id="edit_comment" method="post" enctype="multipart/form-data" comment-loader-url="{% url 'product_load_comment_main' product.pk %}" action="{% url 'product_comment_edit' comment.pk %}" >{% csrf_token %}
+        {{comment_edit_form}}
+        <button type="submit" style="background:lightgreen;">Save</button>
+        <button type="button" style="background:red;" id="close_edit_reply">Cancel</button>
+    </form>
+    <style type="text/css">
+        label, input[type=file]{display: none !important;}
+        textarea{height: 40px;}
+    </style>
+    <script type="text/javascript">
+        hideLoadLinkSpinner();
+        $("#edit_comment").submit(function(ev){
+            ev.preventDefault();
+            var formData = new FormData($(this)[0]);
+            console.log(formData);
+            $.ajax({
+                type:'POST',
+                url:$(this).attr('action'),
+                data:formData,
+                processData: false,
+                async: false,
+                cache: false,
+                contentType: false,
+                success:function(success){
+                    $("#edit_comment").get(0).reset();
+                    loadProductComments("{% url 'product_load_comment_main' product.pk %}");
+                    showSuccessMessage("success", "Comment Updated !!!");
+                },
+                error: function(error){
+                    showErrorMessage("error", error);
+                }
+            });
+        })
+    </script>
+{% else %}
+    <p class="xl-error">YOU ARE NOT THE OWNER</p>
+{% endif %}
+<script type="text/javascript">
+    $("#close_edit_reply").click(function(){
+        $("#edit_comment_modal").fadeOut();
+    });
+</script>

@@ -1,0 +1,36 @@
+<div class="xl-add-product">
+    <h2>Add Product</h2>
+    {% if company.get_sum_categories > 0 %}
+        <form method="post" id="submit_product_company" enctype="multipart/form-data" action="{% url 'comp_save_product' %}">{% csrf_token %}
+            <span id="add_prod_image" for="id_image"><i class="icon ion-ios-camera"></i> Add Image</span>
+            {{product_form}}
+            <button type="submit" style="background:lightgreen;">Save</button>
+            <button type="button" style="background:red;" id="close_add_product">Cancel</button>
+        </form>
+        <div id="categories-options" style="display:none;">
+            {% if categories %}
+                {% for category in categories %}
+                    <option value="{{category.id}}">{{category.name}}</option>
+                {% endfor %}
+            {% endif %}
+        </div>
+    {% else %}
+        <p class="xl-error">You need at least one category to add a product</p>
+        <textarea style="display:none !important;" id="id_product_description"></textarea>
+        <button type="button" style="background:red;" id="close_add_product">Cancel</button>
+    {% endif %}
+    <script type="text/javascript">
+        CKEDITOR.replace( 'id_product_description' );
+        hideLoadLinkSpinner();
+        $("#add_prod_image").click(function(){
+            $("#id_image").click();
+        });
+        $("#close_add_product").click(function(){
+            $(".mfp-close").click();
+        })
+        $(document).ready(function(){
+            var options = $("#categories-options").html();
+            $("#id_category").html(options);
+        });
+    </script>
+</div>

@@ -1,0 +1,43 @@
+{% load staticfiles %}
+{% load humanize %}
+<div class="xl-ms-single-bill">
+    <div class="xl-ms-trade-content">
+        <h2>Agreed Trade Details</h2>
+        {% if trade %}
+            <div class="xl-ms-trade-parts">
+                <div class="xl-ms-trade-user">
+                    {% if trade.trade.user.profile_image %}
+                        <img src="{{trade.trade.user.profile_image.url}}" alt="{{trade.trade.user.user_name}}" />
+                    {% else %}
+                        <img src="{% static 'images/default_user.jpg' %}" alt="{{trade.trade.user.user_name}}" />
+                    {% endif %}
+                    <p><a target="_blank" href="{% url 'user_profile' trade.trade.user.user_name %}"><strong>{{trade.trade.user.full_name}}</strong> <span class="username">@{{trade.trade.user.user_name}}</span></a></p>
+                    <p>{{trade.trade.user.email}}</p>
+                </div>
+                <div class="xl-ms-trade-company">
+                    <img src="{{trade.trade.product.company.profile_image.url}}" alt="{{trade.trade.product.company.name_dotted}}" />
+                    <p><a target="_blank" href="{% url 'comp_profile' trade.trade.product.company.name_dotted %}"><strong>{{trade.trade.product.company.name}}</strong></a></p>
+                    <p>{{trade.trade.product.company.email}}</p>
+                </div>
+            </div>
+            <div class="xl-ms-trade-product">
+                {% if trade.trade.product.image %}
+                    <img src="{{trade.trade.product.image.url}}" alt="{{trade.trade.product.product_name}}" />
+                {% else %}
+                    <img src="{% static 'images/default_company.jpg' %}" alt="{{trade.trade.product.product_name}}" />
+                {% endif %}
+                <h2><a target="_blank" href="{% url 'single_product' trade.trade.product.company.name_dotted trade.trade.product.pk %}">{{trade.trade.product.product_name}}</a></h2>
+                <span><i class="icon ion-ios-pricetags"></i> {{trade.quantity}} {% if trade.quantity > 1 %}ITEMS{% else %}ITEM{% endif %} / {{trade.price|intword}} {{setting.currency}}</span>
+                <p><strong>Agreed Date : </strong>{{trade.agreement_date}} | <strong>Expery Date : </strong>{{trade.finished_date}}</p>
+                <p>{% if trade.is_finished == True %}TRADE IS FINISHED COMPLETELY{% else %}<strong>Deadline In : </strong> {{deadline_days}}{% endif %}</p>
+            </div>
+            {% if session_user %}
+                <p style="text-align:center; margin:6px 0;"><a style="color:#333;" href="{% url 'user_single_trade' trade.trade.pk %}">VIEW TRADE MESSAGES</a></p>
+                <p style="text-align:center; margin-bottom:6px;">If you want to start a new trade for this product, click the button bellow</p>
+                <a style="display:block; padding:6px 20px; background:#00C6D7; color:#FFF; text-align:center;" href="{% url 'user_restart_trades' trade.trade.pk %}">START</a>
+            {% endif %}
+        {% else %}
+            <p class="xl-error">TRADE NOT FOUND</div>
+        {% endif %}
+    </div>
+</div>

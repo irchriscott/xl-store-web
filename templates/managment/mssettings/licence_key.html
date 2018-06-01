@@ -1,0 +1,35 @@
+{% load staticfiles %}
+<h3>Licence Key</h3>
+<h1 class="company">{{ms_company.company.name}}</h1>
+<p class="licence-title">Licence Key is</p>
+<span class="licence-key">{{licence.licence_key}}</span>
+{% if remaining == False %}
+    <p class="expired">Your Licence Key has expired !!!</p>
+    <span class="expired-msg">Please, you can come to our offices to activated it by yourself if you have Paypal</span>
+    <button class="activate-btn">Activate Licence Key</button>
+{% else %}
+    <p class="key-p"><strong>Expary Date : </strong>{{licence.expary_date}}</p>
+    <p class="key-p"><strong>Remaining Days : </strong>{{remaining}}</p>
+    {% if licence.status == 'trial' %}
+        <span class="expired-msg">You are still using Trial Version</span>
+    {% else %}
+        <p class="status"><strong>Status : </strong>{{licence.status}}</p>
+        {% if licence.status == 'desactivated' %}
+            <button class="activate-btn">Activate Licence Key</button>
+        {% else %}
+            <button class="activate-btn">Desactivate Licence Key</button>
+        {% endif %}
+    {% endif %}
+{% endif %}
+<style type="text/css">
+    .company{text-align: center; text-transform: uppercase; margin:20px auto;}
+    .licence-title{text-align: center; font-size: 16px;}
+    .licence-key{display: block; background: green; color: #FFF; padding: 10px; font-size: 22px; text-align:center; margin:15px auto;
+    font-weight: bold}
+    .expired{color: red; font-size: 18px; text-align: center; margin-bottom: 15px;}
+    .expired-msg{text-align: center; display: block;}
+    .activate-btn{display: block; font-size: 17px; text-transform: uppercase; padding: 5px 30px; background: #00c6d7; color:#FFF;
+    margin: 20px auto;}
+    .status{color: green; font-size: 20px; text-align: center;}
+    .key-p{text-align: center; text-transform: uppercase; margin-bottom: 15px;}
+</style>

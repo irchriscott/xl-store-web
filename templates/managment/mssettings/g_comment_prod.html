@@ -1,0 +1,48 @@
+{% load staticfiles %}
+{% load humanize %}
+<h3>Comment Products</h3>
+<div class="xl-ms-setting">
+    <p>{{text|safe}}</p>
+    <input type="checkbox" id="comment-product" {% if setting.comment_product == True %}checked{% endif %} />
+    {% csrf_token %}
+    <p id="comment-value" style="margin-top:10px;">{{setting.comment_product}}</p>
+    <input type="password" id="ms-password-comment" placeholder="Enter MS Password" />
+    <button id="save-comment-set" style="margin-right: 10px;">Save</button><button style="background:red;">Cancel</button>
+    <script type="text/javascript">
+        var checkbox = document.querySelector('#comment-product');
+        var init = new Switchery(checkbox);
+        
+        checkbox.onchange = function(){
+            document.getElementById("comment-value").innerHTML = capitalize(checkbox.checked);
+        }
+        
+        $("#save-comment-set").click(function(e){
+            e.preventDefault();
+            var setting = capitalize(checkbox.checked);
+            var password = $("#ms-password-comment").val();
+            var csrf_token = $("input[name=csrfmiddlewaretoken]").val();
+            var url = "{% url 'managment_msst_com_prod' %}";
+            $.ajax({
+                type:"POST",
+                url:url,
+                data:{
+                    'setting':setting,
+                    'password':password,
+                    'csrfmiddlewaretoken':csrf_token
+                },
+                success:function(res){
+                    if(res == 'ok'){
+                        $("#trade_list_loader").show();
+                        load_msp_products(url);
+                        $("#comment-set").text(setting)
+                        $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:'Setting Changed Successfully !!!',type: 'green'});
+                    }
+                    else{
+                        load_msp_products(url);
+                        $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:res,type: 'red'});
+                    }
+                }
+            });
+        });
+    </script>
+</div>

@@ -1,0 +1,57 @@
+{% load staticfiles %}
+<section class="xl-post-modal">
+    <div class="xl-add-post  xl-add-category">
+        <h2>Publish Something Here...</h2>
+        <form id="submit_user_post" action="{% url 'user_add_post' %}" enctype="multipart/form-data" method="post">{% csrf_token %}
+            {{post_form}}
+            <span id="image_post"><!--<i class="icon ion-ios-camera"></i>--> Image - <!--<i class="icon ion-ios-videocam"></i>--> Video</span>
+            <div class="xl-post-preview">
+                <img id="preview_post_image"/>
+                <video id="preview_post_video" autoplay/>
+            </div>
+            <button type="submit" style="background:lightgreen;">Save</button>
+            <button type="button" class="close_post mfp-close" style="background:red;">Cancel</button>
+        </form>
+    </div>
+</section>
+<script type="text/javascript">
+
+    hideLoadLinkSpinner();
+    $("#id_post_file").change(function(){
+        previewPostImage(this);
+    });
+
+    $(document).ready(function(){
+        $("#id_post_file").removeAttr('required');
+        {% if session_company %}
+            $("#id_post_text").mention({delimiter: '@',sensitive : true,queryBy: ['name', 'username'], users:{{users|safe}}});
+        {% elif session_user %}
+            $("#id_post_text").mention({delimiter: '@',sensitive : true,queryBy: ['name', 'username'], users:{{all_tags|safe}}});
+        {% endif %}
+    });
+
+    $("#submit_user_post").submit(function(ev){
+        ev.preventDefault();
+        var formData = new FormData($(this)[0]);
+        $.ajax({
+            type:'POST',
+            url:$(this).attr('action'),
+            data:formData,
+            processData: false,
+            async: false,
+            cache: false,
+            contentType: false,
+            success:function(success){
+                $(".mfp-close").click();
+                $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:'Post Published Successfully !!!',type: 'green'});
+            },
+            error: function(error){
+                showErrorMessage("error", error);
+            }
+        });
+    });
+    $(".mfp-close").click(function(){
+        $("#preview_post_image").hide();
+        $("#submit_user_post").get(0).reset();
+    });
+</script>

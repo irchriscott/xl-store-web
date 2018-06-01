@@ -1,0 +1,125 @@
+{% load staticfiles %}
+{% load humanize %}
+<h2>{{product.product_name}}</h2>
+<div class="xl-tabs">
+    <div class="xl-tabs-menu">
+        <ul>
+            <li class="activated"><a href="#interess"><i class="icon ion-ios-cart"></i> Interests</a></li>
+            <li><a href="#likes"><i class="icon ion-heart"></i> Likes</a></li>
+            <li><a href="#dislikes"><i class="icon ion-heart-broken"></i> Disikes</a></li>
+            <li><a href="#comments"><i class="icon ion-ios-chatbubble"></i> Comments</a></li>
+        </ul>
+    </div>
+    <div class="xl-tabs-contents">
+        <div class="activated" id="interess">
+            {% if interesses %}
+                <ul>
+                    {% for interess in interesses %}
+                        <li>
+                            <div class="image">
+                                {% if interess.user.profile_image %}
+                                    <img src="{{interess.user.profile_image.url}}" alt="{{interess.user.user_name}}" />
+                                {% else %}
+                                    <img src="{% static 'images/default_user.jpg' %}" alt="{{interess.user.user_name}}" />
+                                {% endif %}
+                            </div>
+                            <p><a href="{% url 'user_profile' interess.user.user_name %}" target="_blank">{{interess.user.full_name}} <span class="username">@{{interess.user.user_name}}</span></a></p>
+                            <span><i class="icon ion-ios-clock-outline"></i> {{interess.interess_date|date:"M d, Y"}}</span>
+                            <button style="background:lightgreen;">Invite to trade</button>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="xl-error">No Interests</p>
+            {% endif %}
+        </div>
+        <div id="likes">
+            {% if likes %}
+                <ul>
+                    {% for like in likes %}
+                        <li>
+                            <div class="image">
+                                {% if like.user.profile_image %}
+                                    <img src="{{like.user.profile_image.url}}" alt="{{like.user.user_name}}" />
+                                {% else %}
+                                    <img src="{% static 'images/default_user.jpg' %}" alt="{{like.user.user_name}}" />
+                                {% endif %}
+                            </div>
+                            <p><a href="{% url 'user_profile' like.user.user_name %}" target="_blank">{{like.user.full_name}} <span class="username">@{{like.user.user_name}}</span></a></p>
+                            <span><i class="icon ion-ios-clock-outline"></i> {{like.mention_date|date:"M d, Y"}}</span>
+                            <!--<button style="background:lightgreen;">Invite to trade</button>-->
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="xl-error">No Likes</p>
+            {% endif %}
+        </div>
+        <div id="dislikes">
+            {% if dislikes %}
+                <ul>
+                    {% for dislike in dislikes %}
+                        <li>
+                            <div class="image">
+                                {% if dislike.user.profile_image %}
+                                    <img src="{{dislike.user.profile_image.url}}" alt="{{dislike.user.user_name}}" />
+                                {% else %}
+                                    <img src="{% static 'images/default_user.jpg' %}" alt="{{dislike.user.user_name}}" />
+                                {% endif %}
+                            </div>
+                            <p><a href="{% url 'user_profile' dislike.user.user_name %}" target="_blank">{{dislike.user.full_name}} <span class="username">@{{dislike.user.user_name}}</span></a></p>
+                            <span><i class="icon ion-ios-clock-outline"></i> {{dislike.mention_date|date:"M d, Y"}}</span>
+                            <!--<button style="background:lightgreen;">Invite to trade</button>-->
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="xl-error">No Dislikes</p>
+            {% endif %}
+        </div>
+        <div id="comments">
+            {% if comments %}
+                <ul>
+                    {% for comment in comments %}
+                        <li>
+                            {% if comment.company %}
+                                <div class="image">
+                                    {% if comment.company.profile_image %}
+                                        <img src="{{comment.company.profile_image.url}}" alt="{{comment.company.name_dotted}}" />
+                                    {% else %}
+                                        <img src="{% static 'images/default_company.jpg' %}" alt="{{comment.company.name_dotted}}" />
+                                    {% endif %}
+                                </div>
+                                <p><a href="{% url 'comp_profile' comment.company.name_dotted %}" target="_blank">{{comment.company.name}}</a></p>
+                            {% elif comment.user %}
+                                <div class="image">
+                                    {% if comment.user.profile_image %}
+                                        <img src="{{comment.user.profile_image.url}}" alt="{{comment.user.user_name}}" />
+                                    {% else %}
+                                        <img src="{% static 'images/default_user.jpg' %}" alt="{{comment.user.user_name}}" />
+                                    {% endif %}
+                                </div>
+                                <p><a href="{% url 'user_profile' comment.user.user_name %}" target="_blank">{{comment.user.full_name}} <span class="username">@{{comment.user.user_name}}</span></a></p>
+                            {% endif %}
+                            <span><i class="icon ion-ios-clock-outline"></i> {{comment.comment_date|date:"M d, Y"}}</span>
+                            <button style="background:lightgreen;">Report</button>
+                            <button style="background:red;">Delete</button>
+                            <button style="background:#00c6d7;">Load</button>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="xl-error">No Comments</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(".xl-tabs-menu li a").click(function(e){
+        e.preventDefault();
+        var _this = $(this);
+        var location = _this.attr("href");
+        _this.parent("li").addClass("activated").siblings().removeClass("activated");
+        $(".xl-tabs-contents " + location).addClass("activated").siblings().removeClass("activated");
+    });
+</script>

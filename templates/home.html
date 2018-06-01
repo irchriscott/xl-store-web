@@ -1,0 +1,189 @@
+{% load staticfiles %}
+{% include 'css.html' %}
+{% load tz %}
+{% load humanize %}
+    <body>
+        <!-- NAVIGATION BAR -->
+        {% include 'header.html' %}
+
+        <!-- NAVBAR DOWN -->
+
+        <section class="xl-navbar-down">
+            <div class="xl-navbar-content" style="margin:auto !important; width:425px;">
+                <ul>
+                    <li class="activate"><a href="{% url 'home' %}">Home</a></li>
+                    <li><a href="{% url 'products' %}">Products</a></li>
+                    <li><a href="{% url 'posts' %}">Posts</a></li>
+                    <li><a href="{% url 'advertisments' %}">Advertisments</a></li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- PRODUCTS AND POSTS -->
+        <section class="xl-products xl-home-products">
+            <div class="xl-main-section xl-home">
+                {% if session_company %}
+                    {% if products_company %}
+                        {% for product in products_company %}
+                            <div class="xl-product-item" data-src="{{ product.image.url }}" data-responsive="{{ product.image.url }}" data-sub-html="{% include 'product_data_html.html' %}">
+                                <div class="xl-poster">
+                                    <div class="profil-details">
+                                        <img src='{{product.company.get_profile_image.url}}' alt='{{product.company.name}}' class='poster-image' />
+                                        <span class="details">
+                                            <p class="username"><a href="{% url 'comp_profile' product.company.name_dotted %}">{{product.company.name}}</a></p>
+                                            <p class="cat-time">
+                                                <i class="icon ion-ios-settings-strong"></i> <a href="{% url 'single_category' product.company.name_dotted product.category %}">{% for category in product_category %}{% if product.category == category.pk %}{{category.name}}{% endif %}{% endfor %}</a>
+                                                <i class="icon ion-ios-clock-outline"></i>
+                                                <span id='post-date{{product.pk}}' data-time="{{product.posted_date|date:'Y-m-d H:i:s'}}"></span>
+                                            </p>
+                                        </span>
+                                        <div class="price"><i class="icon ion-ios-pricetags"></i> <span id='xl-price{{product.pk}}'><script type='text/javascript'>setInterval(function(){setNumbers('#xl-price{{product.pk}}', '{{product.price}}')})</script> </span> {{product.currency}}</div>
+                                    </div>
+                                </div>
+                                <span class="xl-img-galery">
+                                    <div class="product-picture">
+                                        <img src="{{product.image.url}}" />
+                                    </div>
+                                </span>
+                                <div class="product-details">
+                                    <span class="comment-interess">
+                                        <ul>
+                                            <li><i class="icon ion-ios-chatbubble"></i> <span>{{product.get_sum_comments}}</span></li>
+                                            <li><i class="icon ion-ios-cart"></i> <span>{{product.get_sum_interess}}</span></li>
+                                        </ul>
+                                    </span>
+                                    <span class="like-dislike">
+                                        <ul>
+                                            <li><span class="icon ion-heart"></span> <span>{{product.get_sum_likes}}</span></li>
+                                            <li><span class="icon ion-heart-broken"></span> <span>{{product.get_sum_dislikes}}</span></li>
+                                        </ul>
+                                    </span>
+                                </div>
+                            </div>
+                            <script type="text/javascript">$("#post-date{{product.pk}}").setTime();</script>
+                        {% endfor %}
+                    {% else %}
+                        <p class="xl-error">NO PRODUCT YET</p>
+                    {% endif %}
+
+                {% elif session_user %}
+
+                    {% if users_products %}
+                        {% for product in users_products %}
+                            <div class="xl-product-item" data-src="{{ product.image.url }}" data-responsive="{{ product.image.url }}" data-sub-html="{% include 'product_data_html.html' %}">
+                                <div class="xl-poster">
+                                    <div class="profil-details">
+                                        <img src='{{product.company.get_profile_image.url}}' alt='{{product.company.name}}' class='poster-image' />
+                                        <span class="details">
+                                            <p class="username"><a href="{% url 'comp_profile' product.company.name_dotted %}">{{product.company.name}}</a></p>
+                                            <p class="cat-time">
+                                                <i class="icon ion-ios-settings-strong"></i> <a href="{% url 'single_category' product.company.name_dotted product.category %}">{% for category in product_category %}{% if product.category == category.pk %}{{category.name}}{% endif %}{% endfor %}</a>
+                                                <i class="icon ion-ios-clock-outline"></i>
+                                                <span id='post-date{{product.pk}}' data-time="{{product.posted_date|date:'Y-m-d H:i:s'}}"></span>
+                                            </p>
+                                        </span>
+                                        <div class="price"><i class="icon ion-ios-pricetags"></i> <span id='xl-price{{product.pk}}'><script type='text/javascript'>setInterval(function(){setNumbers('#xl-price{{product.pk}}', '{{product.price}}')})</script></span> {{product.currency}}</div>
+                                    </div>
+                                </div>
+                                <span class="xl-img-galery">
+                                    <div class="product-picture">
+                                        <img src="{{product.image.url}}" />
+                                    </div>
+                                </span>
+                                <div class="product-details">
+                                    <span class="comment-interess">
+                                        <ul>
+                                            <li><i class="icon ion-ios-chatbubble"></i> <span>{{product.get_sum_comments}}</span></li>
+                                            {% if product.get_interess %}
+                                                {% if user.pk in product.get_interess %}
+                                                    <li><i class="icon ion-ios-cart interessed"></i> <span id="general_sum_interess{{product.pk}}">{{product.get_sum_interess}}</span></li>
+                                                {% else %}
+                                                    <li><span id="after_interess{{product.pk}}"><i class="icon ion-ios-cart"></i></span> <span id="general_sum_interess{{product.pk}}">{{product.get_sum_interess}}</span></li>
+                                                {% endif %}
+                                            {% else %}
+                                                <li><span id="after_interess{{product.pk}}"><i class="icon ion-ios-cart"></i></span> <span id="general_sum_interess{{product.pk}}">{{product.get_sum_interess}}</span></li>
+                                            {% endif %}
+                                        </ul>
+                                    </span>
+                                    <span class="like-dislike">
+                                        <ul>
+                                            {% if product.check_mention_like or product.check_mention_dislike %}
+                                                {% if user.pk in product.check_mention_like %}
+                                                    <li><i class="icon ion-heart liked general_product_like{{product.pk}}"></i> <span class="product_sum_like{{product.pk}}">{{product.get_sum_likes}}</span></li>
+                                                    <li><i class="icon ion-heart-broken general_product_dislike{{product.pk}}"></i> <span>{{product.get_sum_dislikes}}</span></li>
+                                                    {% csrf_token %}
+                                                {% elif user.pk in product.check_mention_dislike %}
+                                                    <li><i class="icon ion-heart general_product_like{{product.pk}}"></i> <span class="product_sum_like{{product.pk}}">{{product.get_sum_likes}}</span></li>
+                                                    <li><i class="icon ion-heart-broken disliked general_product_dislike{{product.pk}}"></i> <span>{{product.get_sum_dislikes}}</span></li>
+                                                    {% csrf_token %}
+                                                {% else %}
+                                                    <li><i class="icon ion-heart general_product_like{{product.pk}}"></i> <span class="product_sum_like{{product.pk}}">{{product.get_sum_likes}}</span></li>
+                                                    <li><i class="icon ion-heart-broken general_product_dislike{{product.pk}}"></i> <span>{{product.get_sum_dislikes}}</span></li>
+                                                    {% csrf_token %}
+                                                {% endif %}
+                                            {% else %}
+                                                <li><i class="icon ion-heart general_product_like{{product.pk}}"></i> <span class="product_sum_like{{product.pk}}">{{product.get_sum_likes}}</span></li>
+                                                <li><i class="icon ion-heart-broken general_product_dislike{{product.pk}}"></i> <span>{{product.get_sum_dislikes}}</span></li>
+                                                {% csrf_token %}
+                                            {% endif %}
+                                        </ul>
+                                    </span>
+                                </div>
+                            </div>
+                            <script type="text/javascript">$("#post-date{{product.pk}}").setTime();</script>
+                        {% endfor %}
+                    {% else %}
+                        <p class="xl-error">NO PRODUCT</p>
+                    {% endif %}
+                {% else %}
+                    {% if products_users %}
+                        {% for product in products_users %}
+                            <div class="xl-product-item" data-src="{{ product.image.url }}" data-responsive="{{ product.image.url }}" data-sub-html="{% include 'product_data_html.html' %}">
+                                <div class="xl-poster">
+                                    <div class="profil-details">
+                                        <img src="{{product.company.get_profile_image.url}}" />
+                                        <span class="details">
+                                            <p class="username"><a href="{% url 'comp_profile' product.company.name_dotted %}">{{product.company.name}}</a></p>
+                                            <p class="cat-time">
+                                                <i class="icon ion-ios-settings-strong"></i> <a href="{% url 'single_category' product.company.name_dotted product.category %}">{% for category in product_category %}{% if product.category == category.pk %}{{category.name}}{% endif %}{% endfor %}</a>
+                                                <i class="icon ion-ios-clock-outline"></i>
+                                                <span id='post-date{{product.pk}}' data-time="{{product.posted_date|date:'Y-m-d H:i:s'}}"></span>
+                                            </p>
+                                        </span>
+                                        <div class="price"><i class="icon ion-ios-pricetags"></i> <span id='xl-price{{product.pk}}'><script type='text/javascript'>setInterval(function(){setNumbers('#xl-price{{product.pk}}', '{{product.price}}')})</script></span> {{product.currency}}</div>
+                                    </div>
+                                </div>
+                                <span class="xl-img-galery">
+                                    <div class="product-picture">
+                                        <img src="{{product.image.url}}" />
+                                    </div>
+                                </span>
+                                <div class="product-details">
+                                    <span class="comment-interess">
+                                        <ul>
+                                            <li><i class="icon ion-ios-chatbubble"></i> <span>{{product.get_sum_comments}}</span></li>
+                                            <li><i class="icon ion-ios-cart"></i> <span>{{product.get_sum_interess}}</span></li>
+                                        </ul>
+                                    </span>
+                                    <span class="like-dislike">
+                                        <ul>
+                                            <li><i class="icon ion-heart"></i> <span>{{product.get_sum_likes}}</span></li>
+                                            <li><i class="icon ion-heart-broken"></i> <span>{{product.get_sum_dislikes}}</span></li>
+                                        </ul>
+                                    </span>
+                                </div>
+                            </div>
+                            <script type="text/javascript">$("#post-date{{product.pk}}").setTime();</script>
+                        {% endfor %}
+                    {% else %}
+                        <p class="xl-error">NO PRODUCT YET</p>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </section>
+        <!-- JAVASCRIPT LINKS -->
+        <script type="text/javascript">
+            $(".xl-main-section").lightGallery();
+        </script>
+    </body>
+</html>

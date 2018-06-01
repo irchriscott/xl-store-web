@@ -1,0 +1,77 @@
+{% load staticfiles %}
+{% load humanize %}
+<div class="xl-ms-single-bill">
+{% if admin_session == True or teller_session == True or session_user == True %}
+    <div class="xl-ms-receipt-content">
+        {% if bill %}
+            <h3>Receipt No {{bill.receipt_number}}</h3>
+                {% if bill.user %}
+                <div class="xl-ms-receipt-user">
+                    <div class="profil-image">
+                        {% if bill.user.profile_image %}
+                        <img src="{{bill.user.profile_image.url}}" />
+                        {% else %}
+                        <img src="{% static 'images/default_user.jpg' %}" />
+                        {% endif %}
+                    </div>
+                    <div class="user-details">
+                        <p class="name">{{bill.user.full_name}} <span class="username">@{{bill.user.user_name}}</span></p>
+                        <p class="email">{{bill.user.email}}</p>
+                        <p style="float:right; margin-top:-35px;"><b>Teller : </b> {% if bill.teller %}{{bill.teller.full_name}}{% else %}Admin{% endif %}</p>
+                    </div>
+                </div>
+                {% else %}
+                    <div class="xl-ms-receipt-user">
+                        <div class="profil-image"><img src="{% static 'images/default_user.jpg' %}" /></div>
+                        <div class="user-details">
+                            <p class="name">{{bill.username}}</p>
+                            {% if bill.email %}
+                            <p class="email"><strong>Email : </strong>{{bill.email}}</p>
+                            {% else %}
+                            <p class="email"><strong>Email : </strong> Null</p>
+                            {% endif %}
+                            <p style="float:right; margin-top:-35px;"><b>Teller : </b> {% if bill.teller %}{{bill.teller.full_name}}{% else %}Admin{% endif %}</p>
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="xl-ms-receipt-details">
+                    <table>
+                        <thead>
+                            <tr style="text-align:center;">
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        {% if bill_content %}
+                            <tbody>
+                                {% for product in bill_content %}
+                                    <tr>
+                                        <td>{{product.product.product_code}}</td>
+                                        {% comment %}<td><img src="{{product.product.product.image.url}}" /></td>{% endcomment %}
+                                        <td>{{product.product.product.product_name}}</td>
+                                        <td>{{product.item_price|intword}} {{setting.currency}}</td>
+                                        {% if admin_session == True %}
+                                        <td id="open-update-quantity{{product.pk}}">{{product.quantity}}</td>
+                                        {% else %}
+                                        <td>{{product.quantity}}</td>
+                                        {% endif %}
+                                        <td>{{product.total|intcomma}} {{setting.currency}}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        {% endif %}
+                    </table>
+                </div>
+                <div style="margin-top:10px;">
+                    <h4><strong>Total : </strong>{{bill.total_paid|intcomma}} {{setting.currency}}</h4>
+                    <h4><strong>Discount : </strong>{{bill.discount|intcomma}} {{setting.currency}}</h4>
+                    <h2><strong>Total Net : </strong>{{bill.total_net|intcomma}} {{setting.currency}}</h2>
+                    <p style="float:right; margin-top:-15px;">Date : {{bill.saved_date}}</p>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>

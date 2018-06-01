@@ -1,0 +1,131 @@
+{% load staticfiles %}
+{% load humanize %}
+<div class="xl-ms-product-list">
+    <table>
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Last Entry</th>
+                {% if admin_session == True %}<th>Options</th>{% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% if products %}
+                {% for product in products %}
+                    <tr>
+                        <td>{{product.product_code}}</td>
+                        <td><img src="{{product.product.image.url}}" /></td>
+                        <td>{{product.product.product_name}}</td>
+                        <td>{{product.product.price|intword}} {{setting.currency}}</td>
+                        <td>{{product.stock}}</td>
+                        <td>{{product.last_entry_stock|date:"M d, Y"}}</td>
+                        {% if admin_session == True %}
+                        <td>
+                            <button id="open_update_product{{product.pk}}" href="#update-product{{product.pk}}">Update</button>
+                            <span>
+                            {% if product.product.is_to_be_posted == True %}
+                            <button id="toggle_is_to_be_posted{{product.pk}}" style="background:red;">Unpost</button>
+                            {% else %}
+                            <button id="toggle_is_to_be_posted{{product.pk}}" style="background:lightgreen;">Post</button>
+                            {% endif %}
+                            </span>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% if admin_session == True %}
+                        <div class="xl-ms-add-product-modal zoom-anim-dialog mfp-hide" id="update-product{{product.pk}}">
+                            <h2>Enter Product Details</h2>
+                            <br/>
+                            <form action="{% url 'managment_products_update' product.pk %}" id="update_product_ms{{product.pk}}" method="POST">
+                                <div class='xl-ms-input-add'>
+                                    {% csrf_token %}
+                                    <input type="hidden" name="product" value="{{product.pk}}" />
+                                    <label>Enter Product Quantity To Add :</label>
+                                    <input type="number" min="1" id="quantity{{product.pk}}" placeholder="Enter Quantity To Add" name="quantity" required="required" />
+                                    <label>Enter Purchased Item Price :</label>
+                                    <input type="number" min="1" id="item_price{{product.pk}}" placeholder="Enter Item Price" name="item_price" required="required" />
+                                    <button style="background:lightgreen;" id="submit_update-ms{{product.pk}}" type="button">Update</button>
+                                    <button style="background:red;" type="button" id="close-update_product{{product.pk}}">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                        <script type="text/javascript">
+                            $('#open_update_product{{product.pk}}').magnificPopup({
+                                type: 'inline',
+                                fixedContentPos: false,
+                                fixedBgPos: true,
+                                overflowY: 'auto',
+                                closeBtnInside: true,
+                                preloader: false,
+                                midClick: true,
+                                removalDelay: 300,
+                                mainClass: 'my-mfp-zoom-in'
+                            });
+                            $("#close-update_product{{product.pk}}").click(function(){
+                                $(".mfp-close").click();
+                            });
+                            $("#submit_update-ms{{product.pk}}").click(function(ev){
+                                ev.preventDefault();
+                                var formData = new FormData($(this)[0]);
+                                var csrftoken = getCookie('csrftoken');
+                                var sum_stock = parseInt($("#quantity{{product.pk}}").val()) + parseInt("{{product.stock}}")
+                                $.ajaxSetup({
+                                    beforeSend: function(xhr, settings) {
+                                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                                            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                                        }
+                                    }
+                                });
+                                if($("#quantity{{product.pk}}").val() != "" || $("#quantity{{product.pk}}").val() != 0){
+                                    $.ajax({
+                                        type:'POST',
+                                        url:"{% url 'managment_products_update' product.pk %}",
+                                        data:{
+                                            'csrfmiddlewaretoken':csrftoken,
+                                            'product': '{{product.pk}}',
+                                            'quantity':$("#quantity{{product.pk}}").val(),
+                                            'stock':'{{product.stock}}',
+                                            'item_price':$("#item_price{{product.pk}}").val(),
+                                            'sum_stock':sum_stock
+                                        },
+                                        success:function(success){
+                                            $(".mfp-close").click();
+                                            loadMSProductts("{% url 'managment_products_all' %}");
+                                            showSuccessMessage("success", "Product Stock Updated !!!");
+                                        },
+                                        error: function(error){
+                                            showErrorMessage("error", error);
+                                        }
+                                    });
+                                }else{
+                                    $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:'Quantity cannot be empty or 0 !!!',type: 'red'});
+                                }
+                            });
+                            $("#toggle_is_to_be_posted{{product.pk}}").click(function(){
+                                $.ajax({
+                                    type:'POST',
+                                    url:"{% url 'managment_tooge_posted' %}",
+                                    data:{
+                                        'product':'{{product.product.pk}}'
+                                    },
+                                    success:function(sucess){
+                                        loadMSProductts("{% url 'managment_products_all' %}");
+                                    },
+                                    error: function(error){
+                                        showErrorMessage("error", error);
+                                    }
+                                });
+                            });
+                        </script>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <p class="xl-error">NO PRODUCT IN THE SYSTEM</p>
+            {% endif %}
+        </tbody>
+    </table>
+</div>

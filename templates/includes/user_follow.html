@@ -1,0 +1,108 @@
+{% load staticfiles %}
+{% if follow_users %}
+    <h3>People you may know</h3>
+        {% for user in follow_users %}
+            {% if user.get_followers %}
+                {% for follow in user.get_followers %}{% if follow.follower_user.pk == session_profile.pk %}{% else %}
+                <div class="xl-company-container">
+                    {% if user.cover_image %}
+                        <div class="profile-div" style="background-image:url('{{user.cover_image.url}}')">
+                    {% else %}
+                        <div class="profile-div" style="background:gray;">
+                    {% endif %}
+                        <div class="profil-image">
+                            <img src="{{user.profile_image.url}}" />
+                        </div>
+                    </div>
+                    <div class="comp-details">
+                        <p class="name"><a href="{% url 'user_posts' user.user_name %}">{{user.full_name}}</a></p>
+                        <p class="motto">@{{user.user_name}}</p>
+                            <span id="follow_success_else{{user.pk}}">
+                                <form id="follow_user_else{{user.pk}}" method="post">{% csrf_token %}
+                                    <input type="hidden" name="user" id="user{{user.pk}}" value="{{user.pk}}" />
+                                    <button type="submit"><i class="icon ion-person-add"></i></button>
+                                </form>
+                                <script type="text/javascript">
+                                    $("#follow_user_else{{user.pk}}").submit(function(ev){
+                                        ev.preventDefault();
+                                        $.ajax({
+                                            type:"POST",
+                                            url:"/user/user/follow/",
+                                            data:{
+                                                'user': $("#user{{user.pk}}").val(),
+                                                'csrfmiddlewaretoken':$("input[name=csrfmiddlewaretoken]").val()
+                                            },
+                                            success:function(success){
+                                                showSuccessMessage("success", "User Followed !!!");
+                                                $("#follow_success_else{{user.pk}}").html('<button class="follow_ok"><i class="icon ion-checkmark-round"></i></button>');
+                                            },
+                                            error: function(error){
+                                                showErrorMessage("error", error);
+                                            }
+                                        });
+                                    });
+                                </script>
+                            </span>
+                            <span>
+                                <ul>
+                                    <li class="menu-list" title="{{user.get_sum_posts}} Posts"><a href="{% url 'user_posts' user.user_name %}"><i class="icon ion-ios-compose-outline"></i> <span>{{user.get_sum_posts}}</span></a></li>
+                                    <li class="menu-list" title="{{user.get_sum_following}} Following"><a href="{% url 'user_following' user.user_name %}"><i class="icon ion-ios-person"></i><i class="icon ion-ios-arrow-thin-right"></i> <span> {{user.get_sum_following}}</span></a></li>
+                                    <li class="menu-list" title="{{user.get_sum_followers}} Followers"><a href="{% url 'user_followers' user.user_name %}"><i class="icon ion-ios-person"></i><i class="icon ion-ios-arrow-thin-left"></i> <span>{{user.get_sum_followers}}</span></a></li>
+                                </ul>
+                            </span>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+                {% else %}
+                <div class="xl-company-container">
+                    {% if user.cover_image %}
+                        <div class="profile-div" style="background-image:url('{{user.cover_image.url}}')">
+                    {% else %}
+                        <div class="profile-div" style="background:gray;">
+                    {% endif %}
+                        <div class="profil-image">
+                            <img src="{{user.profile_image.url}}" />
+                        </div>
+                    </div>
+                    <div class="comp-details">
+                        <p class="name"><a href="{% url 'user_posts' user.user_name %}">{{user.full_name}}</a></p>
+                        <p class="motto">@{{user.user_name}}</p>
+                            <span id="follow_success_else{{user.pk}}">
+                                <form id="follow_user_else{{user.pk}}" method="post">{% csrf_token %}
+                                    <input type="hidden" name="user" id="user{{user.pk}}" value="{{user.pk}}" />
+                                    <button type="submit"><i class="icon ion-person-add"></i></button>
+                                </form>
+                                <script type="text/javascript">
+                                    $("#follow_user_else{{user.pk}}").submit(function(ev){
+                                        ev.preventDefault();
+                                        $.ajax({
+                                            type:"POST",
+                                            url:"/user/user/follow/",
+                                            data:{
+                                                'user': $("#user{{user.pk}}").val(),
+                                                'csrfmiddlewaretoken':$("input[name=csrfmiddlewaretoken]").val()
+                                            },
+                                            success:function(success){
+                                                showSuccessMessage("success", "User Followed !!!");
+                                                $("#follow_success_else{{user.pk}}").html('<button class="follow_ok"><i class="icon ion-checkmark-round"></i></button>');
+                                            },
+                                            error: function(error){
+                                                showErrorMessage("error", error);
+                                            }
+                                        });
+                                    });
+                                </script>
+                            </span>
+                            <span>
+                                <ul>
+                                    <li class="menu-list" title="{{user.get_sum_posts}} Posts"><a href="{% url 'user_posts' user.user_name %}"><i class="icon ion-ios-compose-outline"></i> <span>{{user.get_sum_posts}}</span></a></li>
+                                    <li class="menu-list" title="{{user.get_sum_following}} Following"><a href="{% url 'user_following' user.user_name %}"><i class="icon ion-ios-person"></i><i class="icon ion-ios-arrow-thin-right"></i> <span> {{user.get_sum_following}}</span></a></li>
+                                    <li class="menu-list" title="{{user.get_sum_followers}} Followers"><a href="{% url 'user_followers' user.user_name %}"><i class="icon ion-ios-person"></i><i class="icon ion-ios-arrow-thin-left"></i> <span>{{user.get_sum_followers}}</span></a></li>
+                                </ul>
+                            </span>
+                        </div>
+                    </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}

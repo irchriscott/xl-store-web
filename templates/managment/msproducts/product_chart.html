@@ -1,0 +1,8 @@
+{% load staticfiles %}
+{% load humanize %}
+<div class="xl-store-charts">
+    <h2>{{product.product.product_name}} STATISTICS</h2>
+    <div class="xl-product-charts">
+        <embed style="height:600px; width:100%;" type="image/svg+xml" src= {{ graph|safe }} />
+    </div>
+</div>

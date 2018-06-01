@@ -1,0 +1,79 @@
+{% load staticfiles %}
+{% load humanize %}
+<div class="xl-ms-product">
+    {% if anonymous == True %}
+        <div class="xl-ms-product-details">
+            <h2>customer details</h2>
+            <div class="product_image">
+                <img src="{% static 'images/default_user.jpg' %}" />
+            </div>
+            <h3 style="text-align:center;">Anonymous Customers</h3>
+        </div>
+    {% else %}
+        <div class="xl-ms-product-details">
+            <h2>customer details</h2>
+            <div class="product_image">
+                <img src="{{user.profile_image.url}}" />
+            </div>
+            <h3 style="text-align:center;">{{user.full_name}} <span class="username">@{{user.user_name}}</span></h3>
+            <button type="button" style="background:#00c6d7;" href="{% url 'managment_msc_send_mail' user.pk %}" id="open_send_mail">Send e-mail</button>
+        </div>
+
+        <script type="text/javascript">
+            $('#open_send_mail').magnificPopup({type:'ajax'});
+
+        </script>
+    {% endif %}
+    <div class="xl-ms-product-inventory">
+        <h2>Inventory</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Date</th>
+                    <th>Total</th>
+                    <th>Discount</th>
+                    <th>Total Net</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if user_bills %}
+                    {% for bill in user_bills %}
+                        <tr class="single_bill_tr" id="open_single_bill{{bill.pk}}" href="{% url 'managment_get_single_bill' bill.pk %}" style="cursor:pointer;">
+                            <td>{{bill.receipt_number}}</td>
+                            <td>{{bill.saved_date}}</td>
+                            <td>{{bill.total_paid|intcomma}} {{setting.currency}}</td>
+                            <td>{{bill.discount|intcomma}} {{setting.currency}}</td>
+                            <td>{{bill.total_net|intcomma}} {{setting.currency}}</td>
+                        </tr>
+                        <script type="text/javascript">
+                            $("#open_single_bill{{bill.pk}}").magnificPopup({type: 'ajax'});
+                        </script>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="2">Total</th>
+                    <td colspan="3"><span>{{total|intcomma}} {{setting.currency}}</span></td>
+                </tr>
+                <tr>
+                    <th colspan="2">Discount</th>
+                    <td colspan="3"><span>{{discount|intcomma}} {{setting.currency}}</span></td>
+                </tr>
+                <tr>
+                    <th colspan="2">Total Net</th>
+                    <td colspan="3"><span>{{total_net|intcomma}} {{setting.currency}}</span></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+<script type="text/javascript">
+    $(".xl-ms-product-inventory").slimScroll({
+        railVisible: true,
+        size:'7',
+        height:'calc(100vh - 150px)',
+        alwaysVisible: false
+    });
+</script>

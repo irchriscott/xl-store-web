@@ -1,0 +1,284 @@
+{% load staticfiles %}
+{% include 'css.html' %}
+{% load tz %}
+{% load humanize %}
+    <body>
+        {% include 'header.html' %}
+
+        <section class="xl-navbar-down">
+            <div class="xl-navbar-content" style="margin:auto !important; width:425px;">
+                <ul>
+                    <li><a href="{% url 'home' %}">Home</a></li>
+                    <li><a href="{% url 'products' %}">Products</a></li>
+                    <li><a href="{% url 'posts' %}">Posts</a></li>
+                    <li class="activate"><a href="{% url 'advertisments' %}">Advertisments</a></li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- PRODUCTS AND POSTS -->
+
+        <section class="xl-products">
+            <div class="xl-main-section">
+                {% if session_company %}
+                    {% if advertisments_company %}
+                        {% for advertisment in advertisments_company %}
+                            <div class="xl-main-product">
+                                <div class="xl-product-body">
+                                    <div class="xl-product-poster">
+                                        <img src="{{advertisment.company.get_profile_image.url}}" alt="{{advertisment.company.name}}" class="poster-image" />
+                                        <p class="poster-name"><a href="{% url 'comp_profile' advertisment.company.name_dotted  %}">{{advertisment.company.name}}</a> advertising his product <a href="{% url 'single_product' advertisment.company.name_dotted advertisment.product.pk %}">{{advertisment.product.product_name}}</a></p>
+                                        <p class="date-time">
+                                            <i class="icon ion-ios-clock-outline"></i> <span id='post-date{{advertisment.pk}}' data-time="{{advertisment.posted_date|date:'Y-m-d H:i:s'}}"></span>
+                                        </p>
+                                        <div class="post-menu">
+                                            <span id="see_menu{{advertisment.pk}}" title="See Menu" data-id="{{advertisment.pk}}"><i class="icon ion-chevron-down"></i></span>
+                                            <div class="menu-items" id="menu-items{{advertisment.pk}}">
+                                                <ul>
+                                                    {% if session_company == advertisment.company.name_dotted %}
+                                                    <li><a href="#"><i class="icon ion-ios-trash"></i>Delete Adv</a></li>
+                                                    <li><a id="open_edit_adv"><i class="icon ion-ios-compose"></i>Edit Adv</a></li>
+                                                    {% endif %}
+                                                    <li><a href="{% url 'single_product' advertisment.company.name_dotted advertisment.product.pk  %}"><i class="icon ion-image"></i>See Product</a></li>
+                                                    <li><a href="#"><i class="icon ion-ios-cart"></i>Interest</a></li>
+                                                    <li><a href="#"><i class="icon ion-ios-redo"></i>Share Adv</a></li>
+                                                    <li><a href="#"><i class="icon ion-ios-information"></i>Report Adv</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="xl-advertisment-video">
+                                        <video id="advertisment_video{{advertisment.pk}}" controls class="video" preload="auto">
+                                            <source src="{{advertisment.video.url}}" />
+                                        </video>
+                                    </div>
+                                    <div class="xl-product-details">
+                                        <div class="xl-product-about">{% autoescape on %}{{advertisment.advertisment_text|safe}}{% endautoescape %}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <script type="text/javascript">
+                                $("#post-date{{advertisment.pk}}").setTime();
+                                plyr.setup('#advertisment_video{{advertisment.pk}}');
+                                $("#see_menu{{advertisment.pk}}").showMenu();
+                            </script>
+                        {% endfor %}
+                    {% else %}
+                        <p class="xl-error">NO ADVERTISMENT YET</p>
+                    {% endif %}
+                {% elif session_user %}
+                    {% if user.get_sum_companies == 0 %}
+                        {% for advertisment in advertisments_place %}
+                        <div class="xl-main-product">
+                            <div class="xl-product-body">
+                                <div class="xl-product-poster">
+                                    <img src="{{advertisment.company.profile_image.url}}" alt="advertisment.company.name" class="poster-image" />
+                                    <p class="poster-name"><a href="{% url 'comp_profile' advertisment.company.name_dotted  %}">{{advertisment.company.name}}</a> advertising his product <a href="{% url 'single_product' advertisment.company.name_dotted advertisment.product.pk %}">{{advertisment.product.product_name}}</a></p>
+                                    <p class="date-time">
+                                        <i class="icon ion-ios-clock-outline"></i> <span id='post-date{{advertisment.pk}}'><script type="text/javascript">setInterval(function(){setTime('#post-date{{advertisment.pk}}', '{{advertisment.posted_date|date:"Y-m-d H:i:s"}}')}, 100)</script></span>
+                                    </p>
+                                    <div class="post-menu">
+                                        <span id="see_menu{{advertisment.pk}}" title="See Menu"><i class="icon ion-chevron-down"></i></span>
+                                        <div class="menu-items" id="product-menu-items{{advertisment.pk}}">
+                                            <ul>
+                                                {% if session_company == advertisment.company.name_dotted %}
+                                                <li><a href="#"><i class="icon ion-ios-trash"></i>Delete Adv</a></li>
+                                                <li><a id="open_edit_adv"><i class="icon ion-ios-compose"></i>Edit Adv</a></li>
+                                                {% endif %}
+                                                <li><a href="{% url 'single_product' advertisment.company.name_dotted advertisment.product.pk  %}"><i class="icon ion-image"></i>See Product</a></li>
+                                                <li><a href="#"><i class="icon ion-ios-cart"></i>Interest</a></li>
+                                                <li><a href="#"><i class="icon ion-ios-redo"></i>Share Adv</a></li>
+                                                <li><a href="#"><i class="icon ion-ios-information"></i>Report Adv</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="xl-advertisment-video">
+                                    <video id="advertisment_video{{advertisment.pk}}" controls class="video" preload="auto">
+                                        <source src="{{advertisment.video.url}}" />
+                                    </video>
+                                    <script type="text/javascript">
+                                        plyr.setup('#advertisment_video{{advertisment.pk}}');
+                                        $(document).ready(function() {
+                                            $(window).click(function(e){
+                                                $("#product-menu-items{{advertisment.pk}}").fadeOut();
+                                            });
+                                            $("#product-menu-items{{advertisment.pk}}").click(function (ev) {
+                                                ev.stopPropagation();
+                                            });
+                                            $("#see_menu{{advertisment.pk}}").click(function(ev){
+                                                ev.stopPropagation();
+                                                $("#product-menu-items{{advertisment.pk}}").fadeIn();
+                                            });
+                                        });
+                                    </script>
+                                </div>
+                                <div class="xl-product-details">
+                                    <div class="xl-product-about">{% autoescape on %}{{advertisment.advertisment_text|safe}}{% endautoescape %}</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        {% for advertisment in advertisments_users %}
+                        <div class="xl-main-product">
+                            <div class="xl-product-body">
+                                <div class="xl-product-poster">
+                                    <img src="{{advertisment.company.profile_image.url}}" alt="advertisment.company.name" class="poster-image" />
+                                    <p class="poster-name"><a href="{% url 'comp_profile' advertisment.company.name_dotted  %}">{{advertisment.company.name}}</a> advertising his product <a href="{% url 'single_product' advertisment.company.name_dotted advertisment.product.pk %}">{{advertisment.product.product_name}}</a></p>
+                                    <p class="date-time">
+                                        <i class="icon ion-ios-clock-outline"></i> <span id='post-date{{advertisment.pk}}'><script type="text/javascript">setInterval(function(){setTime('#post-date{{advertisment.pk}}', '{{advertisment.posted_date|date:"Y-m-d H:i:s"}}')}, 100)</script></span>
+                                    </p>
+                                    <div class="post-menu">
+                                        <span id="see_menu{{advertisment.pk}}" title="See Menu"><i class="icon ion-chevron-down"></i></span>
+                                        <div class="menu-items" id="product-menu-items{{advertisment.pk}}">
+                                            <ul>
+                                                {% if session_company == advertisment.company.name_dotted %}
+                                                <li><a href="#"><i class="icon ion-ios-trash"></i>Delete Adv</a></li>
+                                                <li><a id="open_edit_adv"><i class="icon ion-ios-compose"></i>Edit Adv</a></li>
+                                                {% endif %}
+                                                <li><a href="{% url 'single_product' advertisment.company.name_dotted advertisment.product.pk  %}"><i class="icon ion-image"></i>See Product</a></li>
+                                                <li><a href="#"><i class="icon ion-ios-cart"></i>Interest</a></li>
+                                                <li><a href="#"><i class="icon ion-ios-redo"></i>Share Adv</a></li>
+                                                <li><a href="#"><i class="icon ion-ios-information"></i>Report Adv</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="xl-advertisment-video">
+                                    <video id="advertisment_video{{advertisment.pk}}" controls class="video" preload="auto">
+                                        <source src="{{advertisment.video.url}}" />
+                                    </video>
+                                    <script type="text/javascript">
+                                        plyr.setup('#advertisment_video{{advertisment.pk}}');
+                                        $(document).ready(function() {
+                                            $(window).click(function(e){
+                                                $("#product-menu-items{{advertisment.pk}}").fadeOut();
+                                            });
+                                            $("#product-menu-items{{advertisment.pk}}").click(function (ev) {
+                                                ev.stopPropagation();
+                                            });
+                                            $("#see_menu{{advertisment.pk}}").click(function(ev){
+                                                ev.stopPropagation();
+                                                $("#product-menu-items{{advertisment.pk}}").fadeIn();
+                                            });
+                                        });
+                                    </script>
+                                </div>
+                                <div class="xl-product-details">
+                                    <div class="xl-product-about">{% autoescape on %}{{advertisment.advertisment_text|safe}}{% endautoescape %}</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                {% else %}
+                    {% if advertisments_users %}
+                        {% for advertisment in advertisments_users %}
+                            <div class="xl-main-product">
+                                <div class="xl-product-body">
+                                    <div class="xl-product-poster">
+                                        <img src="{{advertisment.company.get_profile_image.url}}" alt="advertisment.company.name" class="poster-image" />
+                                        <p class="poster-name"><a href="{% url 'comp_profile' advertisment.company.name_dotted  %}">{{advertisment.company.name}}</a> advertising his product <a href="{% url 'single_product' advertisment.company.name_dotted advertisment.product.pk %}">{{advertisment.product.product_name}}</a></p>
+                                        <p class="date-time">
+                                            <i class="icon ion-ios-clock-outline"></i> <span id='post-date{{advertisment.pk}}'><script type="text/javascript">setInterval(function(){setTime('#post-date{{advertisment.pk}}', '{{advertisment.posted_date|date:"Y-m-d H:i:s"}}')}, 100)</script></span>
+                                        </p>
+                                        <div class="post-menu">
+                                            <span id="see_menu{{advertisment.pk}}" title="See Menu"><i class="icon ion-chevron-down"></i></span>
+                                            <div class="menu-items" id="product-menu-items{{advertisment.pk}}">
+                                                <ul>
+                                                    {% if session_company == advertisment.company.name_dotted %}
+                                                    <li><a href="#"><i class="icon ion-ios-trash"></i>Delete Adv</a></li>
+                                                    <li><a id="open_edit_adv"><i class="icon ion-ios-compose"></i>Edit Adv</a></li>
+                                                    {% endif %}
+                                                    <li><a href="{% url 'single_product' advertisment.company.name_dotted advertisment.product.pk  %}"><i class="icon ion-image"></i>See Product</a></li>
+                                                    <li><a href="#"><i class="icon ion-ios-redo"></i>Share Adv</a></li>
+                                                    <li><a href="#"><i class="icon ion-ios-information"></i>Report Adv</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="xl-advertisment-video">
+                                        <video id="advertisment_video{{advertisment.pk}}" controls class="video" preload="auto">
+                                            <source src="{{advertisment.video.url}}" />
+                                        </video>
+                                        <script type="text/javascript">
+                                            plyr.setup('#advertisment_video{{advertisment.pk}}');
+                                            $(document).ready(function() {
+                                                $(window).click(function(e){
+                                                    $("#product-menu-items{{advertisment.pk}}").fadeOut();
+                                                });
+                                                $("#product-menu-items{{advertisment.pk}}").click(function (ev) {
+                                                    ev.stopPropagation();
+                                                });
+                                                $("#see_menu{{advertisment.pk}}").click(function(ev){
+                                                    ev.stopPropagation();
+                                                    $("#product-menu-items{{advertisment.pk}}").fadeIn();
+                                                });
+                                            });
+                                        </script>
+                                    </div>
+                                    <div class="xl-product-details">
+                                        <div class="xl-product-about">{% autoescape on %}{{advertisment.advertisment_text|safe}}{% endautoescape %}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="xl-error">NO ADVERTISMENT YET</p>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <div class="xl-else-wrapper">
+                <div class="xl-else-section xl-else-fixed">
+                    {% if session_company %}
+                        <h3>Trades</h3>
+                        <div class="xl-comp-cate">
+                            {% if company.get_trades %}
+                                <ul>
+                                    {% for trade in company.get_trades %}
+                                        <li>
+                                            <img src="{{trade.product.image.url}}"/>
+                                            <a href="{% url 'company_single_trade' trade.pk %}">{{trade.product.product_name}} <span class="username">with</span> {{trade.user.full_name}}</a>
+                                            <span><i class="icon ion-ios-arrow-right"></i></span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="xl-error">NO TRADE</p>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <h3>Companies Categories</h3>
+                        <div class="xl-comp-cate">
+                            {% if category_comp %}
+                                <ul>
+                                    {% for company in category_comp %}
+                                        <li>
+                                            <img src="{{company.get_profile_image.url}}" alt="{{company.name_dotted}}" />
+                                            <a href="#">{{company.name}}</a>
+                                            <span><i class="icon ion-ios-arrow-right"></i></span>
+                                            {% if company.get_categories %}
+                                                <ul>
+                                                    {% for category in company.get_categories %}
+                                                        <li><a href="{% url 'single_category' company.name_dotted category.pk %}"><i class="icon ion-ios-star"></i> {{category.name}}</a></li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="xl-error">NO COMPANY YET</p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="xl-else-section xl-else-fixed">
+                    {% include 'includes/notification_full.html' %}
+                </div>
+            </div>
+        </section>
+    </body>
+</html>

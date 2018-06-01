@@ -1,0 +1,114 @@
+{% load staticfiles %}
+{% include '../css.html' %}
+{% load tz %}
+{% load humanize %}
+    <body>
+        {% include '../header.html' %}
+        <section class="xl-navbar-down">
+            <div class="xl-navbar-content" style="margin:auto !important; width:425px;">
+                <ul>
+                    <li class="activate"><a href="{% url 'home' %}">Home</a></li>
+                    <li><a href="{% url 'products' %}">Products</a></li>
+                    <li><a href="{% url 'posts' %}">Posts</a></li>
+                    <li><a href="{% url 'advertisments' %}">Advertisments</a></li>
+                </ul>
+            </div>
+        </section>
+        <section class="xl-products xl-user" style="margin-top: 110px;">
+            <div class="xl-main-section" style="width: calc(45% + (27.5% - 10px));">
+                <div class="xl-followers-users">
+                    <div class="xl-category-detail">
+                        <img src="{{company.get_profile_image.url}}" />
+                        <h2>{{company.name}}</h2>
+                        <p class="all_others">
+                            <span>{{sum_bills}} Bills</span><span class="sum_users">{{sum_carts}} Carts</span>
+                        </p>
+                        {% if check_follow %}
+                            <button class="liked"><i class="icon ion-ios-person"></i> Followed</button>
+                        {% else %}
+                            {% csrf_token %}
+                            <button class="follow_company" style="background: red; color: #FFF;" data-url="#" data-category="#"><i class="icon ion-person-add"></i> Follow</button>
+                        {% endif %}
+                    </div>
+
+                    <h2>Bills</h2>
+
+                    {% if bills %}
+                        <ul>
+                            {% for bill in bills %}
+                                <li>
+                                    <div class="xl-user-follower">
+                                        <div class="xl-bill-no">
+                                            <span>{{bill.receipt_number}}</span>
+                                        </div>
+                                        <div class="user-about">
+                                            <h3><a href="{% url 'managment_get_single_bill' bill.pk %}" id="load_single_bill_{{bill.pk}}"><i class="icon ion-ios-calendar-outline"></i> {{bill.saved_date|date:'M. d, Y'}} </a></h3>
+                                            <p class="user-data"><span><a>{{bill.total_paid|intword}} {{bill.company.get_currency}} Total</a></span><span><a>{{bill.discount|intcomma}} {{bill.company.get_currency}} Discount</a></span><span><a>{{bill.total_net|intword}} {{bill.company.get_currency}} Total Paid</a></span></p>
+                                        </div>
+                                        <script type="text/javascript">$("#load_single_bill_{{bill.pk}}").magnificPopup({type:'ajax'});</script>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="xl-error">NO BILL YET</p>
+                    {% endif %}
+
+                    <h2 style="margin-top: 15px;">Shopping Cart</h2>
+
+                    {% if carts %}
+                        <ul>
+                            {% for cart in carts %}
+                                <li>
+                                    <div class="xl-user-follower">
+                                        <div class="xl-bill-no">
+                                            <span>{{cart.pk}}</span>
+                                        </div>
+                                        <div class="user-about">
+                                            <h3><a href="{% url 'load_single_cart' cart.pk %}" id="load_single_cart_{{cart.pk}}"><i class="icon ion-ios-calendar-outline"></i> {{cart.saved_date|date:'M. d, Y'}} </a></h3>
+                                            <p style="text-transform: capitalize; font-size:14px;"><strong>Status : </strong>{{cart.status}}</p>
+                                            <p class="user-data">
+                                                {% if status == "paid" or status == "delivered" %}
+                                                <span><a>{{bill.total_paid|intword}} {{bill.company.get_currency}} Total</a></span>
+                                                <span><a>{{bill.discount|intcomma}} {{bill.company.get_currency}} Discount</a></span>
+                                                <span><a>{{bill.total_net|intword}} {{bill.company.get_currency}} Total Paid</a></span>
+                                                {% else %}
+                                                    <span><a>{{cart.get_cart_total|intword}} {{cart.market.company.get_surrency}} Total</a></span>
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                        <script type="text/javascript">$("#load_single_cart_{{cart.pk}}").magnificPopup({type:'ajax'});</script>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="xl-error">NO BILL YET</p>
+                    {% endif %}
+
+                </div>
+            </div>
+
+            <div id="xl-else-wrapper-else">
+                <div class="xl-else-section" id="xl-else-section-2">
+                    <h3>Companies</h3>
+                    <div class="xl-trades-list-else" data-status="{{company.pk}}" id="category_list">
+                        {% if bills_carts %}
+                            <ul>
+                                {% for company in bills_carts %}
+                                    <li id="category_{{company.company}}">
+                                        <a data-status="{{company.company}}" href="{% url 'user_company_bills_carts_company' company.company %}">
+                                            <img src="{{company.image.url}}" alt="{{company.name}}" />
+                                            <span class="prod-name">{{company.name}}</span>
+                                            <span class="float-side" style="margin-top:-35px;"><span>{{company.all}}</span><i class="icon ion-ios-arrow-right"></i></span>
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </section>
+    </body>
+</html>

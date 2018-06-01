@@ -1,0 +1,150 @@
+{% load staticfiles %}
+{% load humanize %}
+<h3>Always Print Bill</h3>
+<div class="xl-ms-setting">
+    <p>{{text|safe}}</p>
+    {% csrf_token %}
+    <h3>Mobile Numbers</h3>
+    <table style="margin-top:5px;">
+        <thead>
+            <tr>
+                <th>Airline</th>
+                <th>Number</th>
+                <th>Action</th>
+            </tr>
+            <tbody>
+                {% if numbers %}
+                    {% for number in numbers %}
+                        <tr>
+                            <td>{{number.airline}}</td>
+                            <td>{{number.number}}</td>
+                            <td><span class="xl-item-cart-opt" id="open_edit_number_{{number.pk}}" title="Edit" style="display: inline; margin-right:5px;"><i class="icon ion-edit"></i></span><span class="xl-item-cart-opt remove_number" style="display: inline;" title="Remove" data-url="{% url 'managment_msst_mm_delete' number.pk %}" data-item="{{number.pk}}"><i class="icon ion-close"></span></td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="3"><p style="color:red; padding: 8px 0; margin-bottom: 0;">NO MOBILE NUMBER</p></td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </thead>
+    </table>
+    <button id="open-add-number" style="margin-right: 10px; background:#00c6d7;">Add Mobile Number</button><button style="background:red;">Cancel</button>
+    <section class="xl-search-modal" style="left:0;" id="add-number">
+        <div class="xl-ms-add-product-modal" style="margin-top:calc((100vh - 312px) / 2);">
+            <h2>Add Mobile Money Number</h2>
+            <br/>
+            <form method="POST" action="" id="add-number-form">
+                <div class="xl-finish-pay-cart xl-ms-input-add" style="text-align: left;">
+                    {% csrf_token %}
+                    <label>Select Airline :</label>
+                    <select id="mobile-airline" style="margin-top:0px;">
+                        {% for airline in airlines.airlines %}
+                            <option value="{{airline.name}}" data-code="{{airline.code.0}}">{{airline.name}}</option>
+                        {% endfor %}
+                    </select>
+                    <label>Enter Mobile Number :</label>
+                    <input type="tel" style="width: calc(100% - 18px); margin-top: 0; margin-bottom:10px;" id="mobile-number" required placeholder="Enter Number" />
+                    <label>Enter MS Password :</label>
+                    <input type="password" style="width:calc(100% - 24px); text-align:left; margin-top:0; margin-bottom:5px;" id="ms-password-auth" required placeholder="Enter MS Password" />
+                    <button style="background:lightgreen;" id="save-number" type="button">Add</button>
+                    <button type="button" id="close-add-number" style="background:red;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </section>
+    <script type="text/javascript">
+
+        var country_code = "{{airlines.code}}";
+        var code = $('option:selected', $("#mobile-airline")).attr('data-code');
+        $("#mobile-number").val(country_code + " - " + code);
+        $("#mobile-airline").change(function(){
+            var code = $('option:selected', this).attr('data-code');
+            $("#mobile-number").val(country_code + " - " + code);
+        });
+        $("#open-add-number").click(function(){
+            $("#add-number").fadeIn();
+        });
+        $("#close-add-number").click(function(){
+            $("#add-number").fadeOut();
+        });
+        $("#save-number").click(function(e){
+            e.preventDefault();
+            var number = $("#mobile-number").val();
+            var password = $("#ms-password-auth").val();
+            var csrf_token = $("input[name=csrfmiddlewaretoken]").val();
+            var airline = $("#mobile-airline").val();
+            var url = "{% url 'managment_msst_mm_add' %}";
+
+            if (password != "" && number != "" && airline != ""){
+
+                $.ajax({
+                    type:"POST",
+                    url:url,
+                    data:{
+                        'number':number,
+                        'airline': airline,
+                        'password':password,
+                        'csrfmiddlewaretoken':csrf_token
+                    },
+                    success:function(res){
+                        if(res == 'ok'){
+                            $("#trade_list_loader").show();
+                            load_msp_products(url);
+                            $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:'Number Added Successfully !!!',type: 'green'});
+                        }
+                        else{
+                            load_msp_products(url);
+                            $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:res,type: 'red'});
+                        }
+                    }
+                });
+            } else {
+                $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:"Fill All Fields Please",type: 'red'});
+            }
+        });
+
+        $(".remove_number").click(function(){
+            var url = $(this).attr("data-url");
+            var load_url = "{% url 'managment_msst_mm_add' %}";
+            $.confirm({
+                title: 'Delete Number',
+                content: 'Do you really want to Delete this number ???',
+                icon: 'icon ion-help-circled',
+                animation: 'scale',
+                theme:'material',
+                type:'blue',
+                closeAnimation: 'scale',
+                opacity: 0.5,
+                buttons:{
+                    'confirm':{
+                        text: 'Yes',
+                        btnClass: 'btn-green',
+                        action: function(){
+                            $.ajax({
+                                type:'GET',
+                                url: url,
+                                data: {},
+                                success: function(response){
+                                    if(response == 'ok'){
+                                        $("#trade_list_loader").show();
+                                        load_msp_products(load_url);
+                                        $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:'Number Deleted Successfully !!!',type: 'green'});
+                                    }
+                                    else{
+                                        load_msp_products(load_url);
+                                        $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:res,type: 'red'});
+                                    }
+                                },
+                                error: function(error){
+                                    showErrorMessage("error", error);
+                                }
+                            });
+                        }
+                    },
+                    cancel:function(){},
+                }
+            });
+        });
+    </script>
+</div>

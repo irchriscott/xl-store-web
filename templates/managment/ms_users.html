@@ -1,0 +1,55 @@
+{% load staticfiles %}
+{% include '../css.html' %}
+    <body style="overflow: hidden;">
+        {% include '../header.html' %}
+        <section class="xl-navbar-down">
+            <div class="xl-navbar-content" style="width:595px; margin: auto;">
+                <ul>
+                    <li><a href="{% url 'managment_home' %}">Home</a></li>
+                    <li><a href="{% url 'managment_products' %}">Products</a></li>
+                    <li class="activate"><a href="{% url 'managment_managment' %}">Managment</a></li>
+                    <li><a href="{% url 'managment_get_bills' %}">Bills</a></li>
+                    <li><a href="{% url 'managment_msst' %}">Settings</a></li>
+                    <li><a id="open-logout-menu">Log Out</a></li>
+                    <div class="xl-ms-logout-menu" id="xl-ms-logout-menu">
+                        <ul>
+                            {% if teller_session == True %}
+                                <li><a href="{% url 'managment_mstl_logout' %}"><i class="icon ion-ios-locked"></i> As Teller</a></li>
+                            {% endif %}
+                            <li><a href="{% url 'managment_desactivate_admin' %}"><i class="icon ion-ios-locked"></i> As Admin</a></li>
+                            <li><a href="{% url 'managment_logout' %}"><i class="icon ion-ios-locked"></i> As M.S</a></li>
+                        </ul>
+                    </div>
+                </ul>
+            </div>
+        </section>
+        <section class="xl-ms-container">
+            <div class="xl-ms-products-all" style="width:73%;">
+                <div id="xl-ms-product-wrapper">
+                    <h1 style="font-size:50px; color:#666; text-align:center; text-transform:uppercase; margin-top:170px;">Content will be loaded after selecting a customer</h1>
+                </div>
+            </div>
+            <div class="xl-ms-current-bill xl-ms-categories" style="width: calc(27% - 80px);">
+                <div class="xl-ms-scoll-pane">
+                    <h2>Customers</h2>
+                    <input type="text" placeholder="Search Customer" />
+                    <div id="msp_product_wrapper" style="margin-top:7px;">
+                        <div id="msp_products_loader" class="xl-loader" style="margin-top:60px;">
+                            <img src="{% static 'images/loading.gif' %}" />
+                        </div>
+                    </div>
+                    <div style="text-align:center; margin-top:15px;">
+                        <button id="show_customers_charts" style="padding:5px 15px; color:#FFF; background:#00c6d7; text-transform:uppercase; font-size:16px;" href="{% url 'managment_msc_chart' %}">SEE CHART</button>
+                    </div>
+                </div>
+            </div>
+            <script type="text/javascript">
+                $(document).ready(function(){
+                    $("#msp_products_loader").show();
+                    load_msp_products("{% url 'managment_msc_all' %}");
+                });
+                $("#show_customers_charts").magnificPopup({type:'ajax'});
+            </script>
+        </section>
+    </body>
+</html>

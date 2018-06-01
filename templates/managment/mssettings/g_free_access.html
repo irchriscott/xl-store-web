@@ -1,0 +1,48 @@
+{% load staticfiles %}
+{% load humanize %}
+<h3>Allow Free Access In Market</h3>
+<div class="xl-ms-setting">
+    <p>{{text|safe}}</p>
+    <input type="checkbox" id="access-market" {% if setting.access_market == True %}checked{% endif %} />
+    {% csrf_token %}
+    <p id="market-value" style="margin-top:10px;">{{setting.access_market}}</p>
+    <input type="password" id="ms-password-market" placeholder="Enter MS Password" />
+    <button id="save-market-set" style="margin-right: 10px;">Save</button><button style="background:red;">Cancel</button>
+    <script type="text/javascript">
+        var checkbox = document.querySelector('#access-market');
+        var init = new Switchery(checkbox);
+        
+        checkbox.onchange = function(){
+            document.getElementById("market-value").innerHTML = capitalize(checkbox.checked);
+        }
+        
+        $("#save-market-set").click(function(e){
+            e.preventDefault();
+            var setting = capitalize(checkbox.checked);
+            var password = $("#ms-password-market").val();
+            var csrf_token = $("input[name=csrfmiddlewaretoken]").val();
+            var url = "{% url 'managment_msst_fam' %}";
+            $.ajax({
+                type:"POST",
+                url:url,
+                data:{
+                    'setting':setting,
+                    'password':password,
+                    'csrfmiddlewaretoken':csrf_token
+                },
+                success:function(res){
+                    if(res == 'ok'){
+                        $("#trade_list_loader").show();
+                        load_msp_products(url);
+                        $("#market-set").text(setting)
+                        $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:'Setting Changed Successfully !!!',type: 'green'});
+                    }
+                    else{
+                        load_msp_products(url);
+                        $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:res,type: 'red'});
+                    }
+                }
+            });
+        });
+    </script>
+</div>

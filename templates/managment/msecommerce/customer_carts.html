@@ -1,0 +1,108 @@
+{% load staticfiles %}
+{% load humanize %}
+<div class="xl-ms-product">
+    <div class="xl-ms-product-details other-div-very-different" style="width:40% !important;">
+        <div class="xl-ms-scroll-pane just-for-margins">
+            <h2>About</h2>
+            <div class="xl-ec-user">
+                {% if market.user.profile_image %}
+                    <img src="{{market.user.profile_image.url}}"/>
+                {% else %}
+                    <img src="{% static 'images/default_user.jpg' %}" />
+                {% endif %}
+                <div class="xl-ec-user-details">
+                    <p><a href="{% url 'user_profile' market.user.user_name %}" target="_blank">{{market.user.full_name}}</a></p>
+                    <p><a href="mailto:{{market.user.email}}" target="_blank">{{market.user.email}}</a></p>
+                    <p><strong>Key : </strong>{{market.key}}</p>
+                    <p><strong>Status : </strong>{{market.status}}</p>
+                    <button style="background:lightgreen; margin-right:5px;" class="change_market_status" data-url="{% url 'market_change_status' market.pk %}?status=vip">VIP</button>
+                    <button style="background:#00c6d7; margin-right:5px;" class="change_market_status" data-url="{% url 'market_change_status' market.pk %}?status=disallowed">DISALLOW</button>
+                    <button style="background:red;" class="change_market_status" data-url="{% url 'market_change_status' market.pk %}?status=blocked">BLOCK</button>
+                </div>
+            </div>
+            {% if carts %}
+            <ul>
+                {% for cart in carts %}
+                    <li>
+                        <a class="load_setting" data-url="{% url 'managment_msec_customer_cart' cart.pk %}">
+                            <i class="icon ion-ios-cart"></i>
+                            <span class="prod-name">Cart of {{cart.saved_date|date:'M. d, Y'}}</span>
+                            <span class="float-side" style="margin-top:-35px !important; display: inline;"><span id="ecommerce-set">{{cart.status}}</span></span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+                <p class="xl-error">NO CART YET</p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="xl-ms-product-inventory" style="overflow:hidden;">
+        <div id="msp_product_wrapper">
+            <h1>CONTENT WILL BE LOADED AFTER SELECTING A CART</h1>
+            <div id="msp_products_loader" class="xl-loader" style="margin-top:60px;">
+                <img src="{% static 'images/loading.gif' %}" />
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    h1{font-size: 32px;text-align: center;color: #666;margin-top: calc(50vh - 143px);}
+    .other-div-very-different ul li{height: auto !important; padding-top: 3px !important; padding-bottom: 9px !important;}
+    .other-div-very-different ul li a .float-side{margin-top: 0px !important; margin-right: -8px;}
+    .other-div-very-different ul > li > a > i{float: left; margin-right: 6px; font-size: 20px; margin-top: 7px;}
+    .xl-ul-title{display: block; padding: 7px 5px; background: #ccc;}
+    .xl-ms-product .xl-ms-product-details{padding-right:4px !important;}
+    .just-for-margins{padding-right: 11px !important;}
+</style>
+<script type="text/javascript">
+    $(".xl-ms-scroll-pane, #msp_product_wrapper").slimScroll({
+        railVisible: true,
+        size:'7',
+        height:'calc(100vh - 150px)',
+        alwaysVisible: false
+    });
+    $(".load_setting").click(function(){
+        var url = $(this).attr("data-url");
+        $(this).parent("li").addClass("activated").siblings().removeClass("activated");
+        $("#trade_list_loader").show();
+        load_msp_products(url);
+    });
+
+    $(".change_market_status").click(function(){
+        var data_url = $(this).attr("data-url");
+        $.confirm({
+            title: 'Change Access Status',
+            content: 'Do you really want to change the status into ' + $(this).text() + ' ???',
+            icon: 'icon ion-help-circled',
+            animation: 'scale',
+            theme:'material',
+            type:'blue',
+            closeAnimation: 'scale',
+            opacity: 0.5,
+            buttons:{
+                'confirm':{
+                    text: 'Yes',
+                    btnClass: 'btn-green',
+                    action: function(){
+                        $.ajax({
+                            type:'GET',
+                            url: data_url,
+                            data: {},
+                            success: function(response){
+                                if(response == "ok"){
+                                    loadMSProductts("{% url 'managment_msec_customer' market.pk %}");
+                                    $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:'Market Access Status Changed Successfully !!!',type: 'green'});
+                                } else {
+                                    loadMSProductts("{% url 'managment_msec_customer' market.pk %}");
+                                    $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:response,type: 'red'});
+                                }
+                            }
+                        });
+                    }
+                },
+                cancel:function(){},
+            }
+        });
+    });
+</script>

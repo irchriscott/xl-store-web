@@ -1,0 +1,161 @@
+{% load humanize %}
+{% load tz %}
+{% load staticfiles %}
+
+{% if session_company %}
+<div class='lg-up-comment'>
+    <div class='lg-poster'>
+        <img src='{{product.company.profile_image.url}}' alt='{{product.company.name}}' class='poster-image' />
+        <p><a href='{% url 'comp_profile' product.company.name_dotted %}'>{{product.company.name}}</a></p>
+        <span>
+            <i class='icon ion-ios-settings-strong'></i> <a href='{% url 'single_category' product.company.name_dotted product.category %}'>{% for category in product_category %}{% if product.category == category.pk %}{{category.name}}{% endif %}{% endfor %}</a>
+            <i class='icon ion-ios-clock-outline'></i> <span id='post-date-else{{product.pk}}' data-time='{{product.posted_date|date:'Y-m-d H:i:s'}}'><{{product.posted_date|date:'M. d, Y'}}</span>
+        </span>
+    </div>
+    <div class='lg-description'>
+        <h4 class='lg-name'><a href='{% url 'single_product' product.company.name_dotted product.pk %}'>{{product.product_name}}</a></h4>
+        <span class='lg-price'><i class='icon ion-ios-pricetags'></i> <span id='lg-price{{product.pk}}' data-price='{{product.price}}'>{{product.price|intword}}</span> {{product.currency}}</span>
+        <div class='lg-description-text'>{% autoescape on %}{{product.product_description|safe}}{% endautoescape %}</div>
+    </div>
+    <div class='lg-details'>
+        <span class='interess'><button type='button'><i class='icon ion-ios-cart'></i> Interest</button></span>
+        <span class='like-dislike'>
+            <ul>
+                <li><span class='icon ion-heart'></span> <span>{{product.get_sum_likes}}</span></li>
+                <li><span class='icon ion-heart-broken'></span> <span>{{product.get_sum_dislikes}}</span></li>
+            </ul>
+        </span>
+    </div>
+    <div class='lg-comments'>
+        <h5>{{product.get_sum_comments}} Comments</h5>
+        <span class='comments_list{{product.pk}}'></span>
+    </div>
+</div>
+<div class='lg-comment-box'>
+    <img src='{{company.profile_image.url}}' />
+    <form id='comment_form_else' method='post' comments-loader-url='{% url 'product_load_comment_else' product.pk %}' action='{% url 'product_add_comment' %}' data-product='{{product.pk}}'>
+        {% csrf_token %}
+        <input type='text' id='comment-text' name='comment_text' placeholder='Enter Comment' />
+        <button type='submit' id='submit-comment'><i class='icon ion-chevron-right'></i></button>
+    </form>
+</div>
+{% elif session_user %}
+<div class='lg-up-comment'>
+    <div class='lg-poster'>
+        <img src='{{product.company.profile_image.url}}' alt='{{product.company.name}}' class='poster-image' />
+        <p><a href='{% url 'comp_profile' product.company.name_dotted %}'>{{product.company.name}}</a></p>
+        <span>
+            <i class='icon ion-ios-settings-strong'></i> <a href='{% url 'single_category' product.company.name_dotted product.category %}'>{% for category in product_category %}{% if product.category == category.pk %}{{category.name}}{% endif %}{% endfor %}</a>
+            <i class='icon ion-ios-clock-outline'></i> <span id='post-date-else{{product.pk}}' data-time='{{product.posted_date|date:'Y-m-d H:i:s'}}'>{{product.posted_date|date:'M. d, Y'}}</span>
+        </span>
+    </div>
+    <div class='lg-description'>
+        <h4 class='lg-name'><a href='{% url 'single_product' product.company.name_dotted product.pk %}'>{{product.product_name}}</a></h4>
+        <span class='lg-price'><i class='icon ion-ios-pricetags'></i> <span id='lg-price{{product.pk}}' data-price='{{product.price}}'> {{product.price|intword}}</span> {{product.currency}}</span>
+        <div class='lg-description-text'>{% autoescape on %}{{product.product_description|safe}}{% endautoescape %}</div>
+    </div>
+    <div class='lg-details'>
+        <span class='interess' id='interess_after_else{{product.pk}}'>
+            {% if product.get_interess %}
+                {% if user.pk in product.get_interess %}
+                    <button type='button' style='background:lightgreen;'><i class='icon ion-checkmark-round'></i> Interested</button>
+                    {% else %}
+                    <button class='interess_product' class='interess_product_else{{product.pk}}' data-product='{{product.pk}}' data-url='{% url 'user_interess_product' %}'>{% csrf_token %}<i class='icon ion-ios-cart'></i> Interest</button>
+                {% endif %}
+            {% else %}
+            <button class='interess_product' class='interess_product_else{{product.pk}}' data-product='{{product.pk}}' data-url='{% url 'user_interess_product' %}'>{% csrf_token %}<i class='icon ion-ios-cart'></i> Interest</button>
+            {% endif %}
+        </span>
+        <span class='like-dislike'>
+            <ul>
+                {% if product.check_mention_like or product.check_mention_dislike %}
+                    {% if user.pk in product.check_mention_like %}
+                        <li><span class='liked general_product_like general_product_like{{product.pk}}' data-product='{{product.pk}}' data-href='{% url 'user_like_dislike_product' %}'><i class='icon ion-heart'></i></span> <span class='product_sum_like{{product.pk}}'>{{product.get_sum_likes}}</span></li>
+                        <li><span class='general_product_dislike general_product_dislike{{product.pk}}' data-product='{{product.pk}}' data-href='{% url 'user_like_dislike_product' %}'><i class='icon ion-heart-broken'></i></span> <span class='product_sum_dislike{{product.pk}}'>{{product.get_sum_dislikes}}</span></li>
+                        {% csrf_token %}
+                    {% elif user.pk in product.check_mention_dislike %}
+                        <li><span class='general_product_like general_product_like{{product.pk}}' data-product='{{product.pk}}' data-href='{% url 'user_like_dislike_product' %}'><i class='icon ion-heart'></i></span> <span class='product_sum_like{{product.pk}}'>{{product.get_sum_likes}}</span></li>
+                        <li><span class='disliked general_product_dislike general_product_dislike{{product.pk}}' data-product='{{product.pk}}' data-href='{% url 'user_like_dislike_product' %}'><i class='icon ion-heart-broken'></i></span> <span class='product_sum_dislike{{product.pk}}'>{{product.get_sum_dislikes}}</span></li>
+                        {% csrf_token %}
+                    {% else %}
+                        <li><span class='general_product_like general_product_like{{product.pk}}' data-product='{{product.pk}}' data-href='{% url 'user_like_dislike_product' %}'><i class='icon ion-heart'></i></span> <span class='product_sum_like{{product.pk}}'>{{product.get_sum_likes}}</span></li>
+                        <li><span class='general_product_dislike general_product_dislike{{product.pk}}' data-product='{{product.pk}}' data-href='{% url 'user_like_dislike_product' %}'><i class='icon ion-heart-broken'></i></span> <span class='product_sum_dislike{{product.pk}}'>{{product.get_sum_dislikes}}</span></li>
+                        {% csrf_token %}
+                    {% endif %}
+                {% else %}
+                    <li><span class='general_product_like general_product_like{{product.pk}}' data-product='{{product.pk}}' data-href='{% url 'user_like_dislike_product' %}'><i class='icon ion-heart'></i></span> <span class='product_sum_like{{product.pk}}'>{{product.get_sum_likes}}</span></li>
+                    <li><span class='general_product_dislike general_product_dislike{{product.pk}}' data-product='{{product.pk}}' data-href='{% url 'user_like_dislike_product' %}'><i class='icon ion-heart-broken'></i></span> <span class='product_sum_dislike{{product.pk}}'>{{product.get_sum_dislikes}}</span></li>
+                    {% csrf_token %}
+                {% endif %}
+            </ul>
+        </span>
+    </div>
+    <div class='lg-comments'>
+        <h5>{{product.get_sum_comments}} Comments</h5>
+        <span class='comments_list{{product.pk}}'></span>
+    </div>
+</div>
+<div class='lg-comment-box'>
+    <img src='{{user.profile_image.url}}' />
+    <form id='comment_form_else' method='post' comments-loader-url='{% url 'product_load_comment_else' product.pk %}' action='{% url 'product_add_comment' %}' data-product='{{product.pk}}'>
+        {% csrf_token %}
+        <input type='text' id='comment-text' name='comment_text' placeholder='Enter Comment' />
+        <button type='submit' id='submit-comment'><i class='icon ion-chevron-right'></i></button>
+    </form>
+</div>
+{% else %}
+<div class='lg-up-comment'>
+    <div class='lg-poster'>
+        <img src='{{product.company.profile_image.url}}' alt='{{product.company.name}}' class='poster-image' />
+        <p><a href='{% url 'comp_profile' product.company.name_dotted %}'>{{product.company.name}}</a></p>
+        <span>
+            <i class='icon ion-ios-settings-strong'></i> <a href='{% url 'single_category' product.company.name_dotted product.category %}'>{% for category in product_category %}{% if product.category == category.pk %}{{category.name}}{% endif %}{% endfor %}</a>
+            <i class='icon ion-ios-clock-outline'></i> <span id='post-date-else{{product.pk}}' data-time='{{product.posted_date|date:'Y-m-d H:i:s'}}'>{{product.posted_date|date:'M. d, Y'}}</span>
+        </span>
+    </div>
+    <div class='lg-description'>
+        <h4 class='lg-name'><a href='{% url 'single_product' product.company.name_dotted product.pk %}'>{{product.product_name}}</a></h4>
+        <span class='lg-price'><i class='icon ion-ios-pricetags'></i> <span id='lg-price{{product.pk}}' data-price='{{product.price}}'> {{product.price|intword}}</span> {{product.currency}}</span>
+        <div class='lg-description-text'>{% autoescape on %}{{product.product_description|safe}}{% endautoescape %}</div>
+    </div>
+    <div class='lg-details'>
+        <span class='interess'><button type='button'><i class='icon ion-ios-cart'></i> Interest</button></span>
+        <span class='like-dislike'>
+            <ul>
+                <li><i class='icon ion-heart'></i> <span>{{product.get_sum_likes}}</span></li>
+                <li><i class='icon ion-heart-broken'></i> <span>{{product.get_sum_dislikes}}</span></li>
+            </ul>
+        </span>
+    </div>
+    <div class='lg-comments'>
+        <h5>{{product.get_sum_comments}} Comments</h5>
+        <span class='comments_list{{product.pk}}'></span>
+    </div>
+</div>
+<div class='lg-comment-box'>
+    <img src='{% static 'images/default_user.jpg' %}' />
+    <form id='comment-form'>
+        <input type='text' id='comment-text' disabled placeholder='Enter Comment' />
+        <button type='submit' disabled id='submit-comment'><i class='icon ion-chevron-right'></i></button>
+    </form>
+</div>
+{% endif %}
+
+<script type='text/javascript'>
+    $('.lg-up-comment').slimScroll({
+      railVisible: true,
+      size:'7',
+      height:'92vh',
+      alwaysVisible: false
+    });
+    $('.interess_product').interessProduct();
+    $('.general_product_like').productLike();
+    $('.general_product_dislike').productDislike();
+    $('#post-date-else{{product.pk}}').setTime();
+
+    setTimeout(function(){
+        $('.comments_list{{product.pk}}').load('{% url 'product_load_comment_else' product.pk %}')
+    }, 100);
+
+    $('#comment_form_else').submitComment();
+</script>

@@ -1,0 +1,44 @@
+{% load staticfiles %}
+{% if not_owner == 1 or not_owner == 2 %}
+    <section class="xl-post-modal" style="display:block;">
+        <div class="xl-add-post  xl-add-category">
+            <h2>Edit Post</h2>
+            <style type="text/css">
+                label{display: none !important;}
+            </style>
+            <form id="submit_edit_post{{post.pk}}" action="{% url 'user_edit_save_post' post.pk %}" enctype="multipart/form-data" method="post">{% csrf_token %}
+                {{edit_post_form}}
+                <button type="submit" style="background:lightgreen;">Save</button>
+                <button type="button" class="close_post mfp-close" style="background:red;">Cancel</button>
+            </form>
+            <script type="text/javascript">
+                hideLoadLinkSpinner();
+                $("#submit_edit_post{{post.pk}}").submit(function(ev){
+                    ev.preventDefault();
+                    var formData = new FormData($(this)[0]);
+                    console.log(formData);
+                    $.ajax({
+                        type:'POST',
+                        url:$(this).attr('action'),
+                        data:formData,
+                        processData: false,
+                        async: false,
+                        cache: false,
+                        contentType: false,
+                        success:function(success){
+                            $("#post_text_update{{post.pk}}").text($("textarea[name=post_text]").val());
+                            textFunctions('.post-text');
+                            $(".mfp-close").click();
+                            $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:'Post Published Successfully !!!',type: 'green'});
+                        },
+                        error: function(error){
+                            showErrorMessage("error", error);
+                        }
+                    });
+                });
+            </script>
+        </div>
+    </section>
+{% else %}
+    <p class="xl-error">YOU ARE NOT THE OWNER<p>
+{% endif %}

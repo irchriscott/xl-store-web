@@ -1,0 +1,183 @@
+{% load staticfiles %}
+{% include 'css.html' %}
+{% load tz %}
+{% load humanize %}
+    <body>
+        {% include 'header.html' %}
+        <section class="xl-profil-container">
+            {% if user.cover_image %}
+                <div class="xl-cover-container" id="comp_cover_image" style="background-image:url({{user.cover_image.url}});">
+            {% else %}
+                <div class="xl-cover-container" id="comp_cover_image" style="background:gray;">
+            {% endif %}
+            {% if session_user == user.user_name %}
+                <form style="display:none;" id="update_cover_image" enctype="multipart/form-data" method="post" action="{% url 'user_cover_edit' %}">{% csrf_token %}
+                    {{cover_image_form}}
+                </form>
+                <div class="xl-modif-cover" id="modif_company_cover"><img src="{% static 'css/camera.svg' %}" /><span>Edit Cover Picture</span></div>
+            {% endif %}
+                <div class="xl-user-name">
+                    <h2><a href="{% url 'user_profile' user.user_name %}">{{user.full_name}}</a> <span><i class="icon ion-edit"></i></span></h2>
+                </div>
+            </div>
+            <div class="xl-profil-picture">
+                <a href="{{user.profile_image.url}}" id="profile_image_popup" title="Profile Picture" data-company="{{user.full_name}}">
+                    <img id="profile_image" src="{{user.profile_image.url}}" alt="{{user.user_name}}" />
+                </a>
+                <script type="text/javascript">
+                    $('#profile_image_popup').magnificPopup({type: 'image',closeOnContentClick: true,closeBtnInside: false,fixedContentPos: true,mainClass: 'mfp-no-margins mfp-with-zoom',image: {verticalFit: true,titleSrc: function(item) {return item.el.attr('title') + '<small>by '+$('#profile_image_popup').attr('data-company')+'</small>';}},zoom: {enabled: true,duration: 300}});
+                </script>
+                {% if session_user == user.user_name %}
+                    <div class="xl-modif-profil" id="modif_company_profil">
+                        <img src="{% static 'css/camera.svg' %}" /><span>Edit Profil Picture</span>
+                    </div>
+                    <form style="display:none;" id="update_profile_image" enctype="multipart/form-data" method="post" action="{% url 'user_profile_image_edit' %}">{% csrf_token %}
+                        {{profile_image_form}}
+                    </form>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- NAVBAR DOWN -->
+
+        <section class="xl-navbar-down xl-navbar-user" id="xl-navbar-user">
+            <div class="xl-navbar-content" style="width:545px;">
+                <ul>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="menu-list" title="{{user.get_get_sum_posts}} Posts"><a href="{% url 'user_posts' user.user_name %}">Posts <span>{{user.get_sum_posts}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="menu-list" title="{{user.get_sum_following}} Categories"><a href="{% url 'user_following' user.user_name %}">Following <span>{{user.get_sum_following}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="menu-list" title="{{user.get_sum_followers}} Followers"><a href="{% url 'user_followers' user.user_name %}">Followers <span>{{user.get_sum_followers}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="menu-list" title="{{user.get_sum_companies}} Companies"><a href="{% url 'user_companies' user.user_name %}">Companies <span>{{user.get_sum_companies}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="activate menu-list" title="{{user.get_sum_interess}} Intress"><a href="{% url 'user_interess' user.user_name %}">Interests <span>{{user.get_sum_interess}}</span></a></li>
+                </ul>
+            </div>
+            {% if session_user == user.user_name %}
+                <div class="xl-navbar-buttons">
+                    <button id="profile_edit" type="button">Save Change</button>
+                    <button id="cover_edit" type="button">Save Change</button>
+                    <button id="all_edit" type="button">Save Changes</button>
+                </div>
+            {% endif %}
+            {% if session_user %}
+                <div class="xl-navbar-buttons xl-follow">
+                    {% if session_user == user.user_name %}
+                    <!--<button class="follow_ok"><i class="icon ion-person"></i> Session</button>-->
+                    {% elif check_follow %}
+                        <button class="follow_ok"><i class="icon ion-checkmark-round"></i> Follower</button>
+                    {% else %}
+                        <span id="follow_success">
+                            <form id="follow_user_full_now" action="{% url 'user_follow_user' %}" method="post">{% csrf_token %}
+                                <input type="hidden" name="user" value="{{user.pk}}" />
+                                <button class="follow_now"><i class="icon ion-person-add"></i> Follow</button>
+                            </form>
+                        </span>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </section>
+
+        <!-- PRODUCTS AND POSTS -->
+
+        <section class="xl-products xl-user" id="xl-user">
+            <div class="xl-main-section">
+                <h2 style="font-size:20px; margin-bottom:10px; color:#666; text-align:left;">Interessed Products ({{user.get_sum_interess}})</h2>
+                <div class="xl-single-category">
+                    {% if interesses %}
+                        {% for interess in interesses %}
+                        <div class="xl-product-category" id="xl-product-category{{interess.pk}}">
+                            <div class="product-image"><a id="open_product_ajax{{interess.pk}}" href="{% url 'single_product_ajax' interess.product.pk %}"><img src="{{interess.product.image.url}}" alt="{{product.product_name}}"/></a></div>
+                            <span class="interess_after_else{{product.pk}}">
+                                {% if session_user %}
+                                    {% if session_profile.pk == interess.user.pk %}
+                                        <button class="interess interessed" style="background:lightgreen;"><i class="icon ion-checkmark-round"></i> Interest</button>
+                                    {% else %}
+                                        {% for this_interess in interess.product.get_interess %}
+                                            {% if this_interess == session_profile.pk %}
+                                                <button class="interess interessed" style="background:lightgreen;"><i class="icon ion-checkmark-round"></i> Interested</button>
+                                            {% else %}
+                                                <button class="interess interess_general_product interess_product_else{{product.pk}}" data-product="{{product.pk}}" data-url="{% url 'user_interess_product' %}">{% csrf_token %}<i class="icon ion-ios-cart"></i> Interest</button>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                {% else %}
+                                    <button class="login_first" type="button"><i class="icon ion-ios-cart"></i> Interest</button>
+                                {% endif %}
+                            </span>
+                            <div class="product-description">
+                                <div class="description-content">
+                                    <h3><a href="{% url 'single_product' interess.product.company.name_dotted interess.product.pk %}">{{interess.product.product_name}}</a></h3>
+                                    <span class="price"><i class="icon ion-ios-pricetags"></i> {{interess.product.price|intword}} {{interess.product.currency}}</span>
+                                    <p class="comment-interess">
+                                        <span><i class="icon ion-ios-chatbubble"></i> {{interess.product.get_sum_comments}}</span>
+                                        <span><i class="icon ion-ios-cart"></i> {{interess.product.get_sum_interess}}</span> <span style="margin-left:10px;" class="date" id='post-date{{interess.pk}}'><script type="text/javascript">setInterval(function(){setTime('#post-date{{interess.pk}}', '{{interess.product.posted_date|date:"Y-m-d H:i:s"}}')}, 100)</script></span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <script type="text/javascript">$("#open_product_ajax{{interess.pk}}").magnificPopup({type: 'ajax'});</script>
+                        <script type="text/javascript">$(document).ready(function(){sizeCategory('#xl-product-category{{interess.pk}}')})</script>
+                        {% endfor %}
+                    {% else %}
+                        <p class="xl-error">NO INTERESTS YET</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div id="xl-else-wrapper-else">
+                <div class="xl-else-section" id="xl-else-section-1">
+                    <div class="xl-store-about">
+                        <h3>About {{user.user_name}}</h3>
+                        <p><strong>Name :</strong> {{user.full_name}}</p>
+                        <p><strong>Gender :</strong> {{user.gender}}</p>
+                        <p><strong>State :</strong> {{user.country.name}}</p>
+                        <p><strong>Town :</strong> {{user.town}}</p>
+                        <p><strong>Tel. Number :</strong> {{user.phone_number}}</p>
+                        <p><strong>E-mail :</strong> <a href="mailto:{{user.email}}">{{user.email}}</a></p>
+                        <p><strong>Address :</strong>{{user.address}}</p>
+                        <p><strong>Biography :</strong>{{user.biography}}</p>
+                        {% if session_user == user.user_name %}
+                            <button style="margin-right:10px;" type="button" href="{% url 'user_profile_edit' %}" id="open_edit_profile">Edit</button>
+                            <button type="button" href="{% url 'add_address' %}" id="open_add_address">ADDRESS</button>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="xl-else-section" id="xl-else-section-2">
+                    {% if session_company %}
+                        <h3>Trades with @{{user.user_name}}</h3>
+                        <div class="xl-comp-cate">
+                            {% if trades %}
+                                <ul>
+                                    {% for trade in trades %}
+                                        <li>
+                                            <img src="{{trade.product.image.url}}"/>
+                                            <a href="{% url 'company_single_trade' trade.pk %}">{{trade.product.product_name}} <span class="username">({{trade.status}})</span></a>
+                                            <span><i class="icon ion-ios-arrow-right"></i></span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="xl-error">NO TRADE</p>
+                            {% endif %}
+                        </div>
+                    {% elif session_user %}
+                        <h3>Trades</h3>
+                        <div class="xl-comp-cate">
+                            {% if session_profile.get_trades %}
+                                <ul>
+                                    {% for trade in session_profile.get_trades %}
+                                        <li>
+                                            <img src="{{trade.product.image.url}}"/>
+                                            <a href="{% url 'user_single_trade' trade.pk %}">{{trade.product.product_name}} <span class="username">with</span> {{trade.product.company.name}}</a>
+                                            <span><i class="icon ion-ios-arrow-right"></i></span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="xl-error">NO TRADE</p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </body>
+</html>

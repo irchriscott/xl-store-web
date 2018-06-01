@@ -1,0 +1,49 @@
+{% load staticfiles %}
+<div class="xl-message-map" style="width:70%;">
+    <h2>Companies Bills & Carts</h2>
+    {% if session_user %}
+        <div class="xl-company-categories-list">
+            {% if bills_carts %}
+                <ul>
+                    {% for bill in bills_carts %}
+                        <li class="xl-category-all">
+                            <div class="xl-category-image">
+                                <img src="{{bill.image.url}}" alt="{{bill.name}}" />
+                            </div>
+                            <div class="xl-category-about">
+                                <div class="xl-about-content">
+                                    <h4><a href="{% url 'user_company_bills_carts_company' bill.company %}">{{bill.name}}</a></h4>
+                                    <ul>
+                                        {% if bill.followed == True %}
+                                            <li><span class="liked"><i class="icon ion-heart"></i></span></li>
+                                        {% else %}
+                                            <li><span class="like_category"  data-company="{{bill.company}}"><i class="icon ion-heart"></i></span></li>
+                                        {% endif %}
+                                        <li><i class="icon ion-clipboard"></i> <span>{{bill.bills}}</span></li>
+                                        <li><i class="icon ion-ios-cart"></i> <span>{{bill.carts}}</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    {% else %}
+        <p class="xl-error">ONLY FOR USERS</p>
+    {% endif %}
+    <button id="direction">OK</button>
+    <button style="background:red;" id="close-dialog">CANCEL</button>
+    <script type="text/javascript">
+        $("#close-dialog").click(function(){
+            $(".mfp-close").click();
+        });
+
+        hoverImage("li.xl-category-all","div.xl-category-about");
+
+        $(document).ready(function(){
+            var height = $(".xl-category-image").height();
+            $(".xl-category-about").css('height', height - 24);
+        });
+    </script>
+</div>

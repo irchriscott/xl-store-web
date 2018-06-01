@@ -1,0 +1,72 @@
+{% load staticfiles %}
+{% if companies_may_know %}
+    <h3>Companies you may know</h3>
+        {% for company in companies_may_know %}
+            {% if company.get_followers %}
+                {% for follow in company.get_followers %}{% if follow.user.pk == session_profile.pk %}{% else %}
+                <div class="xl-company-container">
+                    {% if company.cover_image %}
+                        <div class="profile-div" style="background-image:url('{{company.cover_image.url}}')">
+                    {% else %}
+                        <div class="profile-div" style="background:gray;">
+                    {% endif %}
+                        <div class="profil-image">
+                            <img src="{{company.profile_image.url}}" />
+                        </div>
+                    </div>
+                    <div class="comp-details">
+                        <p class="name"><a href="{% url 'comp_profile' company.name_dotted %}">{{company.name}}</a></p>
+                        <p class="motto">{{company.motto}}</p>
+                            <span id="follow_success{{company.pk}}">
+                                <form id="follow_company{{company.pk}}" action="{% url 'user_follow_company' %}" data-company="{{company.pk}}" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="company" id="company{{company.pk}}" value="{{company.pk}}" />
+                                    <button type="submit"><i class="icon ion-person-add"></i></button>
+                                </form>
+                                <script type="text/javascript">$("#follow_company{{company.pk}}").followCompany();</script>
+                            </span>
+                            <span>
+                                <ul>
+                                    <li class="menu-list" title="{{company.get_sum_categories}} Categories"><a href="{% url 'comp_categories' company.name_dotted %}"><i class="icon ion-ios-settings-strong"></i> <span>{{company.get_sum_categories}}</span></a></li>
+                                    <li class="menu-list" title="{{company.get_sum_products}} Products"><a href="{% url 'comp_profile_2' company.name_dotted %}"><i class="icon ion-ios-cart"></i> <span> {{company.get_sum_products}}</span></a></li>
+                                    <li class="menu-list" title="{{company.get_sum_followers}} Followers"><a href="{% url 'comp_followers' company.name_dotted %}"><i class="icon ion-ios-people"></i> <span>{{company.get_sum_followers}}</span></a></li>
+                                </ul>
+                            </span>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+                {% else %}
+                <div class="xl-company-container">
+                    {% if company.cover_image %}
+                        <div class="profile-div" style="background-image:url('{{company.cover_image.url}}')">
+                    {% else %}
+                        <div class="profile-div" style="background:gray;">
+                    {% endif %}
+                        <div class="profil-image">
+                            <img src="{{company.profile_image.url}}" />
+                        </div>
+                    </div>
+                    <div class="comp-details">
+                        <p class="name"><a href="{% url 'comp_profile' company.name_dotted %}">{{company.name}}</a></p>
+                        <p class="motto">{{company.motto}}</p>
+                            <span id="follow_success{{company.pk}}">
+                                <form id="follow_company{{company.pk}}" action="{% url 'user_follow_company' %}" data-company="{{company.pk}}" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="company" id="company{{company.pk}}" value="{{company.pk}}" />
+                                    <button type="submit"><i class="icon ion-person-add"></i></button>
+                                </form>
+                                <script type="text/javascript">$("#follow_company{{company.pk}}").followCompany();</script>
+                            </span>
+                            <span>
+                                <ul>
+                                    <li class="menu-list" title="{{company.get_sum_categories}} Categories"><a href="{% url 'comp_categories' company.name_dotted %}"><i class="icon ion-ios-settings-strong"></i> <span>{{company.get_sum_categories}}</span></a></li>
+                                    <li class="menu-list" title="{{company.get_sum_products}} Products"><a href="{% url 'comp_profile_2' company.name_dotted %}"><i class="icon ion-ios-cart"></i> <span> {{company.get_sum_products}}</span></a></li>
+                                    <li class="menu-list" title="{{company.get_sum_followers}} Followers"><a href="{% url 'comp_followers' company.name_dotted %}"><i class="icon ion-ios-people"></i> <span>{{company.get_sum_followers}}</span></a></li>
+                                </ul>
+                            </span>
+                        </div>
+                    </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}

@@ -1,0 +1,53 @@
+{% load staticfiles %}
+{% if session_user or session_company %}
+    <section class="xl-post-modal" style="display:block;">
+        <div class="xl-add-post  xl-add-category">
+            {% if post.poster_type == 'user' %}
+            <h2>Reply To <span class="username"><a href="{% url 'user_posts' post.user.user_name %}">@{{ post.user.user_name}}</a></span>'s Post </h2>
+            {% elif post.poster_type == 'company' %}
+            <h2>Reply To <span class="username"><a href="{% url 'comp_posts' post.company.name_dotted %}">@{{post.company.name_dotted}}</a></span>'s Post</h2>
+            {% endif %}
+            <style type="text/css">
+                label{display: none !important;}
+            </style>
+            <form id='reply-form' method="post" enctype="multipart/form-data" replies-loader-url="{% url 'user_load_post_replies' post.pk %}" action="{% url 'user_save_post_reply' post.pk %}" data-post="{{post.pk}}">
+                {% csrf_token %}
+                {{post_reply_form}}
+                <span id="image_post"><i class="icon ion-ios-camera"></i> Image</span>
+                <div class="xl-post-preview">
+                    <img id="preview_reply_image"/>
+                </div>
+                <button type="submit" style="background:lightgreen;">Save</button>
+                <button type="button" class="close_post mfp-close" style="background:red;">Cancel</button>
+            </form>
+            <script type="text/javascript">
+                hideLoadLinkSpinner();
+                $("#reply-form").submit(function(ev){
+                    ev.preventDefault();
+                    var formData = new FormData($(this)[0]);
+                    console.log(formData);
+                    $.ajax({
+                        type:'POST',
+                        url:$(this).attr('action'),
+                        data:formData,
+                        processData: false,
+                        async: false,
+                        cache: false,
+                        contentType: false,
+                        success:function(success){
+                            $("#reply-form").get(0).reset();
+                            $(".mfp-close").click();
+                            showSuccessMessage("success", "Reply Added !!!");
+                        },
+                        error: function(error){
+                            showErrorMessage("error", error);
+                        }
+                    });
+                })
+                $("#id_reply_image").change(function(){
+                    previewReplyImage(this);
+                });
+            </script>
+        </div>
+    </section>
+{% endif %}

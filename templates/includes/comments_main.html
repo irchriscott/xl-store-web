@@ -1,0 +1,116 @@
+{% load staticfiles %}
+{% if comments %}
+<ul>
+    {% for comment in comments %}
+        {% if comment.commenter == 'company' %}
+            <li>
+                <div class="xl-single-comment">
+                    <img src="{{comment.company.profile_image.url}}" />
+                    <div class="comment-menu">
+                        <span class="menu-show" id="open_comment_menu{{comment.pk}}" data-id="{{comment.pk}}"><i class="icon ion-chevron-down"></i></span>
+                        <div class="menu-items" style="margin-right:0;" id="menu-items{{comment.pk}}">
+                            <ul>
+                                {% if session_company == comment.company.pk  %}
+                                <li><a class="delete_comment" data-href="{% url 'product_comment_delete' comment.pk %}" data-comment="{{comment.pk}}"><i class="icon ion-ios-trash"></i>Delete</a></li>
+                                <li><a class="open_edit_comment" data-comment="{% url 'product_comment_edit_page' comment.pk %}"><i class="icon ion-ios-compose"></i>Edit</a></li>
+                                {% endif %}
+                                <li><a href="#"><i class="icon ion-ios-loop"></i>Reply</a></li>
+                                <li><a href="#"><i class="icon ion-ios-information"></i>Report</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="comment-content">
+                        <p class="commenter"><a href="{% url 'comp_profile_2' comment.company.name_dotted %}">{{comment.company.name}}</a> - {{comment.comment}} </p>
+                        <p class="datetime"><span id="commentdate{{comment.pk}}" data-time="{{comment.comment_date|date:'Y-m-d H:i:s'}}"></span></p>
+                    </div>
+                </div>
+            </li>
+        {% elif comment.commenter == 'user' %}
+            <li>
+                <div class="xl-single-comment">
+                    <img src="{{comment.user.profile_image.url}}" />
+                    <div class="comment-menu">
+                        <span class="menu-show" id="open_comment_menu{{comment.pk}}" data-id="{{comment.pk}}"><i class="icon ion-chevron-down"></i></span>
+                        <div class="menu-items" style="margin-right:0;" id="menu-items{{comment.pk}}">
+                            <ul>
+                                {% if session_user == comment.user.pk %}
+                                <li><a class="delete_comment" data-href="{% url 'product_comment_delete' comment.pk %}" data-comment="{{comment.pk}}"><i class="icon ion-ios-trash"></i>Delete</a></li>
+                                <li><a class="open_edit_comment" data-comment="{% url 'product_comment_edit_page' comment.pk %}"><i class="icon ion-ios-compose"></i>Edit</a></li>
+                                {% endif %}
+                                <li><a href="#"><i class="icon ion-ios-loop"></i>Reply</a></li>
+                                <li><a href="#"><i class="icon ion-ios-information"></i>Report</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="comment-content">
+                        <p class="commenter"><a href="{% url 'user_posts' comment.user.user_name %}">{{comment.user.full_name}} <span class="username">@{{comment.user.user_name}}</span></a> - {{comment.comment}} </p>
+                        <p class="datetime"><span id="commentdate{{comment.pk}}" data-time="{{comment.comment_date|date:'Y-m-d H:i:s'}}"></span></p>
+                    </div>
+                </div>
+            </li>
+        {% endif %}
+        <script type="text/javascript">
+            $("#open_comment_menu{{comment.pk}}").showMenu();
+            $("#commentdate{{comment.pk}}").setTime();
+        </script>
+    {% endfor %}
+</ul>
+{% else %}
+<p class="xl-error">NO COMMENTS YET</p>
+{% endif %}
+
+<section class="xl-search-modal" style="left:0;" id="edit_comment_modal">
+    <div class="xl-add-category" style="margin-top:calc((100% - 200px) / 4);">
+        <div id="edit_reply_cont">
+            <div class="xl-loader" id="edit_reply_loader"><img src="{% static 'images/loading.gif' %}" alt="loader"/></div>
+        </div>
+    </div>
+</section>
+
+<script type="text/javascript">
+    $(".open_edit_comment").click(function (ev) {
+        ev.preventDefault()
+        $("#edit_comment_modal").fadeIn();
+        $("#edit_reply_loader").show()
+        loadEditReply($(this).attr('data-comment'));
+    });
+    $(".delete_comment").click(function(){
+        var comment = $(this).attr('data-comment');
+        var url = $(this).attr('data-href');
+        $.confirm({
+            title: 'Delete Comment',
+            content: 'Do you really want to delete this comment ???',
+            icon: 'icon ion-help-circled',
+            animation: 'scale',
+            theme:'material',
+            type:'blue',
+            closeAnimation: 'scale',
+            opacity: 0.5,
+            buttons:{
+                'confirm':{
+                    text: 'Yes',
+                    btnClass: 'btn-green',
+                    action: function(){
+                        $.ajax({
+                            type:'POST',
+                            url:url,
+                            data:{
+                                'comment': comment,
+                                'csrfmiddlewaretoken':$("input[name=csrfmiddlewaretoken]").val()
+                            },
+                            success:function(success){
+                                showSuccessMessage("success", "Comment Deleted !!!");
+                                loadProductComments("{% url 'product_load_comment_main' product.pk %}");
+                            },
+                            error: function(error){
+                                showErrorMessage("error", error);
+                            }
+                        });
+                    }
+                },
+                cancel:function(){
+                },
+            }
+        });
+    })
+</script>

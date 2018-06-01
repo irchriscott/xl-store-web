@@ -1,0 +1,15 @@
+{% load humanize %}
+<div class="xl-shopping-cart">
+    <div class="xl-shopping-cart-data">
+        <ul id="load_shopping_cart_items" data-url="{% url 'load_current_cart' shopping_cart.pk %}?type=items">
+            <li style="border:none;"><strong>Current Cart : </strong></li>
+            <li><i class="icon ion-ios-cart"></i> <span>{{quantity}} {% if quantity == 1 %}item{% else %}items{% endif %}</span></li>
+            <li><i class="icon ion-ios-pricetags"></i> <span>{{total|intword}} {{currency}}</span></li>
+        </ul>
+    </div>
+    <script type="text/javascript">
+        $("#load_shopping_cart_items").click(function(){
+            load_market_product($(this).attr("data-url"));
+        });
+    </script>
+</div>

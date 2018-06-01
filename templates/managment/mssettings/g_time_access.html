@@ -1,0 +1,45 @@
+{% load staticfiles %}
+{% load humanize %}
+<h3>Set Time To Access Market</h3>
+<div class="xl-ms-setting">
+    <p>{{text|safe}}</p>
+    <input type="number" min="1" id="time-access" {% if setting.access_market == True %}disabled{% endif %} value="{{setting.time_market_access}}" placeholder="Enter Time To Access The Market" />
+    {% csrf_token %}
+    {% if setting.access_market == True %}
+        <p style="margin-top:10px;">You can only set this if Allow Free Access Market is <b>False</b></p>
+    {% else %}
+        <p id="comment-value" style="margin-top:10px;">{{setting.time_market_access}} minutes</p>
+    {% endif %}
+    <input {% if setting.access_market == True %}disabled{% endif %} type="password" id="ms-password-time" placeholder="Enter MS Password" />
+    <button {% if setting.access_market == True %}disabled{% endif %} id="save-time-set" style="margin-right: 10px;">Save</button><button style="background:red;">Cancel</button>
+    <script type="text/javascript">
+        $("#save-time-set").click(function(e){
+            e.preventDefault();
+            var setting = $("#time-access").val();
+            var password = $("#ms-password-time").val();
+            var csrf_token = $("input[name=csrfmiddlewaretoken]").val();
+            var url = "{% url 'managment_msst_tam' %}";
+            $.ajax({
+                type:"POST",
+                url:url,
+                data:{
+                    'setting':setting,
+                    'password':password,
+                    'csrfmiddlewaretoken':csrf_token
+                },
+                success:function(res){
+                    if(res == 'ok'){
+                        $("#trade_list_loader").show();
+                        load_msp_products(url);
+                        $("#time-set").text(setting + " min");
+                        $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:'Setting Changed Successfully !!!',type: 'green'});
+                    }
+                    else{
+                        load_msp_products(url);
+                        $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:res,type: 'red'});
+                    }
+                }
+            });
+        });
+    </script>
+</div>

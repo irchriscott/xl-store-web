@@ -1,0 +1,37 @@
+<div class="xl-add-product" id="edit_msp_product">
+    <h2>Edit Product</h2>
+    <form id="update_msp_product_form" action="{% url 'edit_single_product' product.product.pk %}" method="POST">
+        {% csrf_token %}
+        {{edit_product}}
+        <button type="submit" style="background:lightgreen;">Save</button>
+        <button type="button" style="background:red;" id="close_edit_msp_product">Cancel</button>
+    </form>
+    <script type="text/javascript">
+        CKEDITOR.replace('id_description_edit');
+        $("#update_msp_product_form").submit(function(ev){
+            ev.preventDefault();
+            var formData = new FormData($(this)[0]);
+            $.ajax({
+                type:'POST',
+                url:"{% url 'edit_single_product' product.product.pk %}",
+                data:formData,
+                processData: false,
+                async: false,
+                cache: false,
+                contentType: false,
+                success:function(success){
+                    $(".mfp-close").click();
+                    loadMSProductts("{% url 'managment_msp_single' product.pk month year %}");
+                    $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:"Product Edited Successfully !!!",type: 'green'});
+                },
+                error: function(error){
+                    showErrorMessage("error", error);
+                }
+            });
+        });
+
+        $("#close_edit_msp_product").click(function(){
+            $(".mfp-close").click();
+        });
+    </script>
+</div>

@@ -1,0 +1,45 @@
+{% load staticfiles %}
+{% load humanize %}
+<h3>Currency</h3>
+<div class="xl-ms-setting">
+    <p>{{text|safe}}</p>
+    <select id="currency" {% if setting.is_currency_changed == True %}disabled{% endif %}>
+        {% for v,n in currencies %}
+            <option {% if setting.currency == v %}selected{% endif %} value="{{v}}">{{n}}</option>
+        {% endfor %}
+    </select>
+    {% csrf_token %}
+    <p id="print-value" style="margin-top:10px;">{{setting.currency}}</p>
+    <input {% if setting.is_currency_changed == True %}disabled{% endif %} type="password" id="ms-password-cur" placeholder="Enter MS Password" />
+    <button {% if setting.is_currency_changed == True %}disabled{% endif %} id="save-currency-set" style="margin-right: 10px;">Save</button><button style="background:red;">Cancel</button>
+    <script type="text/javascript">
+        $("#save-currency-set").click(function(e){
+            e.preventDefault();
+            var setting = $("#currency").val();
+            var password = $("#ms-password-cur").val();
+            var csrf_token = $("input[name=csrfmiddlewaretoken]").val();
+            var url = "{% url 'managment_msst_cur' %}";
+            $.ajax({
+                type:"POST",
+                url:url,
+                data:{
+                    'setting':setting,
+                    'password':password,
+                    'csrfmiddlewaretoken':csrf_token
+                },
+                success:function(res){
+                    if(res == 'ok'){
+                        $("#trade_list_loader").show();
+                        load_msp_products(url);
+                        $("#currency-set").text(setting)
+                        $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:'Setting Changed Successfully !!!',type: 'green'});
+                    }
+                    else{
+                        load_msp_products(url);
+                        $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:res,type: 'red'});
+                    }
+                }
+            });
+        });
+    </script>
+</div>

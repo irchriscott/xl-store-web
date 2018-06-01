@@ -1,0 +1,23 @@
+<div class="xl-add-category" style="width:50%">
+    <h2>Upload Other Pictures</h2>
+    <form id="upload_pictures" enctype="multipart/form-data" method="post" action="{% url 'upload_product_images' product.pk %}" >
+        {% csrf_token %}
+        <span id="click_input_add_files"><i class="icon ion-images"></i> Add Pictures</span>
+        {{more_images_form}}
+        <div class="images-upload-preview" id="images-upload-preview"></div>
+        <button type="submit" style="background:lightgreen;">Save</button>
+        <button type="button" style="background:red;" id="close_upload_others">Cancel</button>
+    </form>
+    <script type="text/javascript">
+        hideLoadLinkSpinner();
+        $("#close_upload_others").click(function(){
+            $(".images-upload-preview img").hide();
+            $("#id_product_images_upload").val('');
+            $(".mfp-close").click();
+        });
+
+        $('#id_product_images_upload').on('change', function() {
+            multipleImagespreview(this, 'div.images-upload-preview');
+        });
+    </script>
+</div>

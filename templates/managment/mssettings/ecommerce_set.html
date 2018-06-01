@@ -1,0 +1,63 @@
+{% load staticfiles %}
+{% load humanize %}
+<div class="xl-ms-product">
+    <div class="xl-ms-product-details other-div-very-different" style="width:50% !important;">
+        <div class="xl-ms-scroll-pane just-for-margins">
+            <h2>E-Commerce Settings</h2>
+            <ul>
+                <li>
+                    <a class="load_setting" data-url="{% url 'use_ecommerce_settings' %}">
+                        <i class="icon ion-ios-cart"></i>
+                        <span class="prod-name">Use E-Commerce Service</span>
+                        <span class="float-side"><span id="ecommerce-set">{{settings.use_ecommerce}}</span><!--<i class="icon ion-ios-arrow-right"></i>--></span>
+                    </a>
+                </li>
+                <li>
+                    <a class="load_setting" data-url="{% url 'use_paypal_settings' %}">
+                        <i class="icon ion-social-usd"></i>
+                        <span class="prod-name">Use PayPal</span>
+                        <span class="float-side"><span id="paypal-set">{{settings.use_paypal}}</span><!--<i class="icon ion-ios-arrow-right"></i>--></span>
+                    </a>
+                </li>
+                <li>
+                    <a class="load_setting" data-url="{% url 'use_mobile_settings' %}">
+                        <i class="icon ion-iphone"></i>
+                        <span class="prod-name">Use Mobile Money</span>
+                        <span class="float-side"><span id="mobile-set">{{settings.mobile}}</span><!--<i class="icon ion-ios-arrow-right"></i>--></span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="xl-ms-product-inventory" style="overflow:hidden;">
+        <div id="msp_product_wrapper">
+            <h1>CONTENT WILL BE LOADED AFTER SELECTING A PARAMETTER</h1>
+            <div id="msp_products_loader" class="xl-loader" style="margin-top:60px;">
+                <img src="{% static 'images/loading.gif' %}" />
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    h1{font-size: 32px;text-align: center;color: #666;margin-top: calc(50vh - 143px);}
+    .other-div-very-different ul li{height: auto !important; padding-top: 3px !important; padding-bottom: 9px !important;}
+    .other-div-very-different ul li a .float-side{margin-top: 0px !important; margin-right: -8px;}
+    .other-div-very-different ul > li > a > i{float: left; margin-right: 6px; font-size: 20px; margin-top: 7px;}
+    .xl-ul-title{display: block; padding: 7px 5px; background: #ccc;}
+    .xl-ms-product .xl-ms-product-details{padding-right:4px !important;}
+    .just-for-margins{padding-right: 11px !important;}
+</style>
+<script type="text/javascript">
+    $(".xl-ms-scroll-pane, #msp_product_wrapper").slimScroll({
+        railVisible: true,
+        size:'7',
+        height:'calc(100vh - 150px)',
+        alwaysVisible: false
+    });
+    $(".load_setting").click(function(){
+        var url = $(this).attr("data-url");
+        $(this).parent("li").addClass("activated").siblings().removeClass("activated");
+        $("#trade_list_loader").show();
+        load_msp_products(url);
+    });
+</script>

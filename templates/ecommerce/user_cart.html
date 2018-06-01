@@ -1,0 +1,16 @@
+{% load staticfiles %}
+<div class="xl-message-map" style="width:60%;">
+    {% if session_user %}
+        <div class="xl-market-products" id="xl_market_products"></div>
+        <button>OK</button>
+        <button style="background:red;" id="close_access_market">CANCEL</button>
+        <script type="text/javascript">
+            $(document).ready(function(){
+                load_market_product("{% url 'load_current_cart' cart.pk %}?type=items");
+            });
+            $("#close_access_market").click(function(){
+                $(".mfp-close").click();
+            });
+        </script>
+    {% endif %}
+</div>

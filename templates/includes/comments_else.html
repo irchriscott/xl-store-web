@@ -1,0 +1,31 @@
+{% load staticfiles %}
+{% if comments %}
+<ul>
+    {% for comment in comments %}
+        {% if comment.commenter == 'company' %}
+        <li>
+            <img src='{{comment.company.profile_image.url}}' />
+            <p class='comment'>
+               <span class='commenter'><a href='{% url 'comp_profile_2' comment.company.name_dotted %}'>{{comment.company.name}}</a></span> -
+               <span class='text'>{{comment.comment}}</span>
+            </p>
+            <p class='comment-time' id='comment-date{{comment.pk}}' data-time='{{comment.comment_date|date:'Y-m-d H:i:s'}}'></p>
+        </li>
+        {% elif comment.commenter == 'user' %}
+        <li>
+            <img src='{{comment.user.profile_image.url}}' />
+            <p class='comment'>
+               <span class='commenter'><a href='{% url 'user_posts' comment.user.user_name %}'>{{comment.user.full_name}} <span class='username'>@{{comment.user.user_name}}</span></a></span>
+                - <span class='text'>{{comment.comment}}</span>
+            </p>
+            <p class='comment-time' id='comment-date{{comment.pk}}' data-time='{{comment.comment_date|date:'Y-m-d H:i:s'}}'></p>
+        </li>
+        {% endif %}
+        <script type='text/javascript'>
+            $('#comment-date{{comment.pk}}').setTime();
+        </script>
+    {% endfor %}
+</ul>
+{% else %}
+<p class='xl-error'>NO COMMENTS</p>
+{% endif %}

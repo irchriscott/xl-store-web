@@ -1,0 +1,761 @@
+{% load staticfiles %}
+{% include 'css.html' %}
+{% load tz %}
+{% load humanize %}
+
+<body>
+    {% include 'header.html' %}
+
+    <section class="xl-navbar-down">
+        <div class="xl-navbar-content" style="margin:auto !important; width:425px;">
+            <ul>
+                <li><a href="{% url 'home' %}">Home</a></li>
+                <li class="activate"><a href="{% url 'products' %}">Products</a></li>
+                <li><a href="{% url 'posts' %}">Posts</a></li>
+                <li><a href="{% url 'advertisments' %}">Advertisments</a></li>
+            </ul>
+        </div>
+    </section>
+
+        <!-- PRODUCTS AND POSTS -->
+
+        <section class="xl-products">
+            <div class="xl-main-section xl-trade-messages">
+                {% if session_company %}
+                    <h2 class="xl-for-trade-messages">Trade for <a href="{% url 'single_product' trade.product.company.name_dotted trade.product.pk %}">{{trade.product.product_name}}</a> with <a href="{% url 'user_profile' trade.user.user_name %}"><span class="username">@{{trade.user.user_name}}</span></a></h2>
+                {% elif session_user %}
+                    <h2 class="xl-for-trade-messages">Trade for <a href="{% url 'single_product' trade.product.company.name_dotted trade.product.pk %}">{{trade.product.product_name}}</a> with <a href="{% url 'comp_profile_2' trade.product.company.name_dotted %}">{{trade.product.company.name}}</a></h2>
+                {% endif %}
+                <div class="xl-messages-all" id="xl-messages-all"></div>
+                <p id="is_typing_message"></p>
+                {% if session_company or session_user %}
+                    <div class="xl-message-box">
+                        <div class="message-else-menu" id="menu-itemssend" style="margin-top:-99px;">
+                            <ul>
+                                <a id="answer_video_call" style="display:none;" href="#xl-video-call">ANSWER_VIDEO_CALL</a>
+                                <!-- <li><a id="open_video_call" href="#xl-video-call"><i class="icon ion-ios-videocam"></i>Video Call</a></li></li> -->
+                                <li><a id="open_upload_others_else" href="#xl-upload_pictures"><i class="icon ion-images"></i>Send Images</a></li>
+                                <li><a id="open_send_location" href="#xl-send-location"><i class="icon ion-ios-location"></i>Send Location</a></li>
+                            </ul>
+                        </div>
+                        {% if session_company %}
+                            <div class="message-else-menu" id="menu-itemsstatus" data-messages="{% url 'trade_messages' trade.pk %}" data-url-change="{% url 'change_trade_status' trade.pk %}" data-status="{{trade.status}}" style="margin-top:-210px;">
+                                <ul>
+                                    <li><a data-status="started" class="change_trade_status"><i class="icon ion-ios-play"></i>Start</a></li>
+                                    <li><a data-status="stopped" class="change_trade_status"><i class="icon ion-ios-pause"></i>Stop</a></li>
+                                    <li><a data-status="aborted" class="change_trade_status"><i class="icon ion-stop"></i>Abort</a></li>
+                                    <li><a data-status="succeeded" class="change_trade_status"><i class="icon ion-checkmark-round"></i>Succeed</a></li>
+                                    <li><a data-status="failed" class="change_trade_status"><i class="icon ion-close"></i>Fail</a></li>
+                                </ul>
+                            </div>
+                            <div class="session_image">
+                                <img src="{{company.profile_image.url}}" alt="{{company.name_dotted}}" />
+                            </div>
+                        {% elif session_user %}
+                            <div class="message-else-menu" id="menu-itemsstatus" data-messages="{% url 'trade_messages' trade.pk %}" data-url-change="{% url 'change_trade_status' trade.pk %}" data-status="{{trade.status}}" style="margin-top:-178px;">
+                                <ul>
+                                    <li><a data-status="started" class="change_trade_status"><i class="icon ion-ios-play"></i>Start</a></li>
+                                    <li><a data-status="stopped" class="change_trade_status"><i class="icon ion-ios-pause"></i>Stop</a></li>
+                                    <li><a data-status="aborted" class="change_trade_status"><i class="icon ion-stop"></i>Abort</a></li>
+                                    <li><a data-status="failed" class="change_trade_status"><i class="icon ion-close"></i>Fail</a></li>
+                                </ul>
+                            </div>
+                            <div class="session_image">
+                                <img src="{{session_profile.profile_image.url}}" alt="{{session_profile.user_name}}" />
+                            </div>
+                        {% endif %}
+                        <form id="send_trade_message_form" data-message-loader-url="{% url 'trade_messages' trade.pk %}" action="{% url 'save_trade_messages' trade.pk %}">
+                            {% csrf_token %}
+                            <span class="show_session"></span>
+                            <input type="text" id="message_text" name="message_text" autocomplete="off" required placeholder="Enter Text Message" />
+                            <div class="message-box-else">
+                                <ul>
+                                    <li><span id="open_send_others" data-id="send"><i class="icon ion-plus"></i></span></li>
+                                    <li><span id="open_change_status" data-id="status"><i class="icon ion-ios-information"></i></span></li>
+                                </ul>
+                            </div>
+                        </form>
+                        <script type="text/javascript">
+                            
+                            var host = 'localhost';
+                            var port = '4000';
+                            var socket = io(host + ':' + port);
+                            var busy = false;
+                            let call_id = null;
+                            let localStream = null;
+                            let sentStream = null;
+
+                            let caller = document.getElementById("video-call-calling");
+                            let called = document.getElementById("video-call-called");
+
+                            var ring = new Audio("{% static 'others/rington.wav' %}");
+                            var call = new Audio("{% static 'others/calling.wav' %}");
+                            ring.loop = true;
+                            call.loop = true;
+
+                            $("#send_trade_message_form").submit(function(ev){
+                                ev.preventDefault();
+                                var action = $(this).attr('action');
+                                var data_messages = $(this).attr('data-message-loader-url');
+                                var formData = new FormData($(this)[0]);
+
+                                $.ajax({
+                                    type:'POST',
+                                    url:action,
+                                    data:formData,
+                                    processData: false,
+                                    async: false,
+                                    cache: false,
+                                    contentType: false,
+                                    success:function(success){
+                                        $("#send_trade_message_form").get(0).reset();
+                                        emitTextMessageSocket("message", $("#message_text").val());
+                                        $("#is_typing_message").fadeOut();
+                                        if(success == "ok"){}else{
+                                            $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:success,type: 'red'});
+                                        }
+                                    },
+                                    error: function(error){
+                                        showErrorMessage("trade_message", error);
+                                    }
+                                });
+                            });
+
+                            $("#message_text").keyup(function(e){
+                                emitTypingSocket($(this).val());
+                            });
+
+                            socket.on("getTextMessage", function(msgObject){
+                                var receiver = msgObject.receiver;
+                                var sender = msgObject.sender;
+                                var trade = msgObject.trade;
+                                var session = {% if session_user %}"{{session_profile.user_name}}"{% elif session_company %}"{{company.name}}"{% endif %}
+
+                                if(receiver == session || sender == session && trade == "{{trade.pk}}"){}
+
+                                loadTradeMessages("{% url 'trade_messages' trade.pk %}");
+                                var type = msgObject.type;
+                                var message = msgObject.message;
+
+                                if(type == "status"){
+                                    $("#trade_status_menu").attr("data-status", message);
+                                    $("#trade_status_menu").activateStatus();
+                                }
+                            });
+
+                            socket.on("getTextTyping", function(data){
+                                var receiver = data.receiver;
+                                var receiver_id = data.receiver_id;
+                                var sender = data.sender;
+                                var trade = data.trade;
+                                var session = {% if session_user %}"{{session_profile.user_name}}"{% elif session_company %}"{{company.name}}"{% endif %}
+                                var session_id = {% if session_user %}"{{session_profile.pk}}"{% elif session_company %}"{{company.pk}}"{% endif %}
+
+                                if(receiver == session && receiver_id == session_id && trade == "{{trade.pk}}"){
+                                    if(data.text != ""){
+                                        $("#is_typing_message").text(sender + " Is Typing...").fadeIn();
+                                    }else{
+                                        $("#is_typing_message").fadeOut();
+                                    }
+                                }
+                            });
+
+                            function emitTextMessageSocket(type, status){
+                                var msgObject = {
+                                    "trade":"{{trade.pk}}",
+                                    {% if session_user %}
+                                    "sender":"{{trade.user.user_name}}",
+                                    "receiver":"{{trade.product.company.name_dotted}}",
+                                    {% elif session_company %}
+                                    "sender":"{{trade.product.company.name_dotted}}",
+                                    "receiver":"{{trade.user.user_name}}",
+                                    {% endif %}
+                                    "message": status,
+                                    "type": type
+                                }
+                                socket.emit("textMessage", msgObject);
+                            }
+
+                            function emitTypingSocket(text){
+                                var data = {
+                                    {% if session_user %}
+                                    "sender_id":"{{trade.user.pk}}",
+                                    "sender":"{{trade.user.user_name}}",
+                                    "receiver":"{{trade.product.company.name}}",
+                                    "receiver_id":"{{trade.product.company.pk}}",
+                                    {% elif session_company %}
+                                    "sender_id":"{{trade.product.company.pk}}",
+                                    "sender":"{{trade.product.company.name}}",
+                                    "receiver":"{{trade.user.user_name}}",
+                                    "receiver_id":"{{trade.user.pk}}",
+                                    {% endif %}
+                                    "text":text,
+                                    "message":"Is Typing...",
+                                    "trade":"{{trade.pk}}"
+                                }
+                                socket.emit("textTyping", data);
+                            }
+
+                            $(".change_trade_status").click(function(e){
+                                e.preventDefault();
+                                var status = $(this).attr("data-status");
+                                var _this = $(this);
+                                var bef_status = $("#trade_status_menu").attr("data-status");
+                                var url = $("#trade_status_menu").attr("data-url-change");
+                                var data_messages = $("#trade_status_menu").attr("data-messages");
+                                $.confirm({
+                                    title: 'Change Trade Status',
+                                    content: 'Do you really want to change trade status from '+ bef_status +' to '+ status +' ???',
+                                    icon: 'icon ion-help-circled',
+                                    animation: 'scale',
+                                    theme:'material',
+                                    type:'blue',
+                                    closeAnimation: 'scale',
+                                    opacity: 0.5,
+                                    buttons:{
+                                        'confirm':{
+                                            text: 'Yes',
+                                            btnClass: 'btn-green',
+                                            action: function(){
+                                                $.ajax({
+                                                    type:'POST',
+                                                    url:url,
+                                                    data:{'status': status},
+                                                    success:function(success){
+                                                        _this.parent("li").addClass("li_acivated").siblings().removeClass("li_acivated");
+                                                        $("#trade_status_menu").fadeOut().attr("data-status", status);
+                                                        emitTextMessageSocket("status", status);
+                                                        if(success == "ok"){
+                                                            showSuccessMessage("trade_status", "Trade Status Changed !!!");
+                                                        }else{
+                                                            $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:success,type: 'red'});
+                                                        }
+                                                    },
+                                                    error: function(error){
+                                                        showErrorMessage("trade_status", error);
+                                                    }
+                                                });
+                                            }
+                                        },
+                                        cancel:function(){},
+                                    }
+                                });
+                            });
+
+                            $(document).ready(function(){
+                                loadTradeMessages("{% url 'trade_messages' trade.pk %}");
+                                emitTypingSocket("");
+                            });
+
+                            $("#open_video_call, #answer_video_call").magnificPopup({
+                                type: 'inline',
+                                fixedContentPos: false,
+                                fixedBgPos: true,
+                                overflowY: 'auto',
+                                closeBtnInside: true,
+                                preloader: false,
+                                midClick: true,
+                                removalDelay: 300,
+                                mainClass: 'my-mfp-zoom-in'
+                            });
+
+                            function randomString(length) {
+                                var chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                var result = '';
+                                for (var i = length; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
+                                return result;
+                            }
+
+                            function startStreamingCall(){
+                                if (navigator.mediaDevices === undefined) {
+                                    navigator.mediaDevices = {};
+                                }
+                                if (navigator.mediaDevices.getUserMedia === undefined) {
+                                    navigator.mediaDevices.getUserMedia = function(constraints) {
+
+                                        var getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+                                        if (!getUserMedia) {
+                                            return Promise.reject(new Error('getUserMedia is not implemented in this browser'));
+                                        }
+
+                                        return new Promise(function(resolve, reject) {
+                                            getUserMedia.call(navigator, constraints, resolve, reject);
+                                        });
+                                    }
+                                }
+
+                                var caller = document.getElementById("video-call-calling");
+                                navigator.mediaDevices.getUserMedia({video:true, audio:true}).then(function(stream){
+                                    if ("srcObject" in caller) {
+                                        caller.srcObject = stream;
+                                    } else {
+                                        caller.src = window.URL.createObjectURL(stream);
+                                    }
+                                    localStream = stream;
+
+                                    caller.onloadedmetadata = function(e) {
+                                        caller.play();
+                                    };
+                                }).catch(function(error){
+                                    console.log(error);
+                                });
+                            }
+
+                            function stopStreamedVideo(videoElem) {
+                                let stream = videoElem.srcObject;
+                                if (stream != null){
+                                    let tracks = stream.getTracks();
+                                    tracks.forEach(function(track) {
+                                        track.stop();
+                                    });
+                                }
+                                videoElem.srcObject = null;
+                            }
+
+                            function userDataCall(id, stream_send, stream_received){
+                                var data = {
+                                    "call_id":id,
+                                    "caller_id":{% if session_company %}"{{trade.product.company.pk}}"{% elif session_user %}"{{trade.user.pk}}"{% endif %},
+                                    "caller":{% if session_company %}"{{trade.product.company.name}}"{% elif session_user %}"{{trade.user.user_name}}"{% endif %},
+                                    "caller_name":{% if session_company %}"{{trade.product.company.name}}"{% elif session_user %}"{{trade.user.full_name}}"{% endif %},
+                                    "caller_image":{% if session_company %}"{{trade.product.company.get_profile_image}}"{% elif session_user %}"{{trade.user.get_profile_image}}"{% endif %},
+                                    "receiver_id":{% if session_company %}"{{trade.user.pk}}"{% elif session_user %}"{{trade.product.company.pk}}"{% endif %},
+                                    "receiver":{% if session_company %}"{{trade.user.user_name}}"{% elif session_user %}"{{trade.product.company.name}}"{% endif %},
+                                    "receiver_name":{% if session_company %}"{{trade.user.full_name}}"{% elif session_user %}"{{trade.product.company.name}}"{% endif %},
+                                    "receiver_image":{% if session_company %}"{{trade.user.get_profile_image}}"{% elif session_user %}"{{trade.product.company.get_profile_image}}"{% endif %},
+                                    "trade":"{{trade.pk}}",
+                                    "stream":{
+                                        "sender":stream_send,
+                                        "receiver":stream_received
+                                    },
+                                    "date": new Date()
+                                }
+                                return data;
+                            }
+
+                            function emitCalling(){
+                                call_id = randomString(16);
+                                socket.emit("calling", userDataCall(call_id, null, null));
+                            }
+
+                            socket.on("getCall", function(data){
+                                var trade = "{{trade.pk}}";
+                                var session_id = {% if session_user %}"{{session_profile.pk}}"{% elif session_company %}"{{company.pk}}"{% endif %};
+                                var session = {% if session_company %}"{{trade.product.company.name}}"{% elif session_user %}"{{trade.user.user_name}}"{% endif %};
+
+                                if(data.caller_id == session_id && data.caller == session && data.trade == trade){
+                                    console.log("You are calling " + data.receiver);
+                                    call_id = data.call_id;
+                                    startStreamingCall();
+                                    $("#xl-video-calling").show();
+                                    $("#call-out-video").show();
+                                    $("#call-out-image").attr("src","http://127.0.0.1:8000/media/" + data.receiver_image);
+                                    $("#call-out-name").text(data.receiver_name);
+                                    call.play();
+
+                                } else if (data.receiver_id == session_id && data.receiver == session && data.trade == trade){
+                                    console.log(data.caller + " is calling you");
+                                    call_id = data.call_id;
+                                    $("#call-in-video").show();
+                                    $("#call-in-image").attr("src", "http://127.0.0.1:8000/media/" + data.caller_image)
+                                    $("#call-in-name").text(data.caller_name);
+                                    $("#answer_video_call").click();
+                                    ring.play();
+                                }
+                            });
+
+                            $("#open_video_call").click(function(){
+                                emitCalling();
+                            });
+
+                            $(function(){
+
+                                $(".xl-call-decline, .mfp-container, .mfp-close").click(function(){
+                                    if(call_id != null){
+                                        socket.emit("hangup", call_id);
+                                    }
+                                });
+
+                                socket.on("hangupCall", function(data){
+                                    if(call_id == data){
+                                        var caller = document.getElementById("video-call-calling");
+                                        var called = document.getElementById("video-call-called");
+                                        ring.pause();
+                                        call.pause();
+                                        caller.pause();
+                                        called.pause();
+
+                                        localStream = null;
+                                        stopStreamedVideo(caller);
+                                        stopStreamedVideo(called);
+                                        call_id = null;
+
+                                        $("#xl-video-calling, #xl-video-called, #call-in-video, #call-out-video").hide();
+                                        $(".mfp-close").click();
+                                    }
+                                });
+
+                                $("#call-in-accept").click(function(){
+                                    var data = {
+                                        "call_id":call_id,
+                                        "caller_id":{% if session_company %}"{{trade.product.company.pk}}"{% elif session_user %}"{{trade.user.pk}}"{% endif %},
+                                        "caller":{% if session_company %}"{{trade.product.company.name}}"{% elif session_user %}"{{trade.user.user_name}}"{% endif %},
+                                        "receiver_id":{% if session_company %}"{{trade.user.pk}}"{% elif session_user %}"{{trade.product.company.pk}}"{% endif %},
+                                        "receiver":{% if session_company %}"{{trade.user.user_name}}"{% elif session_user %}"{{trade.product.company.name}}"{% endif %},
+                                        "trade":"{{trade.pk}}"
+                                    }
+                                    if (call_id != null){
+                                        socket.emit("pickup", data);
+                                    }
+                                });
+
+                                function draw(v,c,w,h) {
+                                    if(v.paused || v.ended) return false;
+                                    c.drawImage(v,0,0,w,h);
+                                    setTimeout(draw,20,v,c,w,h);
+                                }
+
+                                socket.on("pickupCall", function(data){
+                                    var trade = "{{trade.pk}}";
+                                    var session_id = {% if session_user %}"{{session_profile.pk}}"{% elif session_company %}"{{company.pk}}"{% endif %};
+                                    var session = {% if session_company %}"{{trade.product.company.name}}"{% elif session_user %}"{{trade.user.user_name}}"{% endif %};
+
+                                    if(data.caller_id == session_id && data.caller == session && data.trade == trade){
+                                        ring.pause();
+                                        navigator.mediaDevices.getUserMedia({video:true, audio:true}).then(function(stream){
+                                            var mediaUrl = (window.URL || window.webkitURL).createObjectURL(stream);
+
+                                            var caller = document.getElementById("video-call-calling");
+                                            var called = document.getElementById("video-call-called");
+                                            var canvas = document.getElementById("video-call-canvas");
+                                            var context = canvas.getContext('2d');
+
+                                            draw(caller,context,400,200);
+                                            setInterval(function(){
+                                                socket.emit("streaming", userDataCall(call_id, canvas.toDataURL("video/webm"), null));
+                                            },100)
+
+                                        }).catch(function(error){
+                                           console.log(error);
+                                        });
+
+                                    } else if (data.receiver_id == session_id && data.receiver == session && data.trade == trade){
+                                        call.pause();
+                                        navigator.mediaDevices.getUserMedia({video:true, audio:true}).then(function(stream){
+                                            var mediaUrl = (window.URL || window.webkitURL).createObjectURL(stream);
+
+                                            var caller = document.getElementById("video-call-calling");
+                                            var called = document.getElementById("video-call-called");
+                                            var canvas = document.getElementById("video-call-canvas");
+                                            var context = canvas.getContext('2d');
+
+                                            draw(caller,context,400,200);
+                                            setInterval(function(){
+                                                socket.emit("streaming", userDataCall(call_id, null, canvas.toDataURL("video/webm")));
+                                            }, 100)
+
+                                        }).catch(function(error){
+                                            console.log(error);
+                                        });
+                                    }
+                                });
+
+                                socket.on("startStreaming", function(data){
+                                    var trade = "{{trade.pk}}";
+                                    var session_id = {% if session_user %}"{{session_profile.pk}}"{% elif session_company %}"{{company.pk}}"{% endif %};
+                                    var session = {% if session_company %}"{{trade.product.company.name}}"{% elif session_user %}"{{trade.user.user_name}}"{% endif %};
+
+                                    var caller = document.getElementById("video-call-calling");
+                                    var called = document.getElementById("video-call-called");
+                                    var img = document.getElementById("video-call-img");
+
+                                    if(data.caller_id == session_id && data.caller == session && data.trade == trade){
+                                        $("#xl-video-calling, #xl-video-called").show();
+                                        $("#call-out-video, #call-in-video").hide();
+                                        var stream = data.stream.sender;
+                                        $("#video-call-img").attr("src", stream);
+
+                                    } else if (data.receiver_id == session_id && data.receiver == session && data.trade == trade){
+                                        $("#xl-video-calling, #xl-video-calling, #xl-video-called").show();
+                                        $("#call-out-video, #call-in-video").hide();
+                                        startStreamingCall();
+                                        var stream = data.stream.receiver;
+                                        $("#video-call-img").attr("src", stream);
+                                    }
+                                });
+                            });
+
+                        </script>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="xl-else-section xl-trade-messages xl-trade-sides">
+                {% if session_company %}
+                    <div id="trade_list_wrapper">
+                        <div id="trade_list_loader" class="xl-loader" style="margin-top:60px;">
+                            <img src="{% static 'images/loading.gif' %}" />
+                        </div>
+                    </div>
+                    <script type="text/javascript">
+                        $(document).ready(function(){
+                            $("#trade_list_loader").show();
+                            load_trades_lists("{% url 'products_customers' trade.product.pk trade.pk %}");
+                        });
+                    </script>
+                {% elif session_user %}
+                    <div id="trade_list_wrapper">
+                        <div id="trade_list_loader" class="xl-loader" style="margin-top:60px;">
+                            <img src="{% static 'images/loading.gif' %}" />
+                        </div>
+                    </div>
+                    <script type="text/javascript">
+                        $(document).ready(function(){
+                            $("#trade_list_loader").show();
+                            load_trades_lists("{% url 'company_products' trade.product.company.pk trade.pk %}");
+                        });
+                    </script>
+                {% endif %}
+            </div>
+            <div class="xl-else-section xl-trade-messages xl-trade-sides">
+                {% if session_company %}
+                    <h2>Products List</h2>
+                    <div id="msp_product_wrapper">
+                        <div id="msp_products_loader" class="xl-loader" style="margin-top:60px;">
+                            <img src="{% static 'images/loading.gif' %}" />
+                        </div>
+                    </div>
+                    <script type="text/javascript">
+                        $(document).ready(function(){
+                            $("#msp_products_loader").show();
+                            load_msp_products("{% url 'products_trades' trade.pk %}");
+                        });
+                    </script>
+                {% elif session_user %}
+                    <h2>Companies List</h2>
+                    <div id="msp_product_wrapper">
+                        <div id="msp_products_loader" class="xl-loader" style="margin-top:60px;">
+                            <img src="{% static 'images/loading.gif' %}" />
+                        </div>
+                    </div>
+                    <script type="text/javascript">
+                        $(document).ready(function(){
+                            $("#msp_products_loader").show();
+                            load_msp_products("{% url 'company_trades' trade.pk %}");
+                        });
+                    </script>
+                {% endif %}
+            </div>
+        </section>
+        {% if session_company or session_user %}
+            <section class="zoom-anim-dialog mfp-hide" id="xl-upload_pictures">
+                <div class="xl-add-category" style="width:50%">
+                    <h2>Send Images</h2>
+                    <form id="trade_send_images" enctype="multipart/form-data" method="post" action="{% url 'save_trade_messages_images' trade.pk %}" >
+                        {% csrf_token %}
+                        <span id="click_input_add_files"><i class="icon ion-images"></i> Add Pictures</span>
+                        <input name="images" type="file" multiple id="id_product_images_upload" accept="image/*" />
+                        <div class="images-upload-preview" id="images-upload-preview"></div>
+                        <button type="submit" style="background:lightgreen;">Save</button>
+                        <button type="button" style="background:red;" id="close_upload_others">Cancel</button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="zoom-anim-dialog mfp-hide" id="xl-video-call">
+                <div class="xl-add-category" style="width:70%; padding:0 !important;">
+                    <div class="xl-video-call-trade">
+                        <div class="xl-in-out-call" id="call-in-video">
+                            <div class="xl-call-image">
+                                <img src="{% static 'images/call_in.png' %}" />
+                            </div>
+                            <h3>Incomimg Video Call...</h3>
+                            <div class="xl-call-identity">
+                                <div class="xl-user-call-image">
+                                    <img id="call-in-image" />
+                                </div>
+                                <h2 id="call-in-name"></h3>
+                            </div>
+                            <div class="xl-call-menu">
+                                <ul>
+                                    <li>
+                                        <div id="call-in-accept" class="xl-call-accept">
+                                            <img src="{% static 'images/call_accept.png' %}" />
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div id="call-in-decline" class="xl-call-decline">
+                                            <img src="{% static 'images/call_decline.png' %}" />
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="xl-in-out-call" id="call-out-video">
+                            <div class="xl-call-image">
+                                <img src="{% static 'images/call_out.png' %}" />
+                            </div>
+                            <h3>Outgoing Video Call...</h3>
+                            <div class="xl-call-identity">
+                                <div class="xl-user-call-image">
+                                    <img id="call-out-image" />
+                                </div>
+                                <h2 id="call-out-name"></h3>
+                            </div>
+                            <div class="xl-call-menu">
+                                <ul>
+                                    <li>
+                                        <div id="call-out-decline" class="xl-call-decline">
+                                            <img src="{% static 'images/call_decline.png' %}" />
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div id="xl-video-calling" class="xl-video-calling">
+                            <video id="video-call-calling" />
+                        </div>
+                        <div id="xl-video-called" class="xl-video-called">
+                            <div id="call-in-out-decline" class="xl-call-decline">
+                                <img src="{% static 'images/call_decline.png' %}" />
+                            </div>
+                            <canvas width="500" height="200" id="video-call-canvas"></canvas>
+                            <video style="display:none;" id="video-call-called"></video>
+                            <img id="video-call-img" style="width:300px; height:100px;" />
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="zoom-anim-dialog mfp-hide" id="xl-send-location">
+                <div class="xl-add-category" style="width:50%;">
+                    <h2>Send Location</h2>
+                    <div class="xl-search-location">
+                        <form id="send_trade_location" method="post" action="{% url 'save_trade_message_location' trade.pk %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="longitude" id="longitude" />
+                            <input type="hidden" name="latitude" id="latitude" />
+                            <input type="text" id="search_location_text" name="address" placeholder="Search Location Here" />
+                            <button data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" title="Find Location" type="button" class="location_tip" id="find_location"><i class="icon ion-android-send"></i></button>
+                            <button data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" title="Locate Me" type="button" id="locate_me" class="location_tip" style="margin-right:0;"><i class="icon ion-ios-location"></i></button>
+                        </form>
+                    </div>
+                    <div class="xl-location-map" id="trade_location_map"></div>
+                    <form>
+                        <button type="button" id="send_location" style="background:lightgreen;">Send</button>
+                        <button type="button" style="background:red;" id="close_send_location">Cancel</button>
+                    </form>
+                    <script type="text/javascript">
+
+                        $(".mfp-close").click(function(){
+                            emitTypingSocket("");
+                        });
+
+                        $(".mfp-container").click(function(){
+                            emitTypingSocket("");
+                        });
+
+                        $("#open_upload_others_else").click(function(){
+                            emitTypingSocket("Sending Images...");
+                        });
+
+                        $("#open_send_location").click(function(){
+                            emitTypingSocket("Sending Location...");
+                        });
+
+                        $("#id_product_images_upload").change(function(){
+                            emitTypingSocket("Sending Images...");
+                        });
+
+                        //MULTI IMAGES
+
+                        $("#trade_send_images").submit(function(ev){
+                            ev.preventDefault();
+                            var url = $(this).attr("action");
+                            var images = new FormData($(this)[0]);
+                            $.ajax({
+                                type:'POST',
+                                url:url,
+                                data:images,
+                                processData: false,
+                                async: false,
+                                cache: false,
+                                contentType: false,
+                                success:function(success){
+                                    $("#trade_send_images").get(0).reset();
+                                    $(".mfp-close").click();
+                                    emitTextMessageSocket("images",$("#id_product_images_upload").val());
+                                    if(success == "ok"){
+                                        showSuccessMessage("trade_message", "Images Sent !!!");
+                                    }else{
+                                        $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:success,type: 'red'});
+                                    }
+                                },
+                                error: function(error){
+                                    showErrorMessage("trade_message", error);
+                                }
+                            });
+                        });
+
+                        //FOR GEOLOCATION
+
+                        google.maps.event.addDomListener(window, 'load', InitializePlaces('search_location_text'));
+
+                        $(window).on('load', function () {
+                            getUserCurrentLocation("latitude", "longitude", "search_location_text");
+                        });
+
+                        $("#locate_me").click(function(){
+                            getUserCurrentLocation("longitude", "latitude", "search_location_text");
+                        });
+
+                        $("#send_location").click(function(ev){
+                            ev.preventDefault();
+                            var latitude = parseFloat($("#latitude").val());
+                        	var longitude = parseFloat($("#longitude").val());
+                        	var address = $("#search_location_text").val();
+                            var location_data = new FormData($("#send_trade_location")[0]);
+                            var url = $("#send_trade_location").attr("action");
+                            if(address != ""){
+                                $.ajax({
+                                    type:'POST',
+                                    url:url,
+                                    data:location_data,
+                                    processData: false,
+                                    async: false,
+                                    cache: false,
+                                    contentType: false,
+                                    success:function(success){
+                                        $(".mfp-close").click();
+                                        $("#send_trade_location").get(0).reset();
+                                        emitTextMessageSocket("location", {
+                                            "address": address,
+                                            "latitude":$("#latitude").val(),
+                                            "longitude":$("#longitude").val()
+                                        });
+                                        if(success == "ok"){
+                                            showSuccessMessage("trade_message", "Location Sent !!!");
+                                        }else{
+                                            $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:success,type: 'red'});
+                                        }
+                                    },
+                                    error: function(error){
+                                        showErrorMessage("trade_message", error);
+                                    }
+                                });
+                            }else{
+                                $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:'Address cant be Empty !!!',type: 'red'});
+                            }
+                        });
+
+                        $("#send_trade_location").submit(function(ev){
+                            ev.preventDefault();
+                            $("#find_location").click();
+                        });
+                    </script>
+                </div>
+            </section>
+        {% endif %}
+    </body>
+</html>

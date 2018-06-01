@@ -1,0 +1,49 @@
+{% load staticfiles %}
+{% load humanize %}
+<div class="xl-ms-product">
+    <div class="xl-ms-product-details" style="width:30% !important;">
+        <div class="xl-ms-scroll-pane">
+            <h2>Products</h2>
+            {% if products %}
+                <ul>
+                    {% for product in products %}
+                        <li id="product_{{product.pk}}">
+                            <a class="load_product_interess" data-url="{% url 'managment_msdt_interessers' product.pk %}">
+                                <img src="{{product.image.url}}" alt="{{product.pk}}" />
+                                <span class="prod-name">{{product.product_name}}</span>
+                                <span class="float-side"><span>{{product.get_sum_interess}}</span><i class="icon ion-ios-arrow-right"></i></span>
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="xl-error">NO PRODUCT YET</p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="xl-ms-product-inventory" style="overflow:hidden;">
+        <div id="msp_product_wrapper">
+            <h1>CONTENT WILL BE LOADED AFTER SELECTING A PRODUCT</h1>
+            <div id="msp_products_loader" class="xl-loader" style="margin-top:60px;">
+                <img src="{% static 'images/loading.gif' %}" />
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    h1{font-size: 32px;text-align: center;color: #666;margin-top: calc(50vh - 143px);}
+</style>
+<script type="text/javascript">
+    $(".xl-ms-scroll-pane, #msp_product_wrapper").slimScroll({
+        railVisible: true,
+        size:'7',
+        height:'calc(100vh - 150px)',
+        alwaysVisible: false
+    });
+    $(".load_product_interess").click(function(){
+        var url = $(this).attr("data-url");
+        $(this).parent("li").addClass("activated").siblings().removeClass("activated");
+        $("#trade_list_loader").show();
+        load_msp_products(url);
+    });
+</script>

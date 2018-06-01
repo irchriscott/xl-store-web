@@ -1,0 +1,122 @@
+{% load staticfiles %}
+{% load humanize %}
+<div class="xl-ms-product-inventory" style="overflow: auto;">
+    <h2>Items Cart Of {{cart.saved_date|date:'M. d, Y'}}</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Total</th>
+            </tr>
+            <tbody>
+                {% if items %}
+                    {% for item in items %}
+                        <tr>
+                            <td>{{item.product.product_code}}</td>
+                            <td>{{item.product.product.product_name}}</td>
+                            <td>{{item.product.product.price|intword}} {{currency}}</td>
+                            <td>{{item.quantity}}</td>
+                            <td>{{item.total|intword}} {{currency}}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" style="padding:7px 0;"><p style="color:red; padding-top:11px;">NO PRODUCT IN CART</p></td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </thead>
+    </table>
+    {% if cart.status == 'finished' %}
+        <p style="font-size:19px;"><strong>Total : </strong>{{total|intword}} {{currency}}</p>
+        <div class="xl-item-details">
+            <button id="accept_order" style="margin-right: 5px; background:lightgreen;">ACCEPT ORDER</button>
+            <button id="decline_order" style="background:red;">DECLINE ORDER</button>
+        </div>
+    {% elif cart.status == 'paid' %}
+        <p><strong>Total Net : </strong>{{cart.total_net|intword}} {{currency}}</p>
+        <p><strong>Other Charges : </strong>{{cart.others_chargers|intword}} {{currency}}</p>
+        <p><strong>Paid By : </strong>{{cart.payment_mode}}</p>
+        <p><strong>Deliver : </strong>{{cart.delivery_mode}}</p>
+        <p style="font-size:19px;"><strong>Total Paid : </strong>{{cart.total_paid|intword}} {{currency}}</p>
+        <div class="xl-item-details">
+            <button style="background:#00c6d7;" href="{% url 'add_cart_to_ms' cart.pk %}">PLACE ORDER</button>
+        </div>
+    {% elif cart.status == 'delivered' %}
+        <p><strong>Total Net : </strong>{{cart.total_net|intword}} {{currency}}</p>
+        <p><strong>Other Charges : </strong>{{cart.others_chargers|intword}} {{currency}}</p>
+        <p><strong>Paid By : </strong>{{cart.payment_mode}}</p>
+        <p><strong>Deliver : </strong>{{cart.delivery_mode}}</p>
+        <p style="font-size:19px;"><strong>Total Paid : </strong>{{cart.total_paid|intword}} {{currency}}</p>
+    {% else %}
+        <p style="font-size:19px;"><strong>Total : </strong>{{total|intword}} {{currency}}</p>
+    {% endif %}
+    <script type="text/javascript">
+        var host = 'localhost';
+        var port = '4000';
+        var socket = io(host + ':' + port);
+
+        $("#accept_order").click(function(){
+            $.ajax({
+                type:'GET',
+                url:"{% url 'load_current_cart_json' cart.pk %}",
+                data: {},
+                success: function(response){
+                    var data = JSON.parse(response);
+                    $.ajax({
+                        type:'GET',
+                        url:"{% url 'managment_msec_accept_or_decline_cart' cart.pk %}?status=accepted",
+                        data: {},
+                        success: function(resp){
+                            if(resp == "ok"){
+                                socket.emit("acceptOrder", data);
+                                loadMSProductts("{% url 'managment_msec_customer' cart.market.pk %}");
+                                load_msp_products("{% url 'managment_msec_customer_cart' cart.pk %}");
+                                showSuccessMessage("success", "Order Accepted Successfully !!!");
+                                $(".mfp-close").click();
+                            } else {
+                                showErrorMessage("error", resp);
+                            }
+                        }
+                    });
+                },
+                error: function(error){
+
+                }
+            });
+        });
+
+        $("#decline_order").click(function(){
+            $.ajax({
+                type:'GET',
+                url:"{% url 'load_current_cart_json' cart.pk %}",
+                data: {},
+                success: function(response){
+                    var data = JSON.parse(response);
+                    $.ajax({
+                        type:'GET',
+                        url:"{% url 'managment_msec_accept_or_decline_cart' cart.pk %}?status=suspended",
+                        data: {},
+                        success: function(resp){
+                            if(resp == "ok"){
+                                socket.emit("declineOrder", data);
+                                loadMSProductts("{% url 'managment_msec_customer' cart.market.pk %}");
+                                load_msp_products("{% url 'managment_msec_customer_cart' cart.pk %}");
+                                showSuccessMessage("success", "Order Declined Successfully !!!");
+                                $(".mfp-close").click();
+                            } else {
+                                showErrorMessage("error", resp);
+                            }
+                        }
+                    });
+                },
+                error: function(error){
+
+                }
+            });
+        });
+    </script>
+</div>

@@ -1,0 +1,44 @@
+{% load staticfiles %}
+{% if not_owner == 1 %}
+<h2>Edit Reply</h2>
+    <form id="edit_reply" method="post" enctype="multipart/form-data" replies-loader-url="{% url 'user_load_post_replies' post.pk %}" action="{% url 'user_edit_post_reply' reply.pk %}" >{% csrf_token %}
+        {{edit_post_reply_form}}
+        <button type="submit" style="background:lightgreen;">Save</button>
+        <button type="button" style="background:red;" id="close_edit_reply">Cancel</button>
+    </form>
+    <style type="text/css">
+        label, input[type=file]{display: none !important;}
+    </style>
+    <script type="text/javascript">
+        hideLoadLinkSpinner();
+        $("#edit_reply").submit(function(ev){
+            ev.preventDefault();
+            var formData = new FormData($(this)[0]);
+            console.log(formData);
+            $.ajax({
+                type:'POST',
+                url:$(this).attr('action'),
+                data:formData,
+                processData: false,
+                async: false,
+                cache: false,
+                contentType: false,
+                success:function(success){
+                    $("#edit_reply").get(0).reset();
+                    loadProductComments("{% url 'user_load_post_replies' post.pk %}");
+                    showSuccessMessage("success", "Reply Updated !!!");
+                },
+                error: function(error){
+                    showErrorMessage("error", error);
+                }
+            });
+        })
+    </script>
+{% else %}
+    <p class="xl-error">YOU ARE NOT THE OWNER</p>
+{% endif %}
+<script type="text/javascript">
+    $("#close_edit_reply").click(function(){
+        $("#edit_reply_modal").fadeOut();
+    });
+</script>

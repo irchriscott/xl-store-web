@@ -1,0 +1,197 @@
+{% load staticfiles %}
+{% if session_company or session_user %}
+    {% if not_owner == 1 %}
+    <div class="xl-messages-list">
+        {% for message in messages %}
+            {% if message.sender == 'team' and message.receiver == 'both' %}
+                <div class="xl-team-message">
+                    <div class="xl-message-team">
+                        <p class="message">
+                            {% if message.text_message == 'started' %}
+                            Trade has been Engaged :o
+                            {% elif message.text_message == 'stopped' %}
+                            Trade has been Stopped :\
+                            {% elif message.text_message == 'succeeded' %}
+                            Trade has been Well Done Succeded :)
+                            {% elif message.text_message == 'aborted' %}
+                            Trade has been Aborted :|
+                            {% elif message.text_message == 'failed' %}
+                            Trade has Failed :(
+                            {% endif %}
+                        </p>
+                        <span class="datetime" id="messagetime{{message.pk}}" data-time="{{message.date_time|date:'Y-m-d H:i:s'}}"></span>
+                    </div>
+                </div>
+            {% endif %}
+            {% if session_user %}
+                {% if message.sender == 'user' and message.receiver == 'company' %}
+                    <div class="xl-sent-container">
+                        <div class="xl-message-sent">
+                            <span class="sent-indicator"></span>
+                            <p class="text-message">{{message.text_message}}</p>
+                            {% if message.image_message %}
+                                <div class="message-image">
+                                    <a href="{{message.image_message.url}}" class="message_image_zoom" title="Message Picture">
+                                        <img src="{{message.image_message.url}}" alt="" />
+                                    </a>
+                                </div>
+                            {% elif message.address %}
+                                <p><i class="icon ion-ios-location"></i> {{message.address}}</p>
+                                <div class="message_map_container" data-address="{{message.address}}" data-longitude="{{message.longitude}}" data-latitude="{{message.latitude}}">
+                                    <div class="message_map_wrapper" id="map_wrapper_{{message.pk}}"></div>
+                                </div>
+                                <script type="text/javascript">
+                                    loadMapMessage('map_wrapper_{{message.pk}}','{{message.address}}', '{{message.longitude}}', '{{message.latitude}}');
+                                </script>
+                            {% endif %}
+                            <span class="datetime" id="messagetime{{message.pk}}" data-time="{{message.date_time|date:'Y-m-d H:i:s'}}"></span>
+                        </div>
+                        <div class="sender-image">
+                            <img src="{{message.trade.user.profile_image.url}}" alt="{{message.trade.user.user_name}}" />
+                        </div>
+                    </div>
+                {% elif message.sender == 'company' and message.receiver == 'user' %}
+                    <div class="xl-received-container">
+                        <div class="xl-message-received">
+                            <span class="received-indicator"></span>
+                            <p class="text-message">{{message.text_message}}</p>
+                            {% if message.image_message %}
+                            <div class="message-image">
+                                <a href="{{message.image_message.url}}" class="message_image_zoom" title="Message Picture">
+                                    <img src="{{message.image_message.url}}" alt="" />
+                                </a>
+                            </div>
+                            {% elif message.address %}
+                                <p><i class="icon ion-ios-location"></i> {{message.address}}</p>
+                                <div class="message_map_container" data-address="{{message.address}}" data-longitude="{{message.longitude}}" data-latitude="{{message.latitude}}">
+                                    <div class="message_map_wrapper" id="map_wrapper_{{message.pk}}"></div>
+                                    <span class="map_button" id="direction_{{message.pk}}"><i class="icon ion-map"></i></span>
+                                    <span class="map_button" id="view_{{message.pk}}"><i class="icon ion-link"></i></span>
+                                    <span class="map_button"><a id="load_map_{{message.pk}}" style="color:#FFF; display:block;" href="{% url 'load_geo_map' 'trade' message.pk %}">Load</a></span>
+                                    <span class="location_distance" id="distance_{{message.pk}}"></span>
+                                </div>
+                                <script type="text/javascript">
+                                    $("#load_map_{{message.pk}}").magnificPopup({type:'ajax'});
+                                    loadMapMessage('map_wrapper_{{message.pk}}','{{message.address}}', '{{message.longitude}}', '{{message.latitude}}');
+
+                                    $(document).ready(function(){
+
+                                        $("#view_{{message.pk}}").click(function(){
+                                            var lat = '{{message.latitude}}';
+                                            var long = '{{message.longitude}}';
+                                            window.open('https://www.google.com/maps?q='+lat+','+ long+'', '_blank');
+                                        });
+
+                                        $("#direction_{{message.pk}}").click(function(){
+                                            drawRouteMap('{{message.latitude}}', '{{message.longitude}}', '{{message.address}}', 'map_wrapper_{{message.pk}}', '{{message.pk}}', 'd');
+                                        });
+                                    });
+                                </script>
+                            {% endif %}
+                            <span class="datetime" id="messagetime{{message.pk}}" data-time="{{message.date_time|date:'Y-m-d H:i:s'}}"></span>
+                        </div>
+                        <div class="receiver-image">
+                            <img src="{{message.trade.product.company.profile_image.url}}" alt="{{message.trade.product.company.name_dotted}}" />
+                        </div>
+                    </div>
+                {% endif %}
+            {% elif session_company %}
+                {% if message.sender == 'company' and message.receiver == 'user' %}
+                    <div class="xl-sent-container">
+                        <div class="xl-message-sent">
+                            <span class="sent-indicator"></span>
+                            <p class="text-message">{{message.text_message}}</p>
+                            {% if message.image_message %}
+                            <div class="message-image">
+                                <a href="{{message.image_message.url}}" class="message_image_zoom" title="Message Picture">
+                                    <img src="{{message.image_message.url}}" alt="" />
+                                </a>
+                            </div>
+                            {% elif message.address %}
+                                <p><i class="icon ion-ios-location"></i> {{message.address}}</p>
+                                <div class="message_map_container" data-address="{{message.address}}" data-longitude="{{message.longitude}}" data-latitude="{{message.latitude}}">
+                                    <div class="message_map_wrapper" id="map_wrapper_{{message.pk}}"></div>
+                                </div>
+                                <script type="text/javascript">
+                                    loadMapMessage('map_wrapper_{{message.pk}}','{{message.address}}', '{{message.longitude}}', '{{message.latitude}}');
+                                </script>
+                            {% endif %}
+                            <span class="datetime" id="messagetime{{message.pk}}" data-time="{{message.date_time|date:'Y-m-d H:i:s'}}"></span>
+                        </div>
+                        <div class="sender-image">
+                            <img src="{{message.trade.product.company.profile_image.url}}" alt="{{message.trade.product.company.name_dotted}}" />
+                        </div>
+                    </div>
+                {% elif message.sender == 'user' and message.receiver == 'company' %}
+                    <div class="xl-received-container">
+                        <div class="xl-message-received">
+                            <span class="received-indicator"></span>
+                            <p class="text-message">{{message.text_message}}</p>
+                            {% if message.image_message %}
+                            <div class="message-image">
+                                <a href="{{message.image_message.url}}" class="message_image_zoom" title="Message Picture">
+                                    <img src="{{message.image_message.url}}" alt="" />
+                                </a>
+                            </div>
+                            {% elif message.address %}
+                                <p><i class="icon ion-ios-location"></i> {{message.address}}</p>
+                                <div class="message_map_container" data-address="{{message.address}}" data-longitude="{{message.longitude}}" data-latitude="{{message.latitude}}">
+                                    <div class="message_map_wrapper" id="map_wrapper_{{message.pk}}"></div>
+                                    <span class="map_button" id="direction_{{message.pk}}"><i class="icon ion-map"></i></span>
+                                    <span class="map_button" id="view_{{message.pk}}"><i class="icon ion-link"></i></span>
+                                    <span class="map_button"><a id="load_map_{{message.pk}}" style="color:#FFF; display:block;" href="{% url 'load_trade_message_map' message.pk %}">Load</a></span>
+                                    <span class="location_distance" id="distance_{{message.pk}}"></span>
+                                </div>
+                                <script type="text/javascript">
+                                    $("#load_map_{{message.pk}}").magnificPopup({type:'ajax'});
+                                    loadMapMessage('map_wrapper_{{message.pk}}','{{message.address}}', '{{message.longitude}}', '{{message.latitude}}');
+
+                                    $(document).ready(function(){
+
+                                        $("#view_{{message.pk}}").click(function(){
+                                            var lat = '{{message.latitude}}';
+                                            var long = '{{message.longitude}}';
+                                            window.open('https://www.google.com/maps?q='+lat+','+ long+'', '_blank');
+                                        });
+
+                                        $("#direction_{{message.pk}}").click(function(){
+                                            drawRouteMap('{{message.latitude}}', '{{message.longitude}}', '{{message.address}}', 'map_wrapper_{{message.pk}}', '{{message.pk}}');
+                                        });
+                                    });
+                                </script>
+                            {% endif %}
+                            <span class="datetime" id="messagetime{{message.pk}}" data-time="{{message.date_time|date:'Y-m-d H:i:s'}}"></span>
+                        </div>
+                        <div class="receiver-image">
+                            <img src="{{message.trade.user.profile_image.url}}" alt="{{message.trade.user.user_name}}" />
+                        </div>
+                    </div>
+                {% endif %}
+            {% endif %}
+            <script type="text/javascript">$("#messagetime{{message.pk}}").setTime();</script>
+        {% endfor %}
+        </div>
+    {% else %}
+        <p class="xl-error">NOT ALLOWED TO VISIT THIS PAGE</p>
+    {% endif %}
+{% endif %}
+
+<script type="text/javascript">
+    $('.message_image_zoom').magnificPopup({
+        type: 'image',
+        closeOnContentClick: true,
+        closeBtnInside: false,
+        fixedContentPos: true,
+        mainClass: 'mfp-no-margins mfp-with-zoom',
+        image: {
+            verticalFit: true,
+            titleSrc: function(item) {
+                return item.el.attr('title');
+            }
+        },
+        zoom: {
+            enabled: true,
+            duration: 300
+        }
+    });
+</script>

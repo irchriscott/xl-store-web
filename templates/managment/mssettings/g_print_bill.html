@@ -1,0 +1,48 @@
+{% load staticfiles %}
+{% load humanize %}
+<h3>Always Print Bill</h3>
+<div class="xl-ms-setting">
+    <p>{{text|safe}}</p>
+    <input type="checkbox" id="print-bill" {% if setting.print_bill == True %}checked{% endif %} />
+    {% csrf_token %}
+    <p id="print-value" style="margin-top:10px;">{{setting.print_bill}}</p>
+    <input type="password" id="ms-password-apb" placeholder="Enter MS Password" />
+    <button id="save-print-set" style="margin-right: 10px;">Save</button><button style="background:red;">Cancel</button>
+    <script type="text/javascript">
+        var checkbox = document.querySelector('#print-bill');
+        var init = new Switchery(checkbox);
+        
+        checkbox.onchange = function(){
+            document.getElementById("print-value").innerHTML = capitalize(checkbox.checked);
+        }
+        
+        $("#save-print-set").click(function(e){
+            e.preventDefault();
+            var setting = capitalize(checkbox.checked);
+            var password = $("#ms-password-apb").val();
+            var csrf_token = $("input[name=csrfmiddlewaretoken]").val();
+            var url = "{% url 'managment_msst_apb' %}";
+            $.ajax({
+                type:"POST",
+                url:url,
+                data:{
+                    'setting':setting,
+                    'password':password,
+                    'csrfmiddlewaretoken':csrf_token
+                },
+                success:function(res){
+                    if(res == 'ok'){
+                        $("#trade_list_loader").show();
+                        load_msp_products(url);
+                        $("#bill-set").text(setting)
+                        $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:'Setting Changed Successfully !!!',type: 'green'});
+                    }
+                    else{
+                        load_msp_products(url);
+                        $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:res,type: 'red'});
+                    }
+                }
+            });
+        });
+    </script>
+</div>

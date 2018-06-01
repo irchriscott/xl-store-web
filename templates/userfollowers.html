@@ -1,0 +1,202 @@
+{% load staticfiles %}
+{% include 'css.html' %}
+{% load tz %}
+{% load humanize %}
+    <body>
+        {% include 'header.html' %}
+        <section class="xl-profil-container">
+            {% if user.cover_image %}
+                <div class="xl-cover-container" id="comp_cover_image" style="background-image:url({{user.cover_image.url}});">
+            {% else %}
+                <div class="xl-cover-container" id="comp_cover_image" style="background:gray;">
+            {% endif %}
+            {% if session_user == user.user_name %}
+                <form style="display:none;" id="update_cover_image" enctype="multipart/form-data" method="post" action="{% url 'user_cover_edit' %}">{% csrf_token %}
+                    {{cover_image_form}}
+                </form>
+                <div class="xl-modif-cover" id="modif_company_cover"><img src="{% static 'css/camera.svg' %}" /><span>Edit Cover Picture</span></div>
+            {% endif %}
+                <div class="xl-user-name">
+                    <h2><a href="{% url 'user_profile' user.user_name %}">{{user.full_name}}</a> <span><i class="icon ion-edit"></i></span></h2>
+                </div>
+            </div>
+            <div class="xl-profil-picture">
+                <a href="{{user.profile_image.url}}" id="profile_image_popup" title="Profile Picture" data-company="{{user.full_name}}">
+                    <img id="profile_image" src="{{user.profile_image.url}}" alt="{{user.user_name}}" />
+                </a>
+                <script type="text/javascript">
+                    $('#profile_image_popup').magnificPopup({type: 'image',closeOnContentClick: true,closeBtnInside: false,fixedContentPos: true,mainClass: 'mfp-no-margins mfp-with-zoom',image: {verticalFit: true,titleSrc: function(item) {return item.el.attr('title') + '<small>by '+$('#profile_image_popup').attr('data-company')+'</small>';}},zoom: {enabled: true,duration: 300}});
+                </script>
+                {% if session_user == user.user_name %}
+                    <div class="xl-modif-profil" id="modif_company_profil">
+                        <img src="{% static 'css/camera.svg' %}" /><span>Edit Profil Picture</span>
+                    </div>
+                    <form style="display:none;" id="update_profile_image" enctype="multipart/form-data" method="post" action="{% url 'user_profile_image_edit' %}">{% csrf_token %}
+                        {{profile_image_form}}
+                    </form>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- NAVBAR DOWN -->
+
+        <section class="xl-navbar-down xl-navbar-user" id="xl-navbar-user">
+            <div class="xl-navbar-content" style="width:545px;">
+                <ul>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="menu-list" title="{{user.get_sum_posts}} Posts"><a href="{% url 'user_posts' user.user_name %}">Posts <span>{{user.get_sum_posts}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="menu-list" title="{{user.get_sum_following}} Following"><a href="{% url 'user_following' user.user_name %}">Following <span>{{user.get_sum_following}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="activate menu-list" title="{{user.get_sum_followers}} Followers"><a href="{% url 'user_followers' user.user_name %}">Followers <span>{{user.get_sum_followers}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="menu-list" title="{{user.get_sum_companies}} Companies"><a href="{% url 'user_companies' user.user_name %}">Companies <span>{{user.get_sum_companies}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="menu-list" title="{{user.get_sum_interess}} Intress"><a href="{% url 'user_interess' user.user_name %}">Interests <span>{{user.get_sum_interess}}</span></a></li>
+                </ul>
+            </div>
+            {% if session_user == user.user_name %}
+                <div class="xl-navbar-buttons">
+                    <button id="profile_edit" type="button">Save Change</button>
+                    <button id="cover_edit" type="button">Save Change</button>
+                    <button id="all_edit" type="button">Save Changes</button>
+                </div>
+            {% endif %}
+            {% if session_user %}
+                <div class="xl-navbar-buttons xl-follow">
+                    {% if session_user == user.user_name %}
+                    <!--<button class="follow_ok"><i class="icon ion-person"></i> Session</button>-->
+                    {% elif check_follow %}
+                        <button class="follow_ok"><i class="icon ion-checkmark-round"></i> Follower</button>
+                    {% else %}
+                        <span id="follow_success">
+                            <form id="follow_user_full_now" action="{% url 'user_follow_user' %}" method="post">{% csrf_token %}
+                                <input type="hidden" name="user" value="{{user.pk}}" />
+                                <button class="follow_now"><i class="icon ion-person-add"></i> Follow</button>
+                            </form>
+                        </span>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </section>
+
+        <!-- PRODUCTS AND POSTS -->
+
+        <section class="xl-products xl-user" id="xl-user">
+            <div class="xl-main-section" style="width: calc(45% + (27.5% - 10px));">
+                <div class="xl-followers-users">
+                    <h2>{% if followers.count == 1 %}{{user.get_sum_followers}} Follower{% else %}{{user.get_sum_followers}} Followers{% endif %}</h2>
+                    {% if followers %}
+                        <ul>
+                            {% for follow in followers %}
+                                <li>
+                                    <div class="xl-user-follower">
+                                        <img src="{{follow.follower_user.profile_image.url}}" alt="{{follow.follower_user.user_name}}" />
+                                        <div class="user-about">
+                                            <h3><a href="{% url 'user_posts' follow.follower_user.user_name %}">{{follow.follower_user.full_name}} <span class="username">@{{follow.follower_user.user_name}}</span></a></h3>
+                                            <p class="user-location"><i class="icon ion-ios-location"></i> {{follow.follower_user.town}}, {{follow.follower_user.country.name}}</p>
+                                            <p class="user-data"><span><a href="{% url 'user_followers' follow.follower_user.user_name %}">{{follow.follower_user.get_sum_followers}} Followers</a></span><span><a href="{% url 'user_following' follow.follower_user.user_name %}">{{follow.follower_user.get_sum_following}} Following</a></span><span><a href="{% url 'user_posts' follow.follower_user.user_name %}">{{follow.follower_user.get_sum_posts}} Posts</a></span></p>
+                                        </div>
+                                        <span id="follow_success{{follow.pk}}">
+                                        {% if session_company %}
+
+                                        {% elif session_user %}
+                                        {% if follow.follower_user.pk == session_profile.pk %}
+                                            <button style="background:lightgreen; margin-top:-10px;" type="button"><i class="icon ion-person"></i> Session</button>
+                                            {% elif follow.follower_user.get_followers  %}
+                                                {% for follower in follow.follower_user.get_followers %}
+                                                    {% if follower.follower_user.pk == session_profile.pk %}
+                                                        <button style="background:lightgreen; margin-top:-20px;" type="button"><i class="icon ion-checkmark-round"></i> Follow</button>
+                                                    {% else %}
+                                                        <form id="follow_user{{follow.pk}}" method="post">{% csrf_token %}
+                                                            <input type="hidden" name="following" id="following{{follow.pk}}" value="{{follow.follower_user.pk}}" />
+                                                            <button type="submit"><i class="icon ion-person-add"></i> Follow</button>
+                                                        </form>
+                                                        <script type="text/javascript">
+                                                            $("#follow_user{{follow.pk}}").submit(function(ev){
+                                                                ev.preventDefault();
+                                                                $.ajax({
+                                                                    type:"POST",
+                                                                    url:"/user/user/follow/",
+                                                                    data:{
+                                                                        'user': $("#following{{follow.pk}}").val(),
+                                                                        'csrfmiddlewaretoken':$("input[name=csrfmiddlewaretoken]").val()
+                                                                    },
+                                                                    success:function(success){
+                                                                        showSuccessMessage("follow_user", "User Followed !!!");
+                                                                        $("#follow_success{{follow.pk}}").html('<button style="background:lightgreen;" type="button"><i class="icon ion-checkmark-round"></i> Follow</button>');
+                                                                    },
+                                                                    error: function(error){
+                                                                        showErrorMessage("follow_user", error);
+                                                                    }
+                                                                });
+                                                            });
+                                                        </script>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% else %}
+                                                <form id="follow_user{{follow.pk}}" method="post">{% csrf_token %}
+                                                    <input type="hidden" name="following" id="following{{follow.pk}}" value="{{follow.follower_user.pk}}" />
+                                                    <button type="submit"><i class="icon ion-person-add"></i> Follow</button>
+                                                </form>
+                                                <script type="text/javascript">
+                                                    $("#follow_user{{follow.pk}}").submit(function(ev){
+                                                        ev.preventDefault();
+                                                        $.ajax({
+                                                            type:"POST",
+                                                            url:"/user/user/follow/",
+                                                            data:{
+                                                                'user': $("#following{{follow.pk}}").val(),
+                                                                'csrfmiddlewaretoken':$("input[name=csrfmiddlewaretoken]").val()
+                                                            },
+                                                            success:function(success){
+                                                                showSuccessMessage("follow_user", "User Followed !!!");
+                                                                $("#follow_success{{follow.pk}}").html('<button style="background:lightgreen;" type="button"><i class="icon ion-checkmark-round"></i> Follow</button>');
+                                                            },
+                                                            error: function(error){
+                                                                showErrorMessage("follow_user", error);
+                                                            }
+                                                        });
+                                                    });
+                                                </script>
+                                            {% endif %}
+                                        {% else %}
+                                            <button class="login_first" type="submit" style="margin-top:0;"><i class="icon ion-person-add"></i> Follow</button>
+                                        {% endif %}
+                                        </span>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="xl-error">NO FOLLOWER YET</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div>
+                <div class="xl-else-section" style="display: none;">
+                    <div class="xl-store-about">
+                        <h3>About {{user.user_name}}</h3>
+                        <p><strong>Name :</strong> {{user.full_name}}</p>
+                        <p><strong>Gender :</strong> {{user.gender}}</p>
+                        <p><strong>State :</strong> {{user.country.name}}</p>
+                        <p><strong>Town :</strong> {{user.town}}</p>
+                        <p><strong>Tel. Number :</strong> {{user.phone_number}}</p>
+                        <p><strong>E-mail :</strong> <a href="mailto:{{user.email}}">{{user.email}}</a></p>
+                        <p><strong>Address :</strong>{{user.address}}</p>
+                        <p><strong>Biography :</strong>{{user.biography}}</p>
+                        {% if session_user == user.user_name %}
+                            <button type="button" style="margin-right:10px;" href="{% url 'user_profile_edit' %}" id="open_edit_profile">Edit</button>
+                            <button type="button" href="{% url 'add_address' %}" id="open_add_address">ADDRESS</button>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="xl-else-section">
+                    {% if session_user %}
+                        {% include 'includes/user_follow.html' %}
+                    {% elif session_company %}
+                        {% include 'includes/notification_full.html' %}
+                    {% else %}
+                    <p class="xl-error">LOGIN TO GET CONTENT HERE</p>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </body>
+</html>

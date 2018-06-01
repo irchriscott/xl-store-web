@@ -1,0 +1,249 @@
+{% load staticfiles %}
+{% load humanize %}
+<div class="xl-ms-product">
+    <div class="xl-ms-product-details">
+        <h2>{{product.product.product_name}}</h2>
+        <div class="product_image">
+            <img src="{{product.product.image.url}}" />
+        </div>
+        <span class="xl-ms-price"><i class="icon ion-ios-pricetags"></i> {{product.product.price|intword}} {{setting.currency}}</span>
+        <p><strong>Category : </strong> {{category.name}}</p>
+        <p><strong>Date : </strong> <span id="product_date" data-time="{{product.product.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+        <button type="button" style="background:#00c6d7;" id="open_edit_msp_product" href="{% url 'managment_msp_single_edit' product.pk month year %}">Edit Product</button>
+        <button type="button" style="background:#999;" id="open_update_msp_product" href="#update_msp_product">Update Product</button>
+        <span class="xl-product-code-gen" style="margin-right: 10px;"><a href="#product_qr_code_gen" id="open_qr_code_gen">QR CODE</a></span><span class="xl-product-code-gen"><a href="#product_bar_code_gen" id="open_bar_code_gen">BAR CODE</a></span>
+    </div>
+    <div class="xl-ms-product-inventory">
+        <h2>Inventory</h2>
+        <div class="xl-date-select">
+            <select id="product_invent_date_select">
+                {% for date in dates %}
+                    <option value="{% url 'managment_msp_single' product.pk date.month date.year %}" {% if date.year == year and date.month == month %}selected{% endif %}>{{date.value}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Quantity</th>
+                    <th>Item Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <thead>
+                <tr>
+                    <th style="padding:10px;" colspan="4">1. PURCHASES</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if product_purchases %}
+                    {% for purchase in product_purchases %}
+                        <tr>
+                            <td>{{purchase.entry_date|date:"M. d, Y"}}</td>
+                            <td>{{purchase.quantity_added}}</td>
+                            <td>{{purchase.item_price|intcomma}} {{setting.currency}}</td>
+                            <td>{{purchase.get_total_entry|intcomma}} {{setting.currency}}</td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+            <thead>
+                <tr style="border-top:2px solid #333;">
+                    <th style="padding: 10px;" colspan="4">2. SALES</th>
+                </tr>
+            </thead>
+            <tbody class="xl-ms-sales-list">
+                {% if product_sales %}
+                    {% for sale in product_sales %}
+                        <tr>
+                            {% if month != 0 %}
+                                <td>{{sale.saved_date}}</td>
+                            {% else %}
+                                <td>{{sale.saved_date|date:"F, Y"}}</td>
+                            {% endif %}
+                            <td>{{sale.total_quantity}}</td>
+                            <td>{{sale.item_price|intcomma}} {{setting.currency}}</td>
+                            <td>{{sale.total_totals|intcomma}} {{setting.currency}}</td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="2">Stock Met</th>
+                    <td colspan="2"><span>{{stock_met}} Items</span> for <span>{{total_stock_met|intcomma}} {{setting.currency}}</span></td>
+                </tr>
+                <tr>
+                    <th colspan="2">Stock Purchased</th>
+                    <td colspan="2"><span>{{stock_month}} Items</span> for <span>{{total_stock_month|intcomma}} {{setting.currency}}</span></td>
+                </tr>
+                <tr style="border-bottom:2px solid #333">
+                    <th colspan="2">Total Stock</th>
+                    <td colspan="2"><span>{{stock_total}} Items</span> for <span>{{total_stock_total|intcomma}} {{setting.currency}}</span></td>
+                </tr>
+                <tr>
+                    <th colspan="2">Total Purchased</th>
+                    <td colspan="2"><span>{{purchase_quantity}} Items</span> for <span>{{purchase_total|intcomma}} {{setting.currency}}</span></td>
+                </tr>
+                <tr>
+                    <th colspan="2">Total Sold</th>
+                    <td colspan="2"><span>{{sale_quantity}} Items</span> for <span>{{sale_total|intcomma}} {{setting.currency}}</span></td>
+                </tr>
+                <tr>
+                    <th colspan="2">Current Stock</th>
+                    <td colspan="2"><span>{{current_stock}} Items</span> for <span>{{total_stock|intcomma}} {{setting.currency}}</span></td>
+                </tr>
+            </tfoot>
+        </table>
+        <div class="xl-ms-totals" style="text-align:center; margin-bottom:30px;">
+            <button id="see_product_charts" href="{% url 'managment_msp_single_charts' product.pk month year %}">See Sales In Charts</button>
+        </div>
+    </div>
+</div>
+
+
+<div class="xl-add-product zoom-anim-dialog mfp-hide" id="edit_msp_product">
+    <h2>Edit Product</h2>
+    <form id="update_msp_product_form" action="{% url 'edit_single_product' product.product.pk %}" method="POST">
+        {% csrf_token %}
+        {{edit_product}}
+        <button type="submit" style="background:lightgreen;">Save</button>
+        <button type="button" style="background:red;" id="close_edit_msp_product">Cancel</button>
+    </form>
+    <script type="text/javascript">
+        CKEDITOR.replace('id_description_edit');
+    </script>
+</div>
+
+
+<div class="xl-ms-add-product-modal zoom-anim-dialog mfp-hide" id="update_msp_product">
+    <h2>Enter Product Details</h2>
+    <br/>
+    <form action="{% url 'managment_products_update' product.pk %}" id="update_product_msp" method="POST">
+        <div class='xl-ms-input-add'>
+            {% csrf_token %}
+            <input type="hidden" name="product" value="{{product.pk}}" />
+            <label>Enter Product Quantity To Add :</label>
+            <input type="number" min="1" id="quantity" placeholder="Enter Quantity To Add" name="quantity" required="required" />
+            <label>Enter Purchased Item Price :</label>
+            <input type="number" min="1" id="item_price" placeholder="Enter Item Price" name="item_price" required="required" />
+            <button style="background:lightgreen;" id="submit_update_msp" type="submit">Update</button>
+            <button style="background:red;" type="button" id="close_update_msp_product">Cancel</button>
+        </div>
+    </form>
+</div>
+
+<div class="xl-ms-add-product-modal zoom-anim-dialog mfp-hide" id="product_qr_code_gen">
+    <h2>QR code for {{product.product.product_name}}</h2>
+    <div class='xl-ms-input-add'>
+        <div id="qr_code_container" style="width:300px; height:280px; margin-left:70px; margin-top:25px;"></div>
+        <button style="background:lightgreen;" id="print_qr_code">Print</button>
+        <button style="background:red;" type="button" id="close_product_qr_code_gen">Cancel</button>
+    </div>
+</div>
+
+<div class="xl-ms-add-product-modal zoom-anim-dialog mfp-hide" id="product_bar_code_gen">
+    <h2>Bar code for {{product.product.product_name}}</h2>
+    <div class='xl-ms-input-add'>
+        <svg id="bar_code_container" style="width:100% !important; height:180px; margin:auto; margin-top:25px;"></svg>
+        <br/>
+        <button style="background:lightgreen;" id="print_bar_code">Print</button>
+        <button style="background:red;" type="button" id="close_product_bar_code_gen">Cancel</button>
+    </div>
+</div>
+
+<script type="text/javascript" src="{% static 'js/qrcode.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/JsBarcode.all.min.js' %}"></script>
+<script type="text/javascript">
+
+    var product_details = {
+        "id":"{{product.product.pk}}",
+        "ms_id":"{{product.pk}}",
+        "company":"{{product.product.company.name_dotted}}",
+        "name":"{{product.product.product_name}}",
+        "phone_number":"{{product.product.company.phone_number}}",
+        "company_name":"{{product.product.company.name}}",
+        "url":"",
+        "code":"{{product.product_code}}"
+    }
+
+    var qrcode = new QRCode(document.getElementById("qr_code_container"), {
+    	width : 250,
+    	height : 250
+    });
+
+    qrcode.makeCode(JSON.stringify(product_details));
+    JsBarcode("#bar_code_container", "{{product.product_code}}");
+
+    $('#open_edit_msp_product').magnificPopup({type:'ajax'});
+
+    $('#open_update_msp_product, #open_qr_code_gen, #open_bar_code_gen').magnificPopup({
+        type: 'inline',
+        fixedContentPos: false,
+        fixedBgPos: true,
+        overflowY: 'auto',
+        closeBtnInside: true,
+        preloader: false,
+        midClick: true,
+        removalDelay: 300,
+        mainClass: 'my-mfp-zoom-in'
+    });
+
+    $("#close_update_msp_product, #close_product_qr_code_gen, #close_product_bar_code_gen").click(function(){
+        $(".mfp-close").click();
+    });
+
+    $("#submit_update_msp").click(function(ev){
+        ev.preventDefault();
+        var formData = new FormData($(this)[0]);
+        var csrftoken = getCookie('csrftoken');
+        var sum_stock = parseInt($("#quantity").val()) + parseInt("{{product.stock}}")
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+
+        if($("#quantity").val() != "" || $("#quantity").val() != 0){
+
+            $.ajax({
+                type:'POST',
+                url:"{% url 'managment_products_update' product.pk %}",
+                data:{
+                    'csrfmiddlewaretoken':csrftoken,
+                    'product': '{{product.pk}}',
+                    'quantity':$("#quantity").val(),
+                    'stock':'{{product.stock}}',
+                    'item_price':$("#item_price").val(),
+                    'sum_stock':sum_stock
+                },
+                success:function(success){
+                    $(".mfp-close").click();
+                    loadMSProductts("{% url 'managment_msp_single' product.pk month year %}");
+                    $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:success,type: 'green'});
+                },
+                error: function(error){
+                    showErrorMessage("error", error);
+                }
+            });
+        }else{
+            $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:'Quantity cannot be empty or 0 !!!',type: 'red'});
+        }
+    });
+
+    $("#product_invent_date_select").change(function(){
+        loadMSProductts($(this).val());
+    });
+
+    $(".xl-ms-product-inventory").slimScroll({
+        railVisible: true,
+        size:'7',
+        height:'calc(100vh - 150px)',
+        alwaysVisible: false
+    });
+    $("#see_product_charts").magnificPopup({type: 'ajax'});
+    $("#product_date").setTime();
+</script>

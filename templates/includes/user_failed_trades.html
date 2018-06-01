@@ -1,0 +1,62 @@
+{% load staticfiles %}
+{% load humanize %}
+{% if session_user %}
+    <div class="xl-trades-list-else" id="company_trades">
+        {% if failed_trades == True %}
+            {% if trade_companies %}
+                <ul>
+                    {% for company in trade_companies %}
+                        <li id="failedcomp_{{company.product__company}}">
+                            <a class="company_trade_companies_failed" data-url="{% url 'products_failed_trades' company.product__company %}">
+                                {% for comp in companies %}
+                                    {% if comp.pk == company.product__company %}
+                                        {% if comp.profile_image %}
+                                            <img src="{{comp.profile_image.url}}" />
+                                        {% else %}
+                                            <img src="{% static 'images/default_company.jpg' %}" />
+                                        {% endif %}
+                                        <span class="prod-name">{{comp.name}}</span>
+                                    {% endif %}
+                                {% endfor %}
+                                <span class="float-side"><span>{{company.products}}</span><i class="icon ion-ios-arrow-right"></i></span>
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="xl-error">NO FAILED OR STOPPED TRADE</p>
+            {% endif %}
+        {% elif failed_products == True %}
+            <span class="xl-go-back" id="go_back_failed">GO BACK</span>
+            {% if products %}
+                <ul>
+                    {% for product in products %}
+                        <li id="failed_trade_{{product.pk}}">
+                            <a href="{% url 'user_single_trade' product.pk %}">
+                                <img src="{{product.product.image.url}}" />
+                                <span class="prod-name">{{product.product.product_name}}</span>
+                                <span class="float-side"><span>{{product.get_sum_trade_messages}}</span><i class="icon ion-ios-arrow-right"></i></span>
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="xl-error">NO FAILED OR STOPPED TRADE</p>
+            {% endif %}
+        {% endif %}
+    </div>
+{% else %}
+    <p class="xl-error">YOU ARE NOT ALLOWED TO VISITE THIS PAGE</p>
+{% endif %}
+<script type="text/javascript">
+    $(".company_trade_companies_failed").click(function(){
+        var url = $(this).attr("data-url");
+        $(this).parent("li").addClass("activated").siblings().removeClass("activated");
+        $("#trade_list_loader").show();
+        load_msp_products(url);
+    });
+    $("#go_back_failed").click(function(){
+        $("#msp_products_loader").show();
+        load_msp_products("{% url 'user_failed_trades' %}");
+    });
+</script>

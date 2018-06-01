@@ -1,0 +1,100 @@
+{% load humanize %}
+<div class="xl-message-map" style="width:50%;">
+    <h4 style="margin-top:15px; text-align:center; font-size:22px; font-weight:normal;">Shopping Cart Items No {{cart.pk}}</h4>
+    <div class="xl-ms-product-list" style="margin-top:15px; margin-bottom: 10px;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if items %}
+                    {% for item in items %}
+                        <tr>
+                            <td>{{item.product.product_code}}</td>
+                            <td>{{item.product.product.product_name}}</td>
+                            <td>{{item.product.product.price|intword}} {{currency}}</td>
+                            <td>{{item.quantity}}</td>
+                            <td>{{item.total|intword}} {{currency}}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" style="padding:7px 0;"><p style="color:red; padding-top:9px; padding-bottom: 3px;">NO PRODUCT IN CART</p></td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <p style="font-size:20px; margin-top:10px; margin-bottom: 10px; color:#333; text-align:left;"><strong>Total : </strong>{{total|intword}} {{currency}}</p>
+        <div class="xl-item-details" style="margin-bottom:5px;">
+            <button style="margin-right: 5px; background:lightgreen;" id="accept_order">ACCEPT ORDER</button>
+            <button style="background:red;" id="decline_order">DECLINE ORDER</button>
+        </div>
+    </div>
+    <script type="text/javascript">
+        var host = 'localhost';
+        var port = '4000';
+        var socket = io(host + ':' + port);
+
+        $("#accept_order").click(function(){
+            $.ajax({
+                type:'GET',
+                url:"{% url 'load_current_cart_json' cart.pk %}",
+                data: {},
+                success: function(response){
+                    var data = JSON.parse(response);
+                    $.ajax({
+                        type:'GET',
+                        url:"{% url 'managment_msec_accept_or_decline_cart' cart.pk %}?status=accepted",
+                        data: {},
+                        success: function(resp){
+                            if(resp == "ok"){
+                                socket.emit("acceptOrder", data);
+                                showSuccessMessage("success", "Order Accepted Successfully !!!");
+                                $(".mfp-close").click();
+                            } else {
+                                showErrorMessage("error", resp);
+                            }
+                        }
+                    });
+                },
+                error: function(error){
+
+                }
+            });
+        });
+
+        $("#decline_order").click(function(){
+            $.ajax({
+                type:'GET',
+                url:"{% url 'load_current_cart_json' cart.pk %}",
+                data: {},
+                success: function(response){
+                    var data = JSON.parse(response);
+                    $.ajax({
+                        type:'GET',
+                        url:"{% url 'managment_msec_accept_or_decline_cart' cart.pk %}?status=suspended",
+                        data: {},
+                        success: function(resp){
+                            if(resp == "ok"){
+                                socket.emit("declineOrder", data);
+                                showSuccessMessage("success", "Order Declined Successfully !!!");
+                                $(".mfp-close").click();
+                            } else {
+                                showErrorMessage("error", resp);
+                            }
+                        }
+                    });
+                },
+                error: function(error){
+
+                }
+            });
+        });
+    </script>
+</div>

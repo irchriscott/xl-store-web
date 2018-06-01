@@ -1,0 +1,32 @@
+{% load staticfiles %}
+{% load humanize %}
+{% if customers %}
+<ul style="border-top:1px solid #DDD">
+    {% for customer in customers %}
+         <li>
+             <a data-url="{% url 'managment_msec_customer' customer.pk %}" class="load_msp_product">
+                {% if customer.user.profile_image %}
+                    <img src="{{customer.user.profile_image.url}}" />
+                {% else %}
+                    <img src="{% static 'images/default_user.jpg' %}" />
+                {% endif %}
+                <span>{{customer.user.full_name}}</span>
+                 <span class="xl-ms-arrow">
+                     <span style="padding:0 4px; background:#DDD; margin-right:5px; border-radius:3px;">{{customer.get_sum_sum_sales}}</span>
+                     <i class="icon ion-ios-arrow-right"></i>
+                 </span>
+             </a>
+         </li>
+    {% endfor %}
+</ul>
+{% else %}
+    <p class="xl-error">NO REGISTERED CUSTOMER</p>
+{% endif %}
+
+<script type="text/javascript">
+    $(".load_msp_product").click(function(ev){
+        $("#msp_products_loader").show();
+        loadMSProductts($(this).attr('data-url'));
+        $(this).parent('li').addClass('activated').siblings().removeClass('activated');
+    });
+</script>

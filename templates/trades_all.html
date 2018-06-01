@@ -1,0 +1,170 @@
+{% load staticfiles %}
+{% include 'css.html' %}
+{% load tz %}
+{% load humanize %}
+
+<body>
+    {% include 'header.html' %}
+
+    <section class="xl-navbar-down">
+        <div class="xl-navbar-content" style="margin:auto !important; width:425px;">
+            <ul>
+                <li><a href="{% url 'home' %}">Home</a></li>
+                <li class="activate"><a href="{% url 'products' %}">Products</a></li>
+                <li><a href="{% url 'posts' %}">Posts</a></li>
+                <li><a href="{% url 'advertisments' %}">Advertisments</a></li>
+            </ul>
+        </div>
+    </section>
+
+        <!-- PRODUCTS AND POSTS -->
+
+        <section class="xl-products">
+            <div class="xl-main-section">
+                <h2 class="xl-for-trade">Current Trades</h2>
+                {% if session_company %}
+                    <div class="xl-trades-list">
+                        {% if trades_list %}
+                            <ul>
+                                {% for trade in trades_list %}
+                                    <li id="xl-trade-description{{trade.pk}}">
+                                        <div class="xl-trade-description">
+                                            <a href="{% url 'company_single_trade' trade.pk %}">
+                                                <div class="product-image">
+                                                    <img src="{{trade.product.image.url}}" alt="{{trade.product.product_name}}" />
+                                                </div>
+                                            </a>
+                                            <div class="product-description">
+                                                <div class="trade-details">
+                                                    <h3 class="product"><a href="{% url 'company_single_trade' trade.pk %}">{{trade.product.product_name}}</a></h3>
+                                                    <span class="price"><i class="icon ion-ios-pricetags"></i> {{trade.product.price|intword}} {{trade.product.currency}}</span>
+                                                    <p class="company"><a href="{% url 'user_profile' trade.user.user_name %}"><strong>User :</strong> {{trade.user.full_name}}</a></p>
+                                                    <p cdivlass="dates">
+                                                        Start : <span id="startdate{{trade.pk}}" data-time="{{trade.started_date|date:'Y-m-d H:i:s'}}"></span>
+                                                        {% if trade.status in end_status %}
+                                                            End : <span id="enddate{{trade.pk}}" data-time="{{trade.end_date|date:'Y-m-d H:i:s'}}"></span>
+                                                        {% endif %}
+                                                        .
+                                                        Status : {{trade.status}}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <script type="text/javascript">
+                                        $(document).ready(function(){sizeCategory('#xl-trade-description{{trade.pk}}')});
+                                        $("#startdate{{trade.pk}}").setTime();
+                                        $("#enddate{{trade.pk}}").setTime();
+                                    </script>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="xl-error">NO CURRENT TRADE</p>
+                        {% endif %}
+                    </div>
+                {% elif session_user %}
+                    <div class="xl-trades-list">
+                        {% if trades_list %}
+                            <ul>
+                                {% for trade in trades_list %}
+                                    <li id="xl-trade-description{{trade.pk}}">
+                                        <a href="{% url 'user_single_trade' trade.pk %}">
+                                            <div class="xl-trade-description">
+                                                <div class="product-image">
+                                                    <img src="{{trade.product.image.url}}" alt="{{trade.product.product_name}}" />
+                                                </div>
+                                            </a>
+                                            <div class="product-description">
+                                                <div class="trade-details">
+                                                    <h3 class="product"><a href="{% url 'user_single_trade' trade.pk %}">{{trade.product.product_name}}</a></h3>
+                                                    <span class="price"><i class="icon ion-ios-pricetags"></i> {{trade.product.price|intword}} {{trade.product.currency}}</span>
+                                                    <p class="company"><a href="{% url 'comp_profile_2' trade.product.company.name_dotted %}"><strong>Company :</strong> {{trade.product.company.name}}</a></p>
+                                                    <p cdivlass="dates">
+                                                        Start : <span id="startdate{{trade.pk}}" data-time="{{trade.started_date|date:'Y-m-d H:i:s'}}"></span>
+                                                        {% if trade.status in end_status %}
+                                                            End : <span id="enddate{{trade.pk}}" data-time="{{trade.end_date|date:'Y-m-d H:i:s'}}"></span>
+                                                        {% endif %}
+                                                        .
+                                                        Status : {{trade.status}}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <script type="text/javascript">
+                                        $(document).ready(function(){sizeCategory('#xl-trade-description{{trade.pk}}')});
+                                        $("#startdate{{trade.pk}}").setTime();
+                                        $("#enddate{{trade.pk}}").setTime();
+                                    </script>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="xl-error">NO CURRENT TRADE</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="xl-else-section xl-trade-messages" style="height:auto !important;">
+                {% if session_company %}
+                    <h3>Succeeded Trades</h3>
+                    <div id="msp_product_wrapper">
+                        <div id="msp_products_loader" class="xl-loader" style="margin-top:60px;">
+                            <img src="{% static 'images/loading.gif' %}" />
+                        </div>
+                    </div>
+                    <script type="text/javascript">
+                        $(document).ready(function(){
+                            $("#msp_products_loader").show();
+                            load_msp_products("{% url 'company_succeeded_trades' %}");
+                        });
+                    </script>
+                {% elif session_user %}
+                    <h3>Succeeded Trades</h3>
+                    <div id="trade_list_wrapper">
+                        <div id="trade_list_loader" class="xl-loader" style="margin-top:60px;">
+                            <img src="{% static 'images/loading.gif' %}" />
+                        </div>
+                    </div>
+                    <script type="text/javascript">
+                        $(document).ready(function(){
+                            $("#trade_list_loader").show();
+                            load_trades_lists("{% url 'user_succeeded_trades' %}");
+                        });
+                    </script>
+                {% else %}
+                {% endif %}
+            </div>
+            <div class="xl-else-section xl-trade-messages" style="height:auto !important;">
+                {% if session_company %}
+                    <h3>Failed & Stopped Trades</h3>
+                    <div id="trade_list_wrapper">
+                        <div id="trade_list_loader" class="xl-loader" style="margin-top:60px;">
+                            <img src="{% static 'images/loading.gif' %}" />
+                        </div>
+                    </div>
+                    <script type="text/javascript">
+                        $(document).ready(function(){
+                            $("#trade_list_loader").show();
+                            load_trades_lists("{% url 'company_failed_trades' %}");
+                        });
+                    </script>
+                {% elif session_user %}
+                    <h3>Failed & Stopped Trades</h3>
+                    <div id="msp_product_wrapper">
+                        <div id="msp_products_loader" class="xl-loader" style="margin-top:60px;">
+                            <img src="{% static 'images/loading.gif' %}" />
+                        </div>
+                    </div>
+                    <script type="text/javascript">
+                        $(document).ready(function(){
+                            $("#msp_products_loader").show();
+                            load_msp_products("{% url 'user_failed_trades' %}");
+                        });
+                    </script>
+                {% else %}
+                {% endif %}
+            </div>
+        </section>
+    </body>
+</html>

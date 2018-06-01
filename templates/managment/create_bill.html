@@ -1,0 +1,96 @@
+<section id="xl-ms-add-user-receipt">
+    <div class="xl-ms-add-user-receipt">
+        <h2>Add Receipt Owner</h2>
+        <div class="search-user">
+            <input type="text" id="search_user_key" placeholder="Search User" />
+            {% csrf_token %}
+            <div class="search-user-result" id="search-user-result"></div>
+            <script type="text/javascript">
+                $("#search_user_key").keyup(function(){
+                    if($(this).val() != ""){
+                        $("#search-user-result").show();
+                        $.ajax({
+                            type:"POST",
+                            url:"{% url 'managment_search_user' %}",
+                            data:{
+                                'search_user_key':$(this).val(),
+                                'csrfmiddlewaretoken':$("input[name=csrfmiddlewaretoken]").val()
+                            },
+                            success:function(success){
+                                $("#search-user-result").html(success);
+                            }
+                        });
+                    }else{
+                        $("#search-user-result").hide();
+                    }
+                });
+            </script>
+        </div>
+        <span class="xl-ms-or">OR</span>
+        <h2>Enter Owner Details</h2>
+        <div class="add-user-form">
+            <input type="hidden" id="user_bill" />
+            <input type="text" id="user_fullname" placeholder="Enter User Full Name" required />
+            <input type="email" id="user_email" placeholder="Enter User Email" />
+            {% csrf_token %}
+        </div>
+        <button style="background:lightgreen;" id="create_bill_now" type="submit">Submit</button>
+        <button style="background:red;" id="close-add-receipt" type="button">Cancel</button>
+    </div>
+    <script type="text/javascript">
+        $("#close-add-receipt").click(function(){
+            $(".mfp-close").click();
+        });
+        $("#create_bill_now").click(function(){
+            var user_id = $("#user_bill").val();
+            var user_name = $("#user_fullname").val();
+            var user_email = $("#user_email").val();
+            var csrf_token = $("input[name=csrfmiddlewaretoken]").val()
+
+            if(user_id != ""){
+                $.ajax({
+                    type:"POST",
+                    url:"{% url 'managment_create_bill' %}",
+                    data:{
+                        'user_id':user_id,
+                        'bill':"{{next_billID}}",
+                        'csrfmiddlewaretoken':csrf_token
+                    },
+                    success:function(success){
+                        loadMSCurrentBill("{% url 'managment_load_bill' %}");
+                        $(".mfp-close").click();
+                        loadMSCurrentBill("{% url 'managment_load_bill' %}");
+                        showSuccessMessage("success", "Bill Created !!!");
+                    },
+                    error: function(error){
+                        showErrorMessage("error", error);
+                    }
+                });
+            }else{
+                if(user_name !=""){
+                    $.ajax({
+                        type:"POST",
+                        url:"{% url 'managment_create_bill' %}",
+                        data:{
+                            'name':user_name,
+                            'email':user_email,
+                            'bill':"{{next_billID}}",
+                            'csrfmiddlewaretoken':csrf_token
+                        },
+                        success:function(success){
+                            loadMSCurrentBill("{% url 'managment_load_bill' %}");
+                            $(".mfp-close").click();
+                            loadMSCurrentBill("{% url 'managment_load_bill' %}");
+                            showSuccessMessage("success", "Bill Created !!!");
+                        },
+                        error: function(error){
+                            showErrorMessage("error", error);
+                        }
+                    });
+                }else{
+                    $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:'Select a User or Insert a User !!!',type: 'red'});
+                }
+            }
+        });
+    </script>
+</section>

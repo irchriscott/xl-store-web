@@ -1,0 +1,226 @@
+{% load humanize %}
+<div class="xl-market-header">
+    <h3>{{company.name}} Market</h3>
+    <div class="xl-market-cart" style="margin-top:-24px;">
+        <span id="load_shopping_data" data-url="{% url 'load_market_products' market.key shopping_cart.pk %}?last_option=continue" style="font-size: 17px;padding: 8px 15px;border: 1px solid #00c6d7;border-radius: 4px;">Continue Shopping</span>
+    </div>
+</div>
+<h4 style="margin-top:15px; text-align:center; font-size:22px; font-weight:normal;">Current Shopping Cart Items</h4>
+<div class="xl-ms-product-list" style="margin-top:15px; margin-bottom: 10px;">
+    <table>
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Total</th>
+                <th>Options</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if items %}
+                {% for item in items %}
+                    <tr>
+                        <td>{{item.product.product_code}}</td>
+                        <td>{{item.product.product.product_name}}</td>
+                        <td>{{item.product.product.price|intword}} {{currency}}</td>
+                        <td>{{item.quantity}}</td>
+                        <td>{{item.total|intword}} {{currency}}</td>
+                        <td><span class="xl-item-cart-opt" id="open_edit_item_cart_{{item.pk}}" title="Edit"><i class="icon ion-edit"></i></span><span class="xl-item-cart-opt remove_item_to_cart" title="Remove" data-url="{% url 'remove_item_to_shopping_cart' item.pk %}" data-item="{{item.pk}}"><i class="icon ion-close"></span></td>
+                    </tr>
+                    <section class="xl-search-modal" style="left:0;" id="update_item_cart_{{item.pk}}">
+                        <div class="xl-ms-add-product-modal" style="margin-top:calc((100vh - 206px) / 2);">
+                            <h2>Update Quantity</h2>
+                            <br/>
+                            <form method="POST">
+                                <div class='xl-ms-input-add'>
+                                    {% csrf_token %}
+                                    <input type="hidden" name="product" value="{{item.pk}}" />
+                                    <label>Enter Item Quantity :</label>
+                                    <input type="number" min="1" value="{{item.quantity}}" id="updated_quantity_{{item.pk}}" placeholder="Enter Quantity" name="quantity" required="required" />
+                                    <button style="background:lightgreen;" id="submit_update_item_cart_{{item.pk}}" type="button">Update</button>
+                                    <button type="button" class="close_update_item" style="background:red;">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                        <script type="text/javascript">
+                            $('#open_edit_item_cart_{{item.pk}}').click(function(){
+                                $("#update_item_cart_{{item.pk}}").fadeIn();
+                            });
+
+                            $(".close_update_item").click(function(){
+                                $("#update_item_cart_{{item.pk}}").fadeOut();
+                            });
+
+                            $("#submit_update_item_cart_{{item.pk}}").click(function(e){
+                                e.preventDefault();
+                                $.ajax({
+                                    type: "POST",
+                                    url: "{% url 'update_item_to_shopping_cart' item.pk %}",
+                                    data: {
+                                        "quantity": $("#updated_quantity_{{item.pk}}").val(),
+                                        "csrfmiddlewaretoken": $("input[name=csrfmiddlewaretoken]").val()
+                                    },
+                                    success: function(response){
+                                        if (response == "updated"){
+                                            showSuccessMessage("update_item_cart", "Item Updated !!!");
+                                            $("#update_item_cart_{{item.pk}}").fadeOut();
+                                            load_market_product("{% url 'load_current_cart' shopping_cart.pk %}?type=items");
+                                        } else {
+                                            $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:response,type: 'red'});
+                                        }
+                                    },
+                                    error: function(error){
+                                        showErrorMessage("update_item_cart", error);
+                                    }
+                                });
+                            });
+                        </script>
+                    </section>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="6" style="padding:7px 0;"><p style="color:red; padding-top:9px; padding-bottom: 3px;">NO PRODUCT IN CART</p></td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+    <p style="font-size:20px; margin-top:10px; color:#333; text-align:left;"><strong>Total : </strong>{{total|intword}} {{currency}}</p>
+</div>
+{% if status == "suspended" %}
+    <button class="xl-finish-cart" style="background:green;" data-url="{% url 'load_market_products' market.key shopping_cart.pk %}?last_option=continue" id="continue_shopping">Continue</button>
+    <script type="text/javascript">
+        $("#continue_shopping").click(function(){
+            load_market_product($(this).attr("data-url"));
+        });
+    </script>
+{% elif status == "created" or status == "accepted" or status == "finished" %}
+    <button class="xl-finish-cart" data-pay-url="{% url 'pay_shopping_cart' shopping_cart.pk %}" data-market-status="{{market.status}}" data-user="{{user.pk}}"  id="finish_shopping_cart" data-finish-url="{% url 'finish_shopping_cart' shopping_cart.pk %}" data-href="{% url 'ecommerce_user_start' user.pk %}?key={{market.key}}" data-cart-url="{% url 'load_current_cart_json' shopping_cart.pk %}" style="margin-top:0;">
+        {% if status == "created" %}
+        Finish Cart
+        {% elif status == "accepted" %}
+        Pay Cart
+        {% else %}
+        Ask Order Acceptance
+        {%  endif %}
+    </button>
+    <section class="xl-search-modal" style="left:0;" id="finish_pay_cart_bill">
+        <div class="xl-ms-add-product-modal" style="margin-top:calc((100vh - 404px) / 2);">
+            <h2>Pay & Finish Shopping Cart</h2>
+            <br/>
+            <form method="POST" action="" id="finish_pay_cart_form">
+                <div class="xl-finish-pay-cart xl-ms-input-add">
+                    {% csrf_token %}
+                    <label>Total Net :</label>
+                    <input type="number" disabled name="total_net" value="{{total}}" />
+                    <label>Other Charges :</label>
+                    <input type="number" disabled name="other_charges" value="3000" />
+                    <label>Curreny :</label>
+                    <input type="text" disabled name="currency" value="{{currency}}" />
+                    <label>Select Payment Mode :</label>
+                    <select name="payment_mode">
+                        <option value="paypal">PayPal</option>
+                        <option value="mobile">Mobile Money</option>
+                    </select>
+                    <p class="delivery_mode"><input type="checkbox" name="delivery" /> Delivery Mode</p>
+                    <button style="background:lightgreen;" type="submit">Submit</button>
+                    <button type="button" id="close_finish_pay_cart" style="background:red;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </section>
+    <script type="text/javascript">
+        var host = 'localhost';
+        var port = '4000';
+        var socket = io(host + ':' + port);
+        var user = "{{user.pk}}";
+        var cart = "{{shopping_cart.pk}}";
+
+        $("#finish_shopping_cart").finishShoppingCart();
+
+        socket.on("orderAccepted", function(data){
+            if(data.user.token == user && cart == data.id){
+                $(".jconfirm-closeIcon").click();
+                $("#finish_pay_cart_bill").fadeIn();
+                showSuccessMessage("success", "Order Accepted Successfully !!!");
+            }
+        });
+
+        socket.on("orderDeclined", function(data){
+            if(data.user.token == user && cart == data.id){
+                $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:"Your Order has been Declined. Current Status: SUSPENDED",type: 'red'});
+                $(".jconfirm-closeIcon").click();
+                load_market_product("{% url 'ecommerce_user_start' user.pk %}?key="+data.key);
+            }
+        });
+
+        $("#close_finish_pay_cart").click(function () {
+            $("#finish_pay_cart_bill").fadeOut();
+        });
+
+        $("#finish_pay_cart_form").submit(function(e){
+            e.preventDefault();
+            var data = new FormData($(this)[0]);
+            var delivery = $("#finish_pay_cart_form input[name=delivery]").is(":checked") ? true : false
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'pay_shopping_cart' shopping_cart.pk %}",
+                data: {
+                    'other_charges': $("#finish_pay_cart_form input[name=other_charges]").val(),
+                    'delivery': delivery,
+                    'payment_mode': $("#finish_pay_cart_form select[name=payment_mode]").val(),
+                    'csrfmiddlewaretoken': $("#finish_pay_cart_form input[name=csrfmiddlewaretoken]").val()
+                },
+                success: function(response){
+                    if (response == "paid"){
+                        load_market_product("{% url 'ecommerce_user_start' user.pk %}?key={{market.key}}");
+                    } else {
+                        $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:response,type: 'red'});
+                    }
+                },
+                error: function(error){
+                    showErrorMessage("finish_shopping_cart", error);
+                }
+            });
+        });
+    </script>
+{% endif %}
+<script type="text/javascript">
+    $("#load_shopping_data").click(function(){
+        load_market_product($(this).attr("data-url"));
+    });
+    $(".remove_item_to_cart").click(function(){
+        var data_url = $(this).attr("data-url");
+        $.confirm({
+            title: 'Remove Item',
+            content: 'Do you really want to remove this item to cart ???',
+            icon: 'icon ion-help-circled',
+            animation: 'scale',
+            theme:'material',
+            type:'blue',
+            closeAnimation: 'scale',
+            opacity: 0.5,
+            buttons:{
+                'confirm':{
+                    text: 'Yes',
+                    btnClass: 'btn-green',
+                    action: function(){
+                        $.get(data_url, function(response){
+                            if (response == "removed"){
+                                showSuccessMessage("remove_item_to_cart", "Item Removed !!!");
+                                load_market_product("{% url 'load_current_cart' shopping_cart.pk %}?type=items");
+                            } else {
+                                $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:response,type: 'red'});
+                            }
+                        }, function(error){
+                            load_market_product("{% url 'load_current_cart' shopping_cart.pk %}?type=items");
+                            showErrorMessage("remove_item_to_cart", error);
+                        });
+                    }
+                },
+                cancel:function(){},
+            }
+        });
+    });
+</script>

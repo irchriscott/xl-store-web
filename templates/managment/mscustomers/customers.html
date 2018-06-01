@@ -1,0 +1,42 @@
+{% load staticfiles %}
+{% load humanize %}
+{% if customers %}
+<ul style="border-top:1px solid #DDD">
+    {% for customer in customers %}
+         <li>
+             <a data-url="{% url 'managment_msc_single' customer.user %}" class="load_msp_product">
+                 {% for user in users %}
+                    {% if user.pk == customer.user %}
+                        <img src="{{user.profile_image.url}}" />
+                         <span>{{user.full_name}}</span>
+                    {% endif %}
+                 {% endfor %}
+                 <span class="xl-ms-arrow">
+                     <span style="padding:0 4px; background:#DDD; margin-right:5px; border-radius:3px;">{{customer.sales}}</span>
+                     <i class="icon ion-ios-arrow-right"></i>
+                 </span>
+             </a>
+         </li>
+    {% endfor %}
+    <li>
+        <a data-url="{% url 'managment_msc_anonymous' %}" class="load_msp_product">
+            <img src="{% static 'images/default_user.jpg' %}" />
+            <span>Anonymous</span>
+            <span class="xl-ms-arrow">
+                <span style="padding:0 4px; background:#DDD; margin-right:5px; border-radius:3px;">{{anonymous_customers}}</span>
+                <i class="icon ion-ios-arrow-right"></i>
+            </span>
+        </a>
+    </li>
+</ul>
+{% else %}
+    <p class="xl-error">NO REGISTERED CUSTOMER</p>
+{% endif %}
+
+<script type="text/javascript">
+    $(".load_msp_product").click(function(ev){
+        $("#msp_products_loader").show();
+        loadMSProductts($(this).attr('data-url'));
+        $(this).parent('li').addClass('activated').siblings().removeClass('activated');
+    });
+</script>

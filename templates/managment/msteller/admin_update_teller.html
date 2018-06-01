@@ -1,0 +1,94 @@
+<div class="xl-add-product" style="width:40%">
+    <style type="text/css">
+        .intl-tel-input{width: 100%;}
+        input[type=tel]{width: 100% !important;}
+        input[type=file]{
+            position: absolute;
+            margin-top: -35px;
+            width: 40%;
+            opacity: 0;
+            cursor: pointer;
+        }
+    </style>
+    {% if session_ms %}
+        <h2>Update Teller</h2>
+        <form id="add_new_teller_form" method="post" action="{% url 'admin_update_teller' teller.pk %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <!--<span id="add_teller_image" for="id_teller_image"><i class="icon ion-ios-camera"></i> Add Image</span>-->
+            {{teller_form}}
+            <button type="submit" style="background:lightgreen;">Save</button>
+            <button type="button" style="background:red;" id="close_add_teller">Cancel</button>
+        </form>
+    {% else %}
+        <p class="xl-error">ONLY FOR COMPANIES MS</p>
+    {% endif %}
+
+    <script type="text/javascript">
+
+        $("#close_add_teller").click(function(){
+            $(".mfp-close").click();
+        });
+
+        var set_country_code = setInterval(function(){
+            if($(".intl-tel-input .country-list").length > 0){
+                $(".intl-tel-input .country-list li").each(function(){
+                    if($(this).hasClass('active')){
+                        var country_code = $(this).attr("data-dial-code");
+                        $("#id_phone_number").val("+"+country_code);
+                    }
+                });
+            }
+        });
+
+        setInterval(function(){
+            if($("#id_phone_number").val() != ""){
+                clearInterval(set_country_code);
+            }else{
+                setInterval(set_country_code);
+            }
+        });
+
+        $(".intl-tel-input .country-list li").click(function(){
+    		var country_code = $(this).attr("data-dial-code");
+    		$("#id_phone_number").val("+" + country_code);
+    	});
+
+        $("#id_phone_number").intlTelInput({
+    		initialCountry: "auto",
+    		geoIpLookup: function(callback) {
+    			$.get('http://ipinfo.io', function() {}, "jsonp").always(function(resp) {
+    				var countryCode = (resp && resp.country) ? resp.country : "";
+    				callback(countryCode);
+    			});
+    		},
+        });
+
+        $("#id_teller_image").removeAttr("required");
+
+        $("#add_new_teller_form").submit(function(e){
+            e.preventDefault();
+            var formData = new FormData($(this)[0]);
+            $.ajax({
+                type:'POST',
+                url:$(this).attr('action'),
+                data:formData,
+                processData: false,
+                async: false,
+                cache: false,
+                contentType: false,
+                success:function(success){
+                    $(".mfp-close").click();
+                    loadMSProductts("{% url 'managment_mstl_single_teller' teller.pk %}");
+                    if (success == "ok"){
+                        $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:'Teller Updated Successfully !!!',type: 'green'});
+                    }else{
+                        $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:success,type: 'red'});
+                    }
+                },
+                error: function(error){
+                    showErrorMessage("error", error);
+                }
+            });
+        });
+    </script>
+</div>

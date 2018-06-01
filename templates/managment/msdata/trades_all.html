@@ -1,0 +1,60 @@
+{% load staticfiles %}
+{% load humanize %}
+<div class="xl-ms-product">
+    <div class="xl-ms-product-details" style="width:30% !important;">
+        <div class="xl-ms-scroll-pane">
+            <h2>Products</h2>
+            {% if trades_products %}
+                <ul>
+                    {% for product in trades_products %}
+                        <li id="prod_{{product.product}}">
+                            <a class="trade_select_product" data-url="{% url 'managment_msdt_users_trades' product.product %}">
+                                {% for prod in products %}
+                                    {% if prod.pk == product.product %}
+                                        <img src="{{prod.image.url}}" />
+                                        <span class="prod-name">{{prod.product_name}} <strong>({{prod.price|intword}} {{setting.currency}})</strong></span>
+                                    {% endif %}
+                                {% endfor %}
+                                <span class="float-side"><span>{{product.customers}}</span><i class="icon ion-ios-arrow-right"></i></span>
+                            </a>
+                        </li>
+                    {% endfor %}
+                    <li>
+                        <a class="trade_select_product" data-url="{% url 'managment_msdt_agreed_trades' %}">
+                            <i style="font-size:30px;" class="icon ion-checkmark-circled"></i>
+                            <span class="prod-name">Agreed Trades</span>
+                            <span class="float-side"><span>{{agreed_trades}}</span><i class="icon ion-ios-arrow-right"></i></span>
+                        </a>
+                    </li>
+                </ul>
+            {% else %}
+                <p class="xl-error">NO TRADE</p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="xl-ms-product-inventory" style="overflow:hidden;">
+        <div id="msp_product_wrapper">
+            <h1>CONTENT WILL BE LOADED AFTER SELECTING A PRODUCT</h1>
+            <div id="msp_products_loader" class="xl-loader" style="margin-top:60px;">
+                <img src="{% static 'images/loading.gif' %}" />
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    h1{font-size: 32px;text-align: center;color: #666;margin-top: calc(50vh - 143px);}
+</style>
+<script type="text/javascript">
+    $(".xl-ms-scroll-pane, #msp_product_wrapper").slimScroll({
+        railVisible: true,
+        size:'7',
+        height:'calc(100vh - 150px)',
+        alwaysVisible: false
+    });
+    $(".trade_select_product").click(function(){
+        var url = $(this).attr("data-url");
+        $(this).parent("li").addClass("activated").siblings().removeClass("activated");
+        $("#trade_list_loader").show();
+        load_msp_products(url);
+    });
+</script>

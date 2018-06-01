@@ -1,0 +1,226 @@
+{% load staticfiles %}
+{% include 'css.html' %}
+{% load tz %}
+{% load humanize %}
+    <body>
+        {% include 'header.html' %}
+        <!-- PROFIL DIVISION -->
+        {% block company_profile %}
+            <section class="xl-profil-container">
+                {% if company.cover_image %}
+                    <div class="xl-cover-container" id="comp_cover_image" style="background-image:url({{company.cover_image.url}});">
+                {% else %}
+                    <div class="xl-cover-container" id="comp_cover_image" style="background:gray;">
+                {% endif %}
+                    {% if session_company == company.name_dotted %}
+                        <form style="display:none;" id="update_cover_image" enctype="multipart/form-data" method="post" action="{% url 'comp_cover_edit' %}">{% csrf_token %}
+                            {{cover_image_form}}
+                        </form>
+                        <div class="xl-modif-cover" id="modif_company_cover"><img src="{% static 'css/camera.svg' %}" /><span>Edit Cover Picture</span></div>
+                    {% endif %}
+                    <div class="xl-user-name">
+                        <h2><a href="{% url 'comp_profile' company.name_dotted %}">{{company.name}}</a> <span><i class="icon ion-edit"></i></span></h2>
+                    </div>
+                </div>
+                <div class="xl-profil-picture">
+                    <a href="{{company.get_profile_image.url}}" class="product-main-image" title="Profile Picture" data-company="{{company.name}}">
+                        <img id="profile_image" src="{{company.get_profile_image.url}}" />
+                    </a>
+                    {% if session_company == company.name_dotted %}
+                        <div class="xl-modif-profil" id="modif_company_profil">
+                            <img src="{% static 'css/camera.svg' %}" /><span>Edit Profil Picture</span>
+                        </div>
+                        <form style="display:none;" id="update_profile_image" enctype="multipart/form-data" method="post" action="{% url 'comp_profile_image_edit' %}">{% csrf_token %}
+                            {{profile_image_form}}
+                        </form>
+                    {% endif %}
+                </div>
+            </section>
+        {% endblock %}
+
+        <!-- NAVBAR DOWN -->
+
+        <section class="xl-navbar-down xl-navbar-user" id="xl-navbar-user">
+            <div class="xl-navbar-content" style="width:597px">
+                <ul>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="menu-list" title="{{company.get_sum_products}} Products"><a href="{% url 'comp_profile_2' company.name_dotted %}">Products <span>{{company.get_sum_products}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="activate menu-list" title="{{company.get_sum_posts}} Posts"><a href="{% url 'comp_posts' company.name_dotted %}">Posts <span>{{company.get_sum_posts}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="menu-list" title="{{company.get_sum_categories}} Categories"><a href="{% url 'comp_categories' company.name_dotted %}">Categories <span>{{company.get_sum_categories}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="menu-list" title="{{company.get_sum_advertisments}} Advertisements"><a href="{% url 'comp_advertisments' company.name_dotted %}">Advertisements <span>{{company.get_sum_advertisments}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="menu-list" title="{{company.get_sum_followers}} Followers"><a href="{% url 'comp_followers' company.name_dotted %}">Followers <span>{{company.get_sum_followers}}</span></a></li>
+                </ul>
+            </div>
+            {% if session_company == company.name_dotted %}
+                <div class="xl-navbar-buttons">
+                    <button id="profile_edit" type="button">Save Change</button>
+                    <button id="cover_edit" type="button">Save Change</button>
+                    <button id="all_edit" type="button">Save Changes</button>
+                </div>
+            {% endif %}
+            {% if session_user %}
+                <div class="xl-navbar-buttons xl-follow">
+                    {% if check_follow %}
+                        <button class="follow_ok"><i class="icon ion-checkmark-round"></i> Follower</button>
+                    {% else %}
+                        <span id="follow_success">
+                            <form id="follow_company_full_now" method="post">{% csrf_token %}
+                                <input type="hidden" name="company" value="{{company.pk}}" />
+                                <button class="follow_now"><i class="icon ion-person-add"></i> Follow</button>
+                            </form>
+                        </span>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </section>
+
+        <!-- PRODUCTS AND POSTS -->
+
+        <section class="xl-products xl-user" id="xl-user">
+            <div class="xl-main-section">
+                {% if posts %}
+                    {% for post in posts %}
+                        <div class="xl-main-post" id="xl-main-post{{post.pk}}">
+                            <div class="xl-poster-image">
+                                <div class="poster-img">
+                                    {% if post.company.profile_image %}
+                                    <img src="{{post.company.profile_image.url}}" alt="{{post.company.user_name}}" />
+                                    {% else %}
+                                    <img src='{% static 'images/default_company.jpg' %}' />
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="xl-post-body">
+                                <div class="xl-poster-details">
+                                    <p class="poster-name"><a href="{% url 'comp_posts' post.company.name_dotted %}">{{post.company.name}}</a></p>
+                                    <p class="post-date-time"><i class="icon ion-ios-clock-outline"></i> <span id="posted_date{{post.pk}}" data-time="{{post.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                                    <div class="post-menu">
+                                        <span id="see_menu{{post.pk}}" data-id="{{post.id}}" title="See Menu"><i class="icon ion-chevron-down"></i></span>
+                                        <div class="menu-items" id="menu-items{{post.pk}}">
+                                            <ul>
+                                                <li><a id="open_post_ajax_else{{post.pk}}" href="{% url 'single_post_ajax' post.pk %}"><i class="icon ion-android-open"></i>View Post</a></li>
+                                                {% if session_company == post.company.name_dotted %}
+                                                <li><a class="delete_single_post" data-href="{% url 'user_delete_post' post.pk %}" data-post="{{post.pk}}">{% csrf_token %}<i class="icon ion-ios-trash"></i>Delete</a></li>
+                                                <li><a id="open_edit_post{{post.pk}}" href="{% url 'user_edit_post' post.pk %}"><i class="icon ion-ios-compose"></i>Edit</a></li>
+                                                <script type="text/javascript">$("#open_edit_post{{post.pk}}").magnificPopup({type: 'ajax'});/*alignTop: true,overflowY: 'scroll'*/</script>
+                                                {% endif %}
+                                                {% if session_company or session_user %}
+                                                <li><a href="{% url 'user_post_reply' post.pk %}" id="open_reply_post_else{{post.pk}}"><i class="icon ion-ios-loop-strong"></i>Reply</a></li>
+                                                {% endif %}
+                                                <li><a href="#"><i class="icon ion-ios-redo"></i>Share</a></li>
+                                                <li><a href="#"><i class="icon ion-ios-information"></i>Report</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="xl-post-content">
+                                    <span class="post-text" id="post_text_update{{post.pk}}">{{post.post_text|safe}}</span>
+                                    {% if post.post_file %}
+                                        {% if post.file_type == 'picture' %}
+                                            <span class="post-image">
+                                                <a id="open_post_ajax{{post.pk}}" href="{% url 'single_post_ajax' post.pk %}">
+                                                    <img src="{{post.post_file.url}}" alt="{{post.user.user_name}}" />
+                                                </a>
+                                            </span>
+                                        {% elif post.file_type == 'video' %}
+                                            <span class="post-video">
+                                                <video controls preload="auto" id="post_video{{post.pk}}">
+                                                    <source src="{{post.post_file.url}}" />
+                                                </video>
+                                            </span>
+                                            <script type="text/javascript">plyr.setup('#post_video{{post.pk}}');</script>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                                <script type="text/javascript">$("#open_post_ajax{{post.pk}}, #open_post_ajax_else{{post.pk}}").magnificPopup({type: 'ajax'});</script>
+                                <div class="xl-post-details">
+                                    <ul>
+                                        {% if session_user or session_company %}
+                                        <li><a href="{% url 'user_post_reply' post.pk %}" id="open_reply_post{{post.pk}}"><span><i class="icon ion-ios-loop-strong"></i></span></a> <span>{{post.get_sum_replies}}</span></li>
+                                        <script type="text/javascript">$("#open_reply_post{{post.pk}}, #open_reply_post_else{{post.pk}}").magnificPopup({type: 'ajax'});</script>
+                                        {% else %}
+                                        <li><span class="login_first"><i class="icon ion-ios-loop-strong"></i></span> <span>{{post.get_sum_replies}}</span></li>
+                                        {% endif %}
+                                        {% if session_user %}
+                                            {% if post.check_mention_like or post.check_mention_dislike %}
+                                                {% if session_profile.pk in post.check_mention_like %}
+                                                    <li><span class="liked general_post_like general_post_like{{post.pk}}" data-post="{{post.pk}}" data-href="{% url 'user_like_dislike_post' %}"><i class="icon ion-heart"></i></span> <span class="post_sum_like{{post.pk}}">{{post.get_sum_likes}}</span></li>
+                                                    <li><span class="general_post_dislike general_post_dislike{{post.pk}}" data-post="{{post.pk}}" data-href="{% url 'user_like_dislike_post' %}"><i class="icon ion-heart-broken"></i></span> <span class="post_sum_dislike{{post.pk}}">{{post.get_sum_dislikes}}</span></li>
+                                                    {% csrf_token %}
+                                                {% elif session_profile.pk in post.check_mention_dislike %}
+                                                    <li><span class="general_post_like general_post_like{{post.pk}}" data-post="{{post.pk}}" data-href="{% url 'user_like_dislike_post' %}"><i class="icon ion-heart"></i></span> <span class="post_sum_like{{post.pk}}">{{post.get_sum_likes}}</span></li>
+                                                    <li><span class="disliked general_post_dislike general_post_dislike{{post.pk}}" data-post="{{ppost.pk}}" data-href="{% url 'user_like_dislike_post' %}"><i class="icon ion-heart-broken"></i></span> <span class="post_sum_dislike{{post.pk}}">{{post.get_sum_dislikes}}</span></li>
+                                                    {% csrf_token %}
+                                                {% else %}
+                                                    <li><span class="general_post_like general_post_like{{post.pk}}" data-post="{{post.pk}}" data-href="{% url 'user_like_dislike_post' %}"><i class="icon ion-heart"></i></span> <span class="post_sum_like{{post.pk}}">{{post.get_sum_likes}}</span></li>
+                                                    <li><span class="general_post_dislike general_post_dislike{{post.pk}}" data-post="{{post.pk}}" data-href="{% url 'user_like_dislike_post' %}"><i class="icon ion-heart-broken"></i></span> <span class="post_sum_dislike{{post.pk}}">{{post.get_sum_dislikes}}</span></li>
+                                                    {% csrf_token %}
+                                                {% endif %}
+                                            {% else %}
+                                                <li><span class="general_post_like general_post_like{{post.pk}}" data-post="{{post.pk}}" data-href="{% url 'user_like_dislike_post' %}"><i class="icon ion-heart"></i></span> <span class="post_sum_like{{post.pk}}">{{post.get_sum_likes}}</span></li>
+                                                <li><span class="general_post_dislike general_post_dislike{{post.pk}}" data-post="{{post.pk}}" data-href="{% url 'user_like_dislike_post' %}"><i class="icon ion-heart-broken"></i></span> <span class="post_sum_dislike{{post.pk}}">{{post.get_sum_dislikes}}</span></li>
+                                                {% csrf_token %}
+                                            {% endif %}
+                                        {% else %}
+                                            <li><span><i class="icon ion-heart"></i></span> <span>{{post.get_sum_likes}}</span></li>
+                                            <li><span><i class="icon ion-heart-broken"></i></span> <span>{{post.get_sum_dislikes}}</span></li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <script type="text/javascript">$("#posted_date{{post.pk}}").setTime();$("#see_menu{{post.pk}}").showMenu();</script>
+                    {% endfor %}
+                    <div class="xl-pagination">
+                        <span class="xl-step-links">
+                            {% if posts.has_previous %}
+                                <a href="?page=1">&laquo; First </a> |
+                                <a href="?page={{ posts.previous_page_number }}"> Previous</a>
+                            {% endif %}
+                            <span class="xl-current">
+                                Page {{ posts.number }} of {{ posts.paginator.num_pages }}.
+                            </span>
+                            {% if posts.has_next %}
+                                <a href="?page={{ posts.next_page_number }}">Next </a>|
+                                <a href="?page={{ posts.paginator.num_pages }}"> Last &raquo;</a>
+                            {% endif %}
+                        </span>
+                    </div>
+                {% else %}
+                    <p class="xl-error">NO POSTS YET</p>
+                {% endif %}
+            </div>
+
+            <div id="xl-else-wrapper-else">
+                <div class="xl-else-section" id="xl-else-section-1">
+                    <div class="xl-store-about">
+                        <h3>About {{company.name}}</h3>
+                        <p><strong>Name :</strong> {{company.name}}</p>
+                        <p><strong>State :</strong> {{company.country.name}}</p>
+                        <p><strong>Town :</strong> {{company.town}}</p>
+                        <p><strong>Tel. Number :</strong> {{company.phone_number}}</p>
+                        <p><strong>Addresses :</strong></p>
+                        <div style="margin-top:5px; margin-bottom:5px;">
+                            {% if company.get_company_addresses %}
+                                <ul>
+                                    {% for address in company.get_company_addresses %}
+                                        <li style="text-align: left;"> - <a style="font-style: italic; color:#999" id="load_address_map" href="{% url 'load_geo_map' 'address' address.pk %}">{{address.address}}</a></li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p>-</p>
+                            {% endif %}
+                        </div>
+                        <p><strong>E-mail :</strong> <a href="mailto:{{company.email}}">{{company.email}}</a></p>
+                        {% if session_company == company.name_dotted %}
+                            <button type="button" href="{% url 'comp_profile_edit' %}" style="margin-right:10px;" id="open_edit_profile">Edit</button>
+                            <button type="button" href="{% url 'add_address' %}" id="open_add_address">ADDRESS</button>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="xl-else-section" id="xl-else-section-2">
+                    {% include 'includes/notification_full.html' %}
+                </div>
+            </div>
+        </section>
+    </body>
+</html>

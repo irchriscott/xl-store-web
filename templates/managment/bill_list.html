@@ -1,0 +1,71 @@
+{% load staticfiles %}
+{% load humanize %}
+{% if admin_session == True or teller_session == True %}
+    <div class="xl-ms-product-list">
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>User Image</th>
+                    <th>User Details</th>
+                    <th>Total</th>
+                    <th>Discount</th>
+                    <th>Total Net</th>
+                    <th>Paid By</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if bills %}
+                    {% for bill in bills %}
+                        <tr class="single_bill_tr" id="open_single_bill{{bill.pk}}" href="{% url 'managment_get_single_bill' bill.pk %}" style="cursor:pointer;">
+                            <td>{{bill.receipt_number}}</td>
+                            <td>
+                                {% if bill.user %}
+                                    {% if bill.user.profile_image %}
+                                        <img style="width:70px;" src="{{bill.user.profile_image.url}}" />
+                                    {% else %}
+                                        <img style="width:70px;" src="{% static 'images/default_user.jpg' %}" />
+                                    {% endif %}
+                                {% else %}
+                                    <img style="width:70px;" src="{% static 'images/default_user.jpg' %}" />
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if bill.user %}
+                                    <strong>{{bill.user.full_name}}</strong>
+                                    <span style="display:block;">{{bill.user.email}}</span>
+                                {% else %}
+                                    <strong>{{bill.username}}</strong>
+                                    <span style="display:block;">{{bill.email}}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{bill.total_paid|intcomma}} {{setting.currency}}</td>
+                            <td>{{bill.discount|intcomma}} {{setting.currency}}</td>
+                            <td>{{bill.total_net|intcomma}} {{setting.currency}}</td>
+                            <td>{{bill.paid_by}}</td>
+                        </tr>
+                        <script type="text/javascript">
+                            $("#open_single_bill{{bill.pk}}").magnificPopup({type: 'ajax'});
+                        </script>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td style="padding:20px 0;" colspan="7"><p class="xl-error">NO BILL FOR THIS DAY</p></td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <div class="xl-ms-totals">
+            <h3>Total : {{total_paid|intcomma}} {{setting.currency}}</h3>
+            <h3>Discount : {{discount|intcomma}} {{setting.currency}}</h3>
+            <h1>Total Net : {{total_net|intcomma}} {{setting.currency}}</h1>
+        </div>
+    </div>
+    <script type="text/javascript">
+        $(".single_bill_tr").click(function(){
+            $(this).addClass("tr_active").siblings().removeClass("tr_active");
+        });
+    </script>
+{% else %}
+    <p class="xl-error">YOU ARE NOT AN ADMIN OR TELLER</p>
+{% endif %}

@@ -1,0 +1,15 @@
+<div class="xl-add-category">
+    <h2>Add New Category</h2>
+    <form id="add_category" method="post" action="{% url 'comp_save_category' %}" >{% csrf_token %}
+        <input type="hidden" value="{{company.id}}" name="id" id="id_id" />
+        {{category_form}}
+        <button type="submit" style="background:lightgreen;">Save</button>
+        <button type="button" style="background:red;" id="close_add_category">Cancel</button>
+    </form>
+    <script type="text/javascript">
+        hideLoadLinkSpinner();
+        $("#close_add_category").click(function(){
+            $(".mfp-close").click();
+        });
+    </script>
+</div>

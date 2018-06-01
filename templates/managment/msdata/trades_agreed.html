@@ -1,0 +1,233 @@
+{% load staticfiles %}
+{% load humanize %}
+<div class="xl-ms-trades-list">
+    <h2>Agreed Trades</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>ID</th>
+                <th>Product</th>
+                <th>Q. / Price</th>
+                <th>Exp. Date</th>
+            </tr>
+            {% if trades %}
+                <tbody>
+                    {% for trade in trades %}
+                        <tr style="cursor:pointer;" id="trade_agreement_{{trade.pk}}" href="{% url 'managment_msdt_single_agreed_trade' trade.pk %}">
+                            <td>
+                                {% if trade.trade.user.profile_image %}
+                                    <img src="{{trade.trade.user.profile_image.url}}" style="width:70px; height:70px;" alt="{{trade.trade.user.user_name}}" />
+                                {% else %}
+                                    <img src="{% static 'images/default_user.jpg' %}" style="width:70px; height:70px;" alt="{{trade.trade.user.user_name}}" />
+                                {% endif %}
+                            </td>
+                            <td>{{trade.trade.user.full_name}}<span class="username" style="display:block">@{{trade.trade.user.user_name}}</span></td>
+                            <td>{{trade.trade.product.product_name}}</td>
+                            <td>{{trade.quantity}} / {{trade.price|intword}} {{setting.currency}}</td>
+                            <td>{{trade.finished_date|date:"M d, Y"}}</td>
+                        </tr>
+                        <div class="xl-ms-add-product-modal zoom-anim-dialog mfp-hide" id="update_trade_{{trade.pk}}">
+                            <h2>Update Trade Agreement</h2>
+                            <br/>
+                            <form class="form_to_submit" data-trade-loader="{% url 'managment_msdt_agreed_trades' %}" data-trade="{{trade.pk}}" action="{% url 'managment_msdt_update_agreed_trade' trade.pk %}" method="post">
+                                <div class='xl-ms-input-add'>
+                                    {% csrf_token %}
+                                    <input type="hidden" name="trade" value="{{trade.pk}}" />
+                                    <label>Enter Quantity :</label>
+                                    <input type="number" min="1" value="{{trade.quantity}}" id="trade_quantity{{trade.pk}}" placeholder="Enter Quantity" name="quantity" required="required" />
+                                    <label>Enter Price Agreed :</label>
+                                    <input type="number" min="1" value="{{trade.price}}" id="trade_price{{trade.pk}}" placeholder="Enter Price Agreed" name="price" required="required" />
+                                    <label>Add Days :</label>
+                                    <input type="number" min="0" value="0" id="trade_days_toadd{{trade.pk}}" placeholder="Enter Days to Add" name="days" />
+                                    <button style="background:lightgreen;" class="update_trade_form" id="submit-agree-trade{{trade.pk}}" type="submit">Save</button>
+                                    <button style="background:red;" type="button" id="close-update-trade{{trade.pk}}">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="xl-ms-product-menu-else" id="trade_user_menu_{{trade.pk}}">
+                            <ul>
+                                <li><a id="open-update-trade{{trade.pk}}" href="#update_trade_{{trade.pk}}"><i class="icon ion-edit"></i> Update</a></li>
+                                {% if trade.is_finished == True %}
+                                <li><a class="reactivate-agreed-trade" data-trade="{{trade.pk}}" data-url="{% url 'managment_msdt_reactivate_trade' trade.pk %}" data-trade-loader="{% url 'managment_msdt_agreed_trades' %}"><i class="icon ion-android-done-all"></i> Reactivate Trade</a></li>
+                                {% else %}
+                                <li><a class="add-trade-to-cart" data-trade="{{trade.pk}}" data-url="{% url 'managment_msdt_add_to_cart_trade' trade.pk %}" data-trade-loader="{% url 'managment_msdt_agreed_trades' %}" ><i class="icon ion-ios-cart"></i> Add To Cart</a></li>
+                                {% endif %}
+                                <li><a target="_blank" href="{% url 'company_single_trade' trade.trade.pk %}"><i class="icon ion-ios-chatboxes"></i> Trade Messages</a></li>
+                            </ul>
+                        </div>
+                        <script type="text/javascript">
+
+                            $('#open-update-trade{{trade.pk}}').magnificPopup({
+                                type: 'inline',
+                                fixedContentPos: false,
+                                fixedBgPos: true,
+                                overflowY: 'auto',
+                                closeBtnInside: true,
+                                preloader: false,
+                                midClick: true,
+                                removalDelay: 300,
+                                mainClass: 'my-mfp-zoom-in'
+                            });
+                            $("#close-update-trade{{trade.pk}}").click(function(){
+                                $(".mfp-close").click();
+                            });
+
+                            $("#trade_agreement_{{trade.pk}}").contextmenu(function(e){
+                                e.preventDefault();
+                                $(".xl-ms-product-menu").hide();
+                                var width = $(window).width();
+                                var subWidth = (width * 30) / 100 ;
+                                var pageY = e.pageY - 126;
+                                var pageX = e.pageX - subWidth + 50;
+
+                                $("#trade_user_menu_{{trade.pk}}").css({'top':pageY, 'margin-left':pageX}).show();
+                            });
+
+                            $("#trade_agreement_{{trade.pk}}").magnificPopup({type:'ajax'});
+                        </script>
+                    {% endfor %}
+                </tbody>
+            {% else %}
+            {% endif %}
+        </thead>
+    </table>
+</div>
+<script type="text/javascript">
+    $(".update_trade_form").click(function(e){
+        e.preventDefault();
+        var _this = $(this).parents().find(".form_to_submit");
+        var trade = _this.attr("data-trade");
+        var url = _this.attr("action");
+        var data_trades = _this.attr("data-trade-loader");
+        var quantity = $("#trade_quantity"+trade).val();
+        var price = $("#trade_price"+trade).val();
+        var days = $("#trade_days_toadd"+trade).val();
+        $.confirm({
+            title: 'Update Trade',
+            content: 'Do you really want to update this Trade ???',
+            icon: 'icon ion-help-circled',
+            animation: 'scale',
+            theme:'material',
+            type:'blue',
+            closeAnimation: 'scale',
+            opacity: 0.5,
+            buttons:{
+                'confirm':{
+                    text: 'Yes',
+                    btnClass: 'btn-green',
+                    action: function(){
+                        $.ajax({
+                            type:'POST',
+                            url:url,
+                            data:{
+                                'quantity':quantity,
+                                'price':price,
+                                'days':days,
+                                'csrfmiddlewaretoken':$("input[name=csrfmiddlewaretoken]").val()
+                            },
+                            success:function(response){
+                                $(".mfp-close").click();
+                                $("#trade_list_loader").show();
+                                load_msp_products(data_trades);
+                                if(response == "ok"){
+                                    $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:"Trade Updated Successfully !!!",type: 'green'});
+                                }else{
+                                    $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:response,type: 'red'});
+                                }
+                            },
+                            error: function(error){
+                                showErrorMessage("error", error);
+                            }
+                        });
+                    }
+                },
+                cancel:function(){},
+            }
+        });
+    });
+
+    $(".reactivate-agreed-trade").click(function(){
+        var _this = $(this);
+        var trade = _this.attr("data-trade");
+        var data_trades = _this.attr("data-trade-loader");
+        var url = _this.attr("data-url");
+
+        $.confirm({
+            title: 'Reactivate Trade',
+            content: 'Do you really want to reactivate this trade ???',
+            icon: 'icon ion-help-circled',
+            animation: 'scale',
+            theme:'material',
+            type:'blue',
+            closeAnimation: 'scale',
+            opacity: 0.5,
+            buttons:{
+                'confirm':{
+                    text: 'Yes',
+                    btnClass: 'btn-green',
+                    action: function(){
+                        $.ajax({
+                            type:'POST',
+                            url:url,
+                            data:{},
+                            success:function(response){
+                                load_msp_products(data_trades);
+                                if (response != "ok"){
+                                    $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:response,type: 'red'});
+                                } else {
+                                    showSuccessMessage("success", "Trade Reactivated !!!");
+                                }
+                            },
+                            error: function(error){
+                                showErrorMessage("error", error);
+                            }
+                        });
+                    }
+                },
+                cancel:function(){
+                },
+            }
+        });
+    });
+    $(".add-trade-to-cart").click(function(e){
+        var url = $(this).attr("data-url");
+        var data_trades = $(this).attr("data-trade-loader");
+        $.confirm({
+            title: 'Add Trade',
+            content: 'Do you really want to add this trade ???',
+            icon: 'icon ion-help-circled',
+            animation: 'scale',
+            theme:'material',
+            type:'blue',
+            closeAnimation: 'scale',
+            opacity: 0.5,
+            buttons:{
+                'confirm':{
+                    text: 'Yes',
+                    btnClass: 'btn-green',
+                    action: function(){
+                        $.ajax({
+                            type:'POST',
+                            url:url,
+                            data:{},
+                            success:function(response){
+                                load_msp_products(data_trades);
+                                if (response != "ok"){
+                                    $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:response,type: 'red'});
+                                } else {
+                                    showSuccessMessage("Trade Added !!!");
+                                }
+                            },
+                            error: function(error){
+                                showErrorMessage("error", error);
+                            }
+                        });
+                    }
+                },
+                cancel:function(){
+                },
+            }
+        });
+    });
+</script>

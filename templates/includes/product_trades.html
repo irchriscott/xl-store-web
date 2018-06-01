@@ -1,0 +1,50 @@
+{% load staticfiles %}
+{% load humanize %}
+{% if session_company %}
+    <div class="xl-trades-list-else" id="product_trades">
+        {% if trade_products %}
+            <ul>
+                {% for product in trade_products %}
+                    <li id="prod_{{product.product}}">
+                        <a class="trade_select_product" data-url="{% url 'products_customers' product.product trade.pk %}">
+                            {% for prod in products %}
+                                {% if prod.pk == product.product %}
+                                    <img src="{{prod.image.url}}" />
+                                    <span class="prod-name">{{prod.product_name}}</span>
+                                {% endif %}
+                            {% endfor %}
+                            <span class="float-side"><span>{{product.customers}}</span><i class="icon ion-ios-arrow-right"></i></span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="xl-error">NO PRODUCT</p>
+        {% endif %}
+    </div>
+{% else %}
+    <p class="xl-error">YOU ARE NOT ALLOWED TO VISITE THIS PAGE</p>
+{% endif %}
+<script type="text/javascript">
+    $(".xl-trades-list-else").slimScroll({
+        railVisible: true,
+        size:'7',
+        height:'calc(100vh - 173px)',
+        alwaysVisible: false
+    });
+    $(".trade_select_product").click(function(){
+        var url = $(this).attr("data-url");
+        $(this).parent("li").addClass("activated").siblings().removeClass("activated");
+        $("#trade_list_loader").show();
+        load_trades_lists(url);
+    });
+    $(document).ready(function(){
+        var products = $("#product_trades").find("li")
+        var current_product = parseInt("{{trade.product.pk}}")
+        for(var list = 0; list < products.length; list ++){
+            if($(products[list]).attr("id") == "prod_"+current_product){
+                $(products[list]).addClass("activated");
+            }
+        }
+    });
+</script>

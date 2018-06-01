@@ -1,0 +1,260 @@
+{% load staticfiles %}
+{% include '../css.html' %}
+    <body style="overflow: hidden;">
+        {% include '../header.html' %}
+        <section class="xl-navbar-down">
+            <div class="xl-navbar-content" {% if admin_session == True %} style="width:595px; margin:auto;"{% elif teller_session == True %} style="width:551px; margin:auto;" {% else %} style="width:516px; margin:auto;" {% endif %}>
+                <ul>
+                    <li class="activate"><a href="{% url 'managment_home' %}">Home</a></li>
+                    <li><a href="{% url 'managment_products' %}">Products</a></li>
+                    {% if admin_session == True %}
+                        <li><a href="{% url 'managment_managment' %}">Managment</a></li>
+                        <li><a href="{% url 'managment_get_bills' %}">Bills</a></li>
+                        <li><a href="{% url 'managment_msst' %}">Settings</a></li>
+                        <li><a id="open-logout-menu">Log Out</a></li>
+                        <div class="xl-ms-logout-menu" id="xl-ms-logout-menu">
+                            <ul>
+                                {% if teller_session == True %}
+                                    <li><a href="{% url 'managment_mstl_logout' %}"><i class="icon ion-ios-locked"></i> As Teller</a></li>
+                                {% endif %}
+                                <li><a href="{% url 'managment_desactivate_admin' %}"><i class="icon ion-ios-locked"></i> As Admin</a></li>
+                                <li><a href="{% url 'managment_logout' %}"><i class="icon ion-ios-locked"></i> As M.S</a></li>
+                            </ul>
+                        </div>
+                    {% elif teller_session == True %}
+                        <li><a href="{% url 'managment_get_bills' %}">Bills</a></li>
+                        <li><a id="open-admin-password" href="#admin-password">Activate Admin</a></li>
+                        <li><a id="open-logout-menu">Log Out</a></li>
+                        <div class="xl-ms-logout-menu" id="xl-ms-logout-menu">
+                            <ul>
+                                <li><a href="{% url 'managment_mstl_logout' %}"><i class="icon ion-ios-locked"></i> As Teller</a></li>
+                                <li><a href="{% url 'managment_logout' %}"><i class="icon ion-ios-locked"></i> As M.S</a></li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <li><a id="open-admin-password" href="#admin-password">Activate Admin</a></li>
+                        <li><a id="open-teller-login" href="#teller-login">Login Teller</a></li>
+                        <div class="zoom-anim-dialog mfp-hide" id="teller-login">
+                            <div class="xl-ms-add-product-modal">
+                                <h2>Login Teller</h2>
+                                <br/>
+                                <form action="{% url 'managment_mstl_login' %}" method="POST">
+                                    <div class='xl-ms-input-add'>
+                                        {% csrf_token %}
+                                        <label>Enter Username :</label>
+                                        <input type="text" name="teller_username" placeholder="Enter Username" required="required" />
+                                        <label>Enter Password :</label>
+                                        <input type="password" name="teller_password" placeholder="Enter Password" required="required" />
+                                        <button style="background:lightgreen;" type="submit">Login</button>
+                                        <button style="background:red;" type="button" id="close-teller-login">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    {% endif %}
+                </ul>
+                <div class="zoom-anim-dialog mfp-hide" id="admin-password">
+                    <div class="xl-ms-add-product-modal">
+                        <h2>Activate Admin</h2>
+                        <br/>
+                        <form action="{% url 'managment_activate_admin' %}" method="POST">
+                            <div class='xl-ms-input-add'>
+                                {% csrf_token %}
+                                <label>Enter Password :</label>
+                                <input type="password" name="admin_password" placeholder="Enter Password" required="required" />
+                                <button style="background:lightgreen;" type="submit">Activate</button>
+                                <button style="background:red;" type="button" id="close-admin-password">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    $("#open-admin-password, #open-teller-login").magnificPopup({
+                        type: 'inline',
+                        fixedContentPos: false,
+                        fixedBgPos: true,
+                        overflowY: 'auto',
+                        closeBtnInside: true,
+                        preloader: false,
+                        midClick: true,
+                        removalDelay: 300,
+                        mainClass: 'my-mfp-zoom-in'
+                    });
+                    $("#close-admin-password, #close-teller-login").click(function(){
+                        $(".mfp-close").click();
+                    });
+                </script>
+            </div>
+        </section>
+        {% if admin_session == True or teller_session == True %}
+            <div class="xl-qr-reader-cont">
+                <h5>QR Reader Preview</h5>
+                <a class="hide" href="#" id="xl-qr-toggle-expand"><i class="icon ion-arrow-shrink"></i></a>
+                <div id="qr_code_reader" style="display:none;">
+                    <div id="xl-qr-app">
+                        <div class="xl-qr-preview-container">
+                            <video style="width:250px;" id="preview"></video>
+                        </div>
+                        <span  id="show_available_cameras">SEE AVAILABLE CAMERAS</span>
+                    </div>
+                    <div id="xl-cameras" style="display:none;">
+                        <p>AVAILABLE CAMERAS</p>
+                        <ul id="cameras-list"></ul>
+                        <span style="margin-top:7px;" id="hide_available_cameras">GO BACK</span>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        <section class="xl-ms-container">
+            <div class="xl-ms-products-all">
+                <div class="xl-ms-search-product">
+                    <form id="search-ms-product" method="POST">
+                        <label>Search Product :</label>
+                        {% csrf_token %}
+                        <input type="text" id="search_key" name="search_key" placeholder="Enter Product Code or Name" autofocus/>
+                        <label>Search By :</label>
+                        <select name="search_by" id="search_by">
+                            <option value="C">Product Code</option>
+                            <option value="N">Product Name</option>
+                        </select>
+                    </form>
+                </div>
+                <script type="text/javascript">
+                    $("#search-ms-product").submit(function(ev){
+                        ev.preventDefault();
+                    });
+
+                    $("#search_key").keyup(function(){
+                        if($(this).val() != ""){
+                            $.ajax({
+                                type:"POST",
+                                url:"{% url 'managment_products_filter' %}",
+                                data:{
+                                    'csrfmiddlewaretoken':$("input[name=csrfmiddlewaretoken]").val(),
+                                    'search_key':$(this).val(),
+                                    'search_by':$("#search_by").val()
+                                },
+                                success:function(success){
+                                    $("#xl-ms-product-wrapper").html(success);
+                                }
+                            })
+                        }else{
+                            loadMSProductts("{% url 'managment_products_cart' %}");
+                        }
+                    });
+                </script>
+                <div id="xl-ms-product-wrapper">
+                    <div id="xl-ms-product-loader" class="xl-loader" style="margin-top:40px;">
+                        <img src="{% static 'images/loading.gif' %}" />
+                    </div>
+                    <script type="text/javascript">
+                        $("#xl-ms-product-loader").show();
+                        loadMSProductts("{% url 'managment_products_cart' %}");
+                    </script>
+                </div>
+            </div>
+
+            {% if admin_session == True or teller_session == True %}
+
+                <script type="text/javascript">
+
+                    let selectedCameraID = null
+                    let cameras = []
+
+                    let scanner = new Instascan.Scanner({ video: document.getElementById('preview'), scanPeriod: 5 });
+
+                    scanner.addListener('scan', function (content) {
+                        var product = JSON.parse(content);
+                        var product_id = product.ms_id;
+
+                        if(product_id != null){
+                            $.ajax({
+                                type:'POST',
+                                url:"{% url 'managment_add_item_to_bill' %}",
+                                data:{
+                                    'product':product_id,
+                                    'quantity':'1',
+                                    'csrfmiddlewaretoken':$("input[name=csrfmiddlewaretoken]").val()
+                                },
+                                success:function(success){
+                                    loadMSCurrentBill("{% url 'managment_load_bill' %}");
+                                    loadMSProductts("{% url 'managment_products_cart' %}");
+                                    if(success == 'failed'){
+                                        $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:'Stock Low Than That Quantity !!!',type: 'red'});
+                                    }else if(success == 'negative'){
+                                        $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:'Quantity cant be a negative number !!!',type: 'red'});
+                                    }
+                                }
+                            });
+                            console.log(product);
+                        } else{
+                            $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:'Product Not From XL-STORE !!!',type: 'red'});
+                        }
+                    });
+
+                    Instascan.Camera.getCameras().then(function (cameras) {
+                        if (cameras.length > 0) {
+
+                            scanner.start(cameras[0]);
+                            selectedCameraID = cameras[0].id;
+
+                            for(var i = 0; i <= cameras.length; i++){
+                                var camera = cameras[i]
+                                $("#cameras-list").append('<li onclick="selectCamera(camera)">' + cameraName(cameras[i].name) + '</li>')
+                            }
+
+                        } else {
+                            console.error('No cameras found.');
+                        }
+                    }).catch(function (e) {
+                        console.error(e);
+                    });
+
+                    function selectCamera (camera) {
+                        selectedCameraID = camera.id;
+                        scanner.start(camera);
+                    }
+
+                    function cameraName (name) {
+                        return name || '(unknown)';
+                    }
+
+                    $("#xl-qr-toggle-expand").click(function(e){
+                        e.preventDefault();
+                        $("#qr_code_reader").slideToggle();
+                        $(this).toggleClass("hide");
+
+                        if($(this).hasClass("hide")){
+                            $(this).html('<i class="icon ion-arrow-shrink">');
+                        }else{
+                            $(this).html('<i class="icon ion-arrow-expand"></i>');
+                        }
+                    });
+
+                    $("#show_available_cameras").click(function(){
+                        $("#xl-qr-app").hide();
+                        $("#xl-cameras").show();
+                    });
+
+                    $("#hide_available_cameras").click(function(){
+                        $("#xl-qr-app").show();
+                        $("#xl-cameras").hide();
+                    });
+                </script>
+
+            {% endif %}
+
+            <div class="xl-ms-current-bill">
+                <div id="xl-ms-bill-wrapper">
+                    <div id="xl-ms-bill-loader" class="xl-loader" style="margin-top:40px;">
+                        <img src="{% static 'images/loading.gif' %}" />
+                    </div>
+                    <script type="text/javascript">
+                        $("#xl-ms-bill-loader").show();
+                        loadMSCurrentBill("{% url 'managment_load_bill' %}");
+                    </script>
+                </div>
+            </div>
+        </section>
+    </body>
+</html>

@@ -1,0 +1,115 @@
+{% load staticfiles %}
+{% if replies %}
+<ul>
+    {% for comment in replies %}
+        {% if comment.reply_type == 'company' %}
+            <li>
+                <div class="xl-single-comment">
+                    <img src="{{comment.company.profile_image.url}}" />
+                    <div class="comment-menu">
+                        <span class="menu-show" id="open_comment_menu{{comment.pk}}" data-id="{{comment.pk}}"><i class="icon ion-chevron-down"></i></span>
+                        <div class="menu-items" id="menu-items{{comment.pk}}">
+                            <ul>
+                                {% if session_company == comment.company.name_dotted %}
+                                <li><a class="delete_reply" reply-post-loader="{% url 'user_load_post_replies' comment.post.pk %}" data-href="{% url 'user_delete_post_reply' comment.pk %}" data-reply={{comment.pk}}>{% csrf_token %}<i class="icon ion-ios-trash"></i>Delete</a></li>
+                                <li><a class="open_edit_reply" data-reply="{% url 'user_edit_page_reply' comment.pk %}"><i class="icon ion-ios-compose"></i>Edit</a></li>
+                                {% endif %}
+                                <li><a href="#"><i class="icon ion-ios-loop"></i>Reply</a></li>
+                                <li><a href="#"><i class="icon ion-ios-information"></i>Report</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="comment-content">
+                        <p class="commenter"><a href="{% url 'comp_profile_2' comment.company.name_dotted %}">{{comment.company.name}}</a> - {{comment.reply_text}} </p>
+                        <p class="datetime"><span id="commentdate{{comment.pk}}" data-time="{{comment.reply_date|date:'Y-m-d H:i:s'}}"></span></p>
+                    </div>
+                </div>
+            </li>
+        {% elif comment.reply_type == 'user' %}
+            <li>
+                <div class="xl-single-comment">
+                    <img src="{{comment.user.profile_image.url}}" />
+                    <div class="comment-menu">
+                        <span class="menu-show" id="open_comment_menu{{comment.pk}}" data-id="{{comment.pk}}"><i class="icon ion-chevron-down"></i></span>
+                        <div class="menu-items" id="menu-items{{comment.pk}}">
+                            <ul>
+                                {% if session_user == comment.user.user_name %}
+                                <li><a class="delete_reply" reply-post-loader="{% url 'user_load_post_replies' comment.post.pk %}" data-href="{% url 'user_delete_post_reply' comment.pk %}" data-reply={{comment.pk}}><i class="icon ion-ios-trash"></i>Delete</a></li>
+                                <li><a class="open_edit_reply" data-reply="{% url 'user_edit_page_reply' comment.pk %}"><i class="icon ion-ios-compose"></i>Edit</a></li>
+                                {% endif %}
+                                <li><a href="#"><i class="icon ion-ios-loop"></i>Reply</a></li>
+                                <li><a href="#"><i class="icon ion-ios-information"></i>Report</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="comment-content">
+                        <p class="commenter"><a href="{% url 'user_posts' comment.user.user_name %}">{{comment.user.full_name}} <span class="username">@{{comment.user.user_name}}</span></a> - {{comment.reply_text}} </p>
+                        <p class="datetime"><span id="commentdate{{comment.pk}}" data-time="{{comment.reply_date|date:'Y-m-d H:i:s'}}"></span></p>
+                    </div>
+                </div>
+            </li>
+        {% endif %}
+        <script type="text/javascript">
+            $("#commentdate{{comment.pk}}").setTime();
+            $("#open_comment_menu{{comment.pk}}").showMenu();
+        </script>
+    {% endfor %}
+</ul>
+{% else %}
+<p class="xl-error">NO REPLIES YET</p>
+{% endif %}
+<section class="xl-search-modal" style="left:0;" id="edit_reply_modal">
+    <div class="xl-add-category" style="margin-top:calc((100% - 200px) / 4);">
+        <div id="edit_reply_cont">
+            <div class="xl-loader" id="edit_reply_loader"><img src="{% static 'images/loading.gif' %}" alt="loader"/></div>
+        </div>
+    </div>
+</section>
+
+<script type="text/javascript">
+    $(".open_edit_reply").click(function (ev) {
+        ev.preventDefault()
+        $("#edit_reply_modal").fadeIn();
+        $("#edit_reply_loader").show()
+        loadEditReply($(this).attr('data-reply'));
+    });
+    $(".delete_reply").click(function(){
+        var reply = $(this).attr('data-reply');
+        var url = $(this).attr('data-href');
+        $.confirm({
+            title: 'Delete Reply',
+            content: 'Do you really want to delete this reply ???',
+            icon: 'icon ion-help-circled',
+            animation: 'scale',
+            theme:'material',
+            type:'blue',
+            closeAnimation: 'scale',
+            opacity: 0.5,
+            buttons:{
+                'confirm':{
+                    text: 'Yes',
+                    btnClass: 'btn-green',
+                    action: function(){
+                        $.ajax({
+                            type:'POST',
+                            url:url,
+                            data:{
+                                'reply': reply,
+                                'csrfmiddlewaretoken':$("input[name=csrfmiddlewaretoken]").val()
+                            },
+                            success:function(success){
+                                loadProductComments("{% url 'user_load_post_replies' post.pk %}");
+                                showSuccessMessage("success", "Reply Deleted !!!");
+                            },
+                            error: function(error){
+                                showErrorMessage("error", error);
+                            }
+                        });
+                    }
+                },
+                cancel:function(){
+                },
+            }
+        });
+    })
+</script>

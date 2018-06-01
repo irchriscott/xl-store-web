@@ -1,0 +1,35 @@
+{% load staticfiles %}
+<p style="text-align:center;"><strong>Searching for </strong>{{search_key}}</p>
+{% if users %}
+<ul>
+    {% for user in users %}
+    <li data-user-id="{{user.pk}}" class="xl-ms-user-receipt">
+        <div class="xl-ms-user-details">
+            <img src="{{user.profile_image.url}}" />
+            <p class="name">{{user.full_name}} <span class="username">@{{user.user_name}}</span></p>
+            <p class="email">{{user.email}}</p>
+            {% if user.get_companies %}
+                {% for follow in user.get_companies %}
+                    {% if session_pk == follow.company.pk  %}
+                        <button style="background:lightgreen;"><i class="icon ion-ios-person"></i><i class="icon ion-ios-plus-empty"></i></button>
+                    {% else %}
+                        <button style="background:red;"><i class="icon ion-ios-person"></i><i class="icon ion-ios-plus-empty"></i></button>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <button style="background:red;"><i class="icon ion-ios-person"></i><i class="icon ion-ios-plus-empty"></i></button>
+            {% endif %}
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+<script type="text/javascript">
+    $(".xl-ms-user-receipt").click(function(){
+        var user_id = $(this).attr("data-user-id");
+        $("#user_bill").val(user_id);
+        $(this).addClass("tr_active").siblings().removeClass("tr_active");
+    });
+</script>
+{% else %}
+<p class="xl-error">NO USER FOUND</p>
+{% endif %}

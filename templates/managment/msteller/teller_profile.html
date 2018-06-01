@@ -1,0 +1,132 @@
+<div class="xl-add-product" style="width:60%">
+    {% if session_teller == True %}
+        <div class="xl-teller-profile">
+            <div class="xl-teller-image">
+                <img src="{{teller.teller_image.url}}" alt="{{teller.username}}" />
+            </div>
+            <div class="xl-teller-about">
+                <h3>ABOUT TELLER</h3>
+                <p><strong>Name : </strong>{{teller.full_name}}</p>
+                <p><strong>Username : </strong>{{teller.username}} <span id="update_username">Edit</span></p>
+                <p><strong>Email : </strong>{{teller.email}}</p>
+                <p><strong>Address : </strong>{{teller.address}}</p>
+                <p><strong>Phone Number : </strong>{{teller.phone_number}}</p>
+                <p><strong>Password : </strong> ******** <span id="update_password">Edit</span></p>
+                <p><strong>Registration Date : </strong>{{teller.registration_date}}</p>
+                <button type="submit" id="save_teller_all" style="background:lightgreen;">Save</button>
+                <button type="button" style="background:red;" id="close_teller_profile">Cancel</button>
+            </div>
+        </div>
+        <div class="xl-search-modal" style="left:0; top:0;" id="teller_edit_password">
+            <div class="xl-ms-add-product-modal" style="margin-top:calc((100vh - 290px) / 2) !important;">
+                <h2>Edit Password</h2>
+                <form action="" id="update_teller_password" method="POST">
+                    <div class='xl-ms-input-add'>
+                        {% csrf_token %}
+                        <label>Enter Current Password :</label>
+                        <input type="password" placeholder="Enter Current Password" name="current_password"  required="required" autocomplete="off" />
+                        <label>Enter New Password :</label>
+                        <input type="password" placeholder="Enter New Password" name="new_password" required="required" />
+                        <label>Confirm New Password :</label>
+                        <input type="password" placeholder="Confirm New Password" name="confirm_password" required="required" />
+                        <button style="background:lightgreen;" id="submit_update_password" type="submit">Submit</button>
+                        <button style="background:red;" type="button" id="close_update_password">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="xl-search-modal" style="left:0; top:0;" id="teller_edit_username">
+            <div class="xl-ms-add-product-modal" style="margin-top:calc((100vh - 220px) / 2) !important;">
+                <h2>Edit Username</h2>
+                <form action="{% url 'managment_mstl_update_username' %}" id="update_teller_username" method="POST">
+                    <div class='xl-ms-input-add'>
+                        {% csrf_token %}
+                        <label>Enter New Username :</label>
+                        <input type="text" placeholder="Enter New Username" name="new_username"  required="required" autocomplete="off" />
+                        <label>Enter Password :</label>
+                        <input type="password" placeholder="Enter Password" name="password" required="required" />
+                        <button style="background:lightgreen;"  id="submit_update_username" type="submit">Submit</button>
+                        <button style="background:red;" type="button" id="close_update_username">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script type="text/javascript">
+            $("#close_teller_profile, #save_teller_all").click(function(){
+                $(".mfp-close").click();
+            });
+            $("#update_password").click(function(){
+                $("#teller_edit_password").show();
+            });
+            $("#close_update_password").click(function(){
+                $("#teller_edit_password").hide();
+            });
+
+            $("#update_username").click(function(){
+                $("#teller_edit_username").show();
+            });
+            $("#close_update_username").click(function(){
+                $("#teller_edit_username").hide();
+            });
+
+            $("#submit_update_username").click(function(e){
+                e.preventDefault();
+                var username = $("input[name=new_username]").val();
+                var password = $("input[name=password]").val();
+                var url = "{% url 'managment_mstl_update_username' %}";
+                $.ajax({
+                    type:'POST',
+                    url:url,
+                    data:{
+                        'new_username':username,
+                        'password':password,
+                        'csrfmiddlewaretoken':$("input[name=csrfmiddlewaretoken]").val()
+                    },
+                    success: function(success){
+                        if(success == "ok"){
+                            $("#teller_edit_username").hide();
+                            $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:'Teller Username Updated Successfully !!!',type: 'green'});
+                        }else{
+                            $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:success,type: 'red'});
+                        }
+                    },
+                    error: function(error){
+                        showErrorMessage("error", error);
+                    }
+                });
+            });
+
+            $("#submit_update_password").click(function(e){
+                e.preventDefault();
+                var url = "{% url 'managment_mstl_update_password' %}";
+                var old_password = $("input[name=current_password]").val();
+                var new_password = $("input[name=new_password]").val();
+                var conf_password = $("input[name=confirm_password]").val();
+
+                $.ajax({
+                    type:'POST',
+                    url:url,
+                    data:{
+                        'current_password':old_password,
+                        'new_password': new_password,
+                        'conf_password':conf_password,
+                        'csrfmiddlewaretoken':$("input[name=csrfmiddlewaretoken]").val()
+                    },
+                    success: function(success){
+                        if(success == "ok"){
+                            $("#teller_edit_password").hide();
+                            $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:'Teller Password Updated Successfully !!!',type: 'green'});
+                        }else{
+                            $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:success,type: 'red'});
+                        }
+                    },
+                    error: function(error){
+                        showErrorMessage("error", error);
+                    }
+                });
+            });
+        </script>
+    {% else %}
+        <p class="xl-error">TRY TO LOGIN AS TELLER</p>
+    {% endif %}
+</div>

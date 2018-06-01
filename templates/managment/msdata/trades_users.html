@@ -1,0 +1,194 @@
+{% load staticfiles %}
+{% load humanize %}
+<div class="xl-ms-trades-list">
+    <h2>Trade for {{product.product_name}}</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>ID</th>
+                <th>Status</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+            </tr>
+            {% if trades %}
+                <tbody>
+                    {% for trade in trades %}
+                        {% if trade.check_trade_agreement %}{% else %}
+                            <tr id="open_trade_context_menu_{{trade.pk}}" style="cursor:default;">
+                                <td>
+                                    {% if trade.user.profile_image %}
+                                        <img src="{{trade.user.profile_image.url}}" style="width:70px; height:70px;" alt="{{trade.user.user_name}}" />
+                                    {% else %}
+                                        <img src="{% static 'images/default_user.jpg' %}" style="width:70px; height:70px;" alt="{{trade.user.user_name}}" />
+                                    {% endif %}
+                                </td>
+                                <td>{{trade.user.full_name}} <span class="username" style="display:block;">@{{trade.user.user_name}}</span></td>
+                                <td>{{trade.status}}</td>
+                                <td>{{trade.started_date|date:"d M, Y"}}</td>
+                                <td>{{trade.end_date|date:"d M, Y"}}</td>
+                            </tr>
+
+                            <div class="xl-ms-add-product-modal zoom-anim-dialog mfp-hide" id="agree_trade_{{trade.pk}}">
+                                <h2>Agree Trade</h2>
+                                <br/>
+                                <form data-trade-loader="{% url 'managment_msdt_users_trades' product.pk %}" class="form_to_submit" id="agree_trade_form_{{trade.pk}}" action="{% url 'managment_msdt_agree_trade' trade.pk %}" method="post" data-trade="{{trade.pk}}">
+                                    <div class='xl-ms-input-add'>
+                                        {% csrf_token %}
+                                        <input type="hidden" name="trade" value="{{trade.pk}}" />
+                                        <label>Enter Quantity :</label>
+                                        <input type="number" min="1" value="1" id="trade_quantity{{trade.pk}}" placeholder="Enter Quantity" name="quantity" required="required" />
+                                        <label>Enter Price Agreed :</label>
+                                        <input type="number" min="1" value="{{trade.product.price}}" id="trade_price{{trade.pk}}" placeholder="Enter Price Agreed" name="price" required="required" />
+                                        <button style="background:lightgreen;" class="agree_trade_form" id="submit-agree-trade{{trade.pk}}" type="submit">Save</button>
+                                        <button style="background:red;" type="button" class="close_trade_aggree" id="close-agree-trade{{trade.pk}}">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="xl-ms-product-menu-else" id="trade_user_menu_{{trade.pk}}">
+                                <ul>
+                                    <li><a id="open-agree-trade{{trade.pk}}" href="#agree_trade_{{trade.pk}}"><i class="icon ion-edit"></i> Agree</a></li>
+                                    {% if trade.status != "succeeded" %}
+                                    <li><a data-status="succeeded" class="change_trade_status" data-trades="{% url 'managment_msdt_users_trades' product.pk %}" data-url-change="{% url 'change_trade_status' trade.pk %}" data-current-status="{{trade.status}}"><i class="icon ion-checkmark-round"></i> Succeed</a></li>
+                                    {% endif %}
+                                    <li><a target="_blank" href="{% url 'company_single_trade' trade.pk %}"><i class="icon ion-ios-chatboxes"></i> Trade Messages</a></li>
+                                </ul>
+                            </div>
+                            <script type="text/javascript">
+
+                                $('#open-agree-trade{{trade.pk}}').magnificPopup({
+                                    type: 'inline',
+                                    fixedContentPos: false,
+                                    fixedBgPos: true,
+                                    overflowY: 'auto',
+                                    closeBtnInside: true,
+                                    preloader: false,
+                                    midClick: true,
+                                    removalDelay: 300,
+                                    mainClass: 'my-mfp-zoom-in'
+                                });
+                                $("#close-agree-trade{{trade.pk}}").click(function(){
+                                    $(".mfp-close").click();
+                                });
+
+                                $("#open_trade_context_menu_{{trade.pk}}").contextmenu(function(e){
+                                    e.preventDefault();
+                                    $(".xl-ms-product-menu").hide();
+                                    var width = $(window).width();
+                                    var subWidth = (width * 30) / 100 ;
+                                    var pageY = e.pageY - 126;
+                                    var pageX = e.pageX - subWidth + 50;
+
+                                    $("#trade_user_menu_{{trade.pk}}").css({'top':pageY, 'margin-left':pageX}).show();
+                                });
+                            </script>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            {% else %}
+            {% endif %}
+        </thead>
+    </table>
+</div>
+<script type="text/javascript">
+    $(".change_trade_status").click(function(e){
+        e.preventDefault();
+        var _this = $(this);
+        var status = _this.attr("data-status");
+        var bef_status = _this.attr("data-current-status");
+        var url = _this.attr("data-url-change");
+        var data_trades = _this.attr("data-trades");
+        $.confirm({
+            title: 'Change Trade Status',
+            content: 'Do you really want to change trade status from '+ bef_status +' to '+ status +' ???',
+            icon: 'icon ion-help-circled',
+            animation: 'scale',
+            theme:'material',
+            type:'blue',
+            closeAnimation: 'scale',
+            opacity: 0.5,
+            buttons:{
+                'confirm':{
+                    text: 'Yes',
+                    btnClass: 'btn-green',
+                    action: function(){
+                        $.ajax({
+                            type:'POST',
+                            url:url,
+                            data:{'status': status},
+                            success:function(success){
+                                $(".mfp-close").click();
+                                load_msp_products(data_trades);
+                                if(success == "ok"){
+                                    showSuccessMessage("success", "Trade Status Changed !!!");
+                                }else{
+                                    $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:success,type: 'red'});
+                                }
+                            },
+                            error: function(error){
+                                showErrorMessage("error", error);
+                            }
+                        });
+                    }
+                },
+                cancel:function(){},
+            }
+        });
+    });
+
+    $(".close_trade_aggree").click(function(){
+        $(".mfp-close").click();
+    });
+
+    $(".agree_trade_form").click(function(e){
+        e.preventDefault();
+        var _this = $(this).parents().find(".form_to_submit");
+        var trade = _this.attr("data-trade");
+        var form_data = new FormData(_this[0]);
+        var url = _this.attr("action");
+        var data_trades = _this.attr("data-trade-loader");
+        var quantity = $("#trade_quantity"+trade).val();
+        var price = $("#trade_price"+trade).val();
+        $.confirm({
+            title: 'Agree Trade',
+            content: 'Do you really want to agree this Trade ???',
+            icon: 'icon ion-help-circled',
+            animation: 'scale',
+            theme:'material',
+            type:'blue',
+            closeAnimation: 'scale',
+            opacity: 0.5,
+            buttons:{
+                'confirm':{
+                    text: 'Yes',
+                    btnClass: 'btn-green',
+                    action: function(){
+                        $.ajax({
+                            type:'POST',
+                            url:url,
+                            data:{
+                                'quantity':quantity,
+                                'price':price
+                            },
+                            success:function(success){
+                                $(".mfp-close").click();
+                                $("#trade_list_loader").show();
+                                load_msp_products(data_trades);
+                                if(success == "ok"){
+                                    $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:"Trade Agreed Successfully !!!",type: 'green'});
+                                }else{
+                                    $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:success,type: 'red'});
+                                }
+                            },
+                            error: function(error){
+                                showErrorMessage("error", error);
+                            }
+                        });
+                    }
+                },
+                cancel:function(){},
+            }
+        });
+    });
+</script>

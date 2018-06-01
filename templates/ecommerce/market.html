@@ -1,0 +1,78 @@
+{% load staticfiles %}
+<div class="xl-message-map" style="width:60%;">
+    {% if session_user %}
+        <div class="xl-market-products" id="xl_market_products">
+            <div class="loading_await" id="loading_await_market">
+                <img src="{% static 'images/loading.gif' %}" />
+                <h2>Please Wait ...</h2>
+            </div>
+        </div>
+        <button>OK</button>
+        <button style="background:red;" id="close_access_market">CANCEL</button>
+    {% endif %}
+    <script type="text/javascript">
+        var host = 'localhost';
+        var port = '4000';
+        var socket = io(host + ':' + port);
+        var user = "{{user.pk}}";
+
+        socket.on("accessMarketAllowed", function(data){
+            if (data.user.token == user){
+                if (data.status == "allowed" || data.status == "vip"){
+                    load_market_product("{% url 'ecommerce_user_start' user.pk %}?key=" + data.key);
+                }
+            }
+        });
+
+        socket.on("accessMarketDenied", function(data){
+            if (data.user.token == user){
+                $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:"Market Access Request has been Denied !!!",type: 'red'});
+                $(".mfp-close").click();
+            }
+        });
+
+        function close_market(key) {
+            $.ajax({
+                type: 'GET',
+                url: '/ecommerce/mc/market/company/access/' + key + '/disallow/',
+                data: {},
+                success: function(response){
+                    $(".mfp-close").click();
+                },
+                error: function(error){
+                    showErrorMessage("add_item_to_cart", error);
+                }
+            });
+        }
+
+        $("#close_access_market").click(function(){
+            $.get("{% url 'check_user_access_market' company.pk user.pk %}", function(response){
+                if (response != "Error"){
+                    var data = JSON.parse(response);
+                    $.confirm({
+                        title: 'Leave Market',
+                        content: 'Do you really want to leave {{company.name}} market ???',
+                        icon: 'icon ion-help-circled',
+                        animation: 'scale',
+                        theme:'material',
+                        type:'blue',
+                        closeAnimation: 'scale',
+                        opacity: 0.5,
+                        buttons:{
+                            'confirm':{
+                                text: 'Yes',
+                                btnClass: 'btn-green',
+                                action: function(){
+                                    close_market(data.key);
+                                }
+                            },
+                            cancel:function(){},
+                        }
+                    });
+                } else {
+                    $(".mfp-close").click();
+                }
+            });
+        });
+    </script>
+</div>

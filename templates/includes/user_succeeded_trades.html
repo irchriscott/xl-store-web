@@ -1,0 +1,77 @@
+{% load staticfiles %}
+{% load humanize %}
+{% if session_user %}
+    <div class="xl-trades-list-else" id="company_trades">
+        {% if succeeded_trades == True %}
+            {% if trade_companies %}
+                <ul>
+                    {% for company in trade_companies %}
+                        <li id="comp_{{company.product__company}}">
+                            <a class="company_trade_companies" data-url="{% url 'products_succeeded_trades' company.product__company %}">
+                                {% for comp in companies %}
+                                    {% if comp.pk == company.product__company %}
+                                        <img src="{{comp.profile_image.url}}" />
+                                        <span class="prod-name">{{comp.name}}</span>
+                                    {% endif %}
+                                {% endfor %}
+                                <span class="float-side"><span>{{company.products}}</span><i class="icon ion-ios-arrow-right"></i></span>
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="xl-error">NO SUCCEEDED TRADE</p>
+            {% endif %}
+        {% elif succeeded_products == True %}
+            <span class="xl-go-back" id="go_back_succeed">GO BACK</span>
+            {% if products %}
+                <ul>
+                    {% for product in products %}
+                        <li id="trade_{{product.pk}}">
+                            <a href="{% url 'user_single_trade' product.pk %}">
+                                <img src="{{product.product.image.url}}" />
+                                <span class="prod-name">{{product.product.product_name}}</span>
+                                <span class="float-side"><span>{{product.get_sum_trade_messages}}</span><i class="icon ion-ios-arrow-right"></i></span>
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="xl-error">NO SUCCEEDED TRADE</p>
+            {% endif %}
+                <h3 style="margin:5px 0;">Agreed Trades</h3>
+                {% if agreed_products %}
+                    <ul>
+                        {% for product in agreed_products %}
+                            <li>
+                                <a id="load_trade_agreed_{{product.pk}}" href="{% url 'managment_msdt_single_agreed_trade' product.pk %}">
+                                    <img src="{{product.trade.product.image.url}}" />
+                                    <span class="prod-name">{{product.trade.product.product_name}}</span>
+                                    <span class="float-side"><span>{{product.trade.get_sum_trade_messages}}</span><i class="icon ion-ios-arrow-right"></i></span>
+                                </a>
+                                <script type="text/javascript">
+                                    $("#load_trade_agreed_{{product.pk}}").magnificPopup({type:'ajax'});
+                                </script>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="xl-error">NO AGREED TRADE</p>
+                {% endif %}
+        {% endif %}
+    </div>
+{% else %}
+    <p class="xl-error">YOU ARE NOT ALLOWED TO VISITE THIS PAGE</p>
+{% endif %}
+<script type="text/javascript">
+    $(".company_trade_companies").click(function(){
+        var url = $(this).attr("data-url");
+        $(this).parent("li").addClass("activated").siblings().removeClass("activated");
+        $("#trade_list_loader").show();
+        load_trades_lists(url);
+    });
+    $("#go_back_succeed").click(function(){
+        $("#msp_products_loader").show();
+        load_trades_lists("{% url 'user_succeeded_trades' %}");
+    });
+</script>

@@ -1,0 +1,89 @@
+{% load staticfiles %}
+{% load humanize %}
+{% if admin_session == True %}
+    <div class="xl-ms-product-add">
+        <style type="text/css">
+            .mfp-close{color: #FFF !important;opacity: 1 !important;}
+        </style>
+        <h2>Add Products From Product</h2>
+        {% if products %}
+        <div class="xl-ms-all">
+            {% for product in products %}
+                {% if product.check_managment_product %}{% else %}
+                    <div class="xl-ms-product-toadd">
+                        <div class="product-image"><img src="{{product.image.url}}" /></div>
+                        <div class="product-content">
+                            <div class="product-description">
+                                <h3>{{product.product_name}}</h3>
+                                <p>
+                                    <i class="icon ion-ios-settings-strong"></i> {% for category in product_category %}{% if product.category == category.pk %}{{category.name}}{% endif %}{% endfor %}
+                                    <i class="icon ion-ios-clock-outline"></i>
+                                    <span id='post-date{{product.pk}}'><script type="text/javascript">setInterval(function(){setTime('#post-date{{product.pk}}', '{{product.posted_date|date:"Y-m-d H:i:s"}}')}, 100)</script></span>
+                                </p>
+                                <span class="xl-ms-price"><i class="icon ion-ios-pricetags"></i> {{product.price|intword}} {{setting.currency}}</span>
+                                <span id="button_add{{product.pk}}">
+                                    <button id="open_add_fp_modal{{product.pk}}"><i class="icon ion-ios-cart"></i><i class="icon ion-ios-plus-empty"></i> ADD</button>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="xl-search-modal" style="left:0; top:0;" id="xl-ms-add-product-modal{{product.pk}}">
+                            <div class="xl-ms-add-product-modal" style="margin-top:calc((100vh - 320px) / 2) !important;">
+                                <h2>Enter Product Details</h2>
+                                <form action="{% url 'managment_add_from_product' %}" id="add_fp_product{{product.pk}}" method="POST">
+                                    <div class='xl-ms-input-add'>
+                                        {% csrf_token %}
+                                        <input type="hidden" name="product" value="{{product.id}}" />
+                                        <label>Enter Product Code :</label>
+                                        <input type="text" placeholder="Enter Product Code" name="product_code"  required="required" autocomplete="off" />
+                                        <label>Enter Product Quantity :</label>
+                                        <input type="number" min="1" placeholder="Enter Quantity" name="quantity" required="required" />
+                                        <label>Purchased Item Price :</label>
+                                        <input type="number" min="1" placeholder="Enter Purchased Item Price" name="item_price" required="required" />
+                                        <button style="background:lightgreen;" type="submit">Submit</button>
+                                        <button style="background:red;" type="button" id="close-ms-modal-add{{product.pk}}">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <script type="text/javascript">
+                            hideLoadLinkSpinner();
+                            $("#open_add_fp_modal{{product.pk}}").click(function(){
+                                $("#xl-ms-add-product-modal{{product.pk}}").show();
+                            });
+                            $("#close-ms-modal-add{{product.pk}}").click(function(){
+                                $("#xl-ms-add-product-modal{{product.pk}}").hide();
+                            });
+                            $("#add_fp_product{{product.pk}}").submit(function(ev){
+                                ev.preventDefault();
+                                var formData = new FormData($(this)[0]);
+                                $.ajax({
+                                    type:'POST',
+                                    url:$(this).attr('action'),
+                                    data:formData,
+                                    processData: false,
+                                    async: false,
+                                    cache: false,
+                                    contentType: false,
+                                    success:function(success){
+                                        $("#button_add{{product.pk}}").html('<button style="background:lightgreen;"><i class="icon ion-ios-cart"></i><i class="icon ion-ios-checkmark-empty"></i> ADDED</button>');
+                                        $("#xl-ms-add-product-modal{{product.pk}}").hide();
+                                        loadMSProductts("{% url 'managment_products_all' %}");
+                                        showSuccessMessage("success", "Product Added To MS !!!");
+
+                                    },
+                                    error: function(error){
+                                        showErrorMessage("error", error);
+                                    }
+                                });
+                            });
+                        </script>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+        {% endif %}
+    </div>
+{% else %}
+    <p class="xl-error">WTF DO YOU WANT...???</p>
+{%  endif %}

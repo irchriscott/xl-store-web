@@ -1,0 +1,204 @@
+<div class="xl-add-category" style="width:50%;">
+    <h2>{% if session_company %}Add Company Address{% elif session_user %}Add User Address{% endif %}</h2>
+    <div class="xl-search-location">
+        <form id="update_company_location" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="longitude" id="longitude" />
+            <input type="hidden" name="latitude" id="latitude" />
+            <input type="text" id="search_location_text" name="address" placeholder="Search Location Here" />
+            <button data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" title="Find Location" type="button" class="location_tip" type="button" id="find_location"><i class="icon ion-android-send"></i></button>
+            <button data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" title="Locate Me" type="button" class="location_tip" type="button" id="locate_me" style="margin-right:0;"><i class="icon ion-ios-location"></i></button>
+        </form>
+    </div>
+    <div class="xl-location-map" id="add_address_map"></div>
+    <form>
+        <button type="button" id="save_location" style="background:lightgreen;">ADD</button>
+        <button type="button" style="background:red;" id="close_add_address">Cancel</button>
+    </form>
+    <script type="text/javascript">
+
+        hideLoadLinkSpinner();
+        
+        $("#close_add_address").click(function(){
+            $(".mfp-close").click();
+        });
+
+
+        $(document).ready(function(){
+            getUserCurrentLocation("latitude", "longitude", "search_location_text");
+            setTimeout(() => {
+                loadAddressMap();
+            }, 2000);
+        });
+
+
+        var markers = [];
+        var map;
+
+        google.maps.event.addDomListener(window, 'load', InitializePlaces('search_location_text'));
+
+        function loadAddressMap(){
+            var latitude = parseFloat($("#latitude").val());
+        	var longitude = parseFloat($("#longitude").val());
+        	var address = $("#search_location_text").val();
+            var myLatLng = {lat: latitude, lng: longitude};
+
+            map = new google.maps.Map(document.getElementById('add_address_map'), {
+                zoom: 16,
+                center: myLatLng,
+                gestureHandling: 'cooperative'
+            });
+
+            var marker = new google.maps.Marker({
+                position: myLatLng,
+                map: map,
+                title: address
+            });
+
+            markers.push(marker);
+
+            var geocoder = new google.maps.Geocoder();
+
+            google.maps.event.addListener(map, 'click', function(event) {
+                geocoder.geocode({'latLng': event.latLng}, function(results, status) {
+                    if (status == google.maps.GeocoderStatus.OK) {
+                        if (results[0]) {
+                            var n_address = results[0].formatted_address;
+                            var n_latitude = results[0].geometry.location.lat();
+            				var n_longitude = results[0].geometry.location.lng();
+                            var position = {lat: n_latitude, lng: n_longitude}
+
+                            $("#latitude").val(n_latitude);
+                        	$("#longitude").val(n_longitude);
+                        	$("#search_location_text").val(n_address);
+
+                            clearMarkers();
+
+                            var marker = new google.maps.Marker({
+                                position: position,
+                                map: map,
+                                title: n_address
+                            });
+                            markers.push(marker);
+                        }
+                    } else {
+                        showErrorMessage("error", status);
+                    }
+                });
+            });
+        }
+
+        function setMapOnAll(map) {
+            for (var i = 0; i < markers.length; i++) {
+                markers[i].setMap(map);
+            }
+        }
+
+        function clearMarkers() {
+            setMapOnAll(null);
+        }
+
+        function deleteMarkers() {
+            clearMarkers();
+            markers = [];
+        }
+
+        $("#locate_me").click(function(){
+            getUserCurrentLocation("longitude", "latitude", "search_location_text");
+        });
+
+        $("#find_location").click(function(e){
+    		var address = $("#search_location_text").val();
+    		var geocoder = new google.maps.Geocoder();
+    		geocoder.geocode({ 'address' : address }, function (results, status) {
+    			if (status == google.maps.GeocoderStatus.OK) {
+    				var from_lat = results[0].geometry.location.lat();
+    				var from_long = results[0].geometry.location.lng();
+    				$("#latitude").val(from_lat);
+    				$("#longitude").val(from_long);
+    				var LatLng = {lat: from_lat, lng: from_long};
+
+    				map = new google.maps.Map(document.getElementById('add_address_map'), {
+    				  zoom: 16,
+    				  center: LatLng,
+                      gestureHandling: 'cooperative'
+    				});
+
+    				var marker = new google.maps.Marker({
+    				  position: LatLng,
+    				  map: map,
+    				  title: address
+    				});
+
+                    markers.push(marker);
+
+                    var geocoder = new google.maps.Geocoder();
+
+                    google.maps.event.addListener(map, 'click', function(event) {
+                        geocoder.geocode({'latLng': event.latLng}, function(results, status) {
+                            if (status == google.maps.GeocoderStatus.OK) {
+                                if (results[0]) {
+                                    var n_address = results[0].formatted_address;
+                                    var n_latitude = results[0].geometry.location.lat();
+                    				var n_longitude = results[0].geometry.location.lng();
+                                    var position = {lat: n_latitude, lng: n_longitude}
+
+                                    $("#latitude").val(n_latitude);
+                                	$("#longitude").val(n_longitude);
+                                	$("#search_location_text").val(n_address);
+
+                                    clearMarkers();
+
+                                    var marker = new google.maps.Marker({
+                                        position: position,
+                                        map: map,
+                                        title: n_address
+                                    });
+                                    markers.push(marker);
+                                }
+                            } else {
+                                showErrorMessage("error", status);
+                            }
+                        });
+                    });
+    			} else {
+                    showErrorMessage("error", status);
+                }
+    		});
+    	});
+
+        $("#update_company_location").submit(function(e){e.preventDefault(); $("#find_location").click();});
+        $("#save_location").click(function(){
+            var latitude = parseFloat($("#latitude").val());
+        	var longitude = parseFloat($("#longitude").val());
+        	var address = $("#search_location_text").val();
+
+            if(address != ""){
+                $.ajax({
+                    type:"POST",
+                    url:"{% url 'add_address' %}",
+                    data:{
+                        "latitude": latitude,
+                        "longitude": longitude,
+                        "address": address,
+                        "csrfmiddlewaretoken": $("input[name=csrfmiddlewaretoken]").val()
+                    },
+                    success: function(response){
+                        if(response == "ok"){
+                            showSuccessMessage("success", "Address Saved !!!");
+                            $(".mfp-close").click();
+                            $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:'Adress Added Successfully !!!',type: 'green'});
+                        }else{
+                            $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:'Error Occured',type: 'red'});
+                        }
+                    },
+                    error: function(error){
+                        showErrorMessage("error", error);
+                    }
+                });
+            } else {
+                $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:'Address cant be Empty !!!',type: 'red'});
+            }
+        });
+    </script>
+</div>

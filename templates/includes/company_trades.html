@@ -1,0 +1,50 @@
+{% load staticfiles %}
+{% load humanize %}
+{% if session_user %}
+    <div class="xl-trades-list-else" id="company_trades">
+        {% if trade_companies %}
+            <ul>
+                {% for company in trade_companies %}
+                    <li id="comp_{{company.product__company}}">
+                        <a class="company_trade_companies" data-url="{% url 'company_products' company.product__company trade.pk %}">
+                            {% for comp in companies %}
+                                {% if comp.pk == company.product__company %}
+                                    <img src="{{comp.profile_image.url}}" />
+                                    <span class="prod-name">{{comp.name}}</span>
+                                {% endif %}
+                            {% endfor %}
+                            <span class="float-side"><span>{{company.products}}</span><i class="icon ion-ios-arrow-right"></i></span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="xl-error">NO COMPANY</p>
+        {% endif %}
+    </div>
+{% else %}
+    <p class="xl-error">YOU ARE NOT ALLOWED TO VISITE THIS PAGE</p>
+{% endif %}
+<script type="text/javascript">
+    $(".xl-trades-list-else").slimScroll({
+        railVisible: true,
+        size:'7',
+        height:'calc(100vh - 173px)',
+        alwaysVisible: false
+    });
+    $(".company_trade_companies").click(function(){
+        var url = $(this).attr("data-url");
+        $(this).parent("li").addClass("activated").siblings().removeClass("activated");
+        $("#trade_list_loader").show();
+        load_trades_lists(url);
+    });
+    $(document).ready(function(){
+        var companies = $("#company_trades").find("li")
+        var current_company = parseInt("{{trade.product.company.pk}}")
+        for(var list = 0; list < companies.length; list ++){
+            if($(companies[list]).attr("id") == "comp_"+current_company){
+                $(companies[list]).addClass("activated");
+            }
+        }
+    });
+</script>

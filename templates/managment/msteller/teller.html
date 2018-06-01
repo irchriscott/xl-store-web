@@ -1,0 +1,127 @@
+{% load staticfiles %}
+{% load humanize %}
+<div class="xl-ms-product">
+    <div class="xl-ms-product-details">
+        <h2>Teller Information</h2>
+        <div class="product_image">
+            <img src="{{teller.teller_image.url}}" />
+        </div>
+        <h4 style="margin-bottom:10px;"><strong>{{teller.full_name}}</strong></h4>
+        <p><strong>Email : </strong>{{teller.email}}</p>
+        <p><strong>Address : </strong>{{teller.address}}</p>
+        <p><strong>Phone Number : </strong>{{teller.phone_number}}</p>
+        <p><strong>Is Admin : </strong>{{teller.is_admin}}</p>
+        <button type="button" style="background:#00c6d7;" id="open_edit_ms_teller" href="{% url 'admin_update_teller_temp' teller.pk %}">Edit Teller</button>
+        {% if teller.is_admin == True %}
+            <button type="button" style="background:#999;" id="change_teller_is_admin" data-about="unmake" data-url="{% url 'admin_update_teller_admin' teller.pk %}">Unmake admin</button>
+        {% else %}
+            <button type="button" style="background:#999;" id="change_teller_is_admin" data-about="make" data-url="{% url 'admin_update_teller_admin' teller.pk %}">Make admin</button>
+        {% endif %}
+    </div>
+    <div class="xl-ms-product-inventory">
+        <h2>Tailler Customers</h2>
+        <div id="today_details">
+            <table style="width:100%;">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Image</th>
+                        <th>Details</th>
+                        <th>Total</th>
+                        <th>Discount</th>
+                        <th>Total Net</th>
+                    </tr>
+                </thead>
+                <tbody style="text-align:center;">
+                    {% if customers_detail %}
+                        {% for bill in customers_detail %}
+                            <tr class="single_bill_tr" id="open_single_bill{{bill.pk}}" href="{% url 'managment_get_single_bill' bill.pk %}" style="cursor:pointer;">
+                                <td>{{bill.receipt_number}}</td>
+                                <td>
+                                    {% if bill.user %}
+                                        {% if bill.user.profile_image %}
+                                            <img style="width:40px;" src="{{bill.user.profile_image.url}}" />
+                                        {% else %}
+                                            <img style="width:40px;" src="{% static 'images/default_user.jpg' %}" />
+                                        {% endif %}
+                                    {% else %}
+                                        <img style="width:40px;" src="{% static 'images/default_user.jpg' %}" />
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if bill.user %}
+                                        <strong>{{bill.user.full_name}}</strong>
+                                    {% else %}
+                                        <strong>{{bill.username}}</strong>
+                                    {% endif %}
+                                </td>
+                                <td>{{bill.total_paid|intcomma}} {{setting.currency}}</td>
+                                <td>{{bill.discount|intcomma}} {{setting.currency}}</td>
+                                <td>{{bill.total_net|intcomma}} {{setting.currency}}</td>
+                            </tr>
+                            <script type="text/javascript">
+                                $("#open_single_bill{{bill.pk}}").magnificPopup({type: 'ajax'});
+                            </script>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td style="padding:20px 0;" colspan="7"><p class="xl-error">NO BILL FOR THIS TELLER</p></td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(".xl-ms-product-inventory").slimScroll({
+        railVisible: true,
+        size:'7',
+        height:'calc(100vh - 150px)',
+        alwaysVisible: false
+    });
+
+    $("#open_edit_ms_teller").magnificPopup({type:'ajax'});
+
+    $("#change_teller_is_admin").click(function(e){
+        e.preventDefault();
+        var url = $(this).attr("data-url");
+        var about = $(this).attr("data-about");
+
+        var title = about == "make" ? "Make Admin" : "Unmake Admin";
+        var content = about == "make" ? "Do you really want to make this teller admin ???" : "DO you really want to unmake this teller admin ???"
+
+        $.confirm({
+            title: title,
+            content: content,
+            icon: 'icon ion-help-circled',
+            animation: 'scale',
+            theme:'material',
+            type:'blue',
+            closeAnimation: 'scale',
+            opacity: 0.5,
+            buttons:{
+                'confirm':{
+                    text: 'Yes',
+                    btnClass: 'btn-green',
+                    action: function(){
+                        $.ajax({
+                            type:'POST',
+                            url:url,
+                            data:{},
+                            success:function(success){
+                                loadMSProductts("{% url 'managment_mstl_single_teller' teller.pk %}");
+                                $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:success,type: 'green'});
+                            },
+                            error: function(error){
+                                showErrorMessage("error", error);
+                            }
+                        });
+                    }
+                },
+                cancel:function(){
+                },
+            }
+        });
+    });
+</script>

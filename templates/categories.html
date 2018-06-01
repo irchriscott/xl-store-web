@@ -1,0 +1,213 @@
+{% load staticfiles %}
+{% include 'css.html' %}
+{% load tz %}
+{% load humanize %}
+    <body>
+        {% include 'header.html' %}
+        <!-- PROFIL DIVISION -->
+        <section class="xl-profil-container">
+            {% if company.cover_image %}
+                <div class="xl-cover-container" id="comp_cover_image" style="background-image:url({{company.cover_image.url}});">
+            {% else %}
+                <div class="xl-cover-container" id="comp_cover_image" style="background:gray;">
+            {% endif %}
+                {% if session_company == company.name_dotted %}
+                <form style="display:none;" id="update_cover_image" enctype="multipart/form-data" method="post" action="{% url 'comp_cover_edit' %}">{% csrf_token %}
+                    {{cover_image_form}}
+                </form>
+                <div class="xl-modif-cover" id="modif_company_cover"><img src="{% static 'css/camera.svg' %}" /><span>Edit Cover Picture</span></div>
+                {% endif %}
+                <div class="xl-user-name">
+                    <h2><a href="{% url 'comp_profile' company.name_dotted %}">{{company.name}}</a> <span><i class="icon ion-edit"></i></span></h2>
+                </div>
+            </div>
+            <div class="xl-profil-picture">
+                <a href="{{company.get_profile_image.url}}" class="product-main-image" title="Profile Picture" data-company="{{company.name}}">
+                    <img id="profile_image" src="{{company.get_profile_image.url}}" />
+                </a>
+                {% if session_company == company.name_dotted %}
+                    <div class="xl-modif-profil" id="modif_company_profil">
+                        <img src="{% static 'css/camera.svg' %}" /><span>Edit Profil Picture</span>
+                    </div>
+                    <form style="display:none;" id="update_profile_image" enctype="multipart/form-data" method="post" action="{% url 'comp_profile_image_edit' %}">{% csrf_token %}
+                        {{profile_image_form}}
+                    </form>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- NAVBAR DOWN -->
+
+        <section class="xl-navbar-down xl-navbar-user" id="xl-navbar-user">
+            <div class="xl-navbar-content" style="width:597px">
+                <ul>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="menu-list" title="{{company.get_sum_products}} Products"><a href="{% url 'comp_profile_2' company.name_dotted %}">Products <span>{{company.get_sum_products}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="menu-list" title="{{company.get_sum_posts}} Posts"><a href="{% url 'comp_posts' company.name_dotted %}">Posts <span>{{company.get_sum_posts}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="activate menu-list" title="{{company.get_sum_categories}} Categories"><a href="{% url 'comp_categories' company.name_dotted %}">Categories <span>{{company.get_sum_categories}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="menu-list" title="{{company.get_sum_advertisments}} Advertisements"><a href="{% url 'comp_advertisments' company.name_dotted %}">Advertisements <span>{{company.get_sum_advertisments}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="menu-list" title="{{company.get_sum_followers}} Followers"><a href="{% url 'comp_followers' company.name_dotted %}">Followers <span>{{company.get_sum_followers}}</span></a></li>
+                </ul>
+            </div>
+            {% if session_company == company.name_dotted %}
+                <div class="xl-navbar-buttons">
+                    <button id="open_add_category" style="display:inline-block;" href="{% url 'comp_add_category' %}" type="button">Add Category</button>
+                    <button id="profile_edit" type="button">Save Change</button>
+                    <button id="cover_edit" type="button">Save Change</button>
+                    <button id="all_edit" type="button">Save Changes</button>
+                </div>
+            {% endif %}
+            {% if session_user %}
+                <div class="xl-navbar-buttons xl-follow">
+                    {% if check_follow %}
+                        <button class="follow_ok"><i class="icon ion-checkmark-round"></i> Follower</button>
+                    {% else %}
+                        <span id="follow_success">
+                            <form id="follow_company_full_now" method="post">{% csrf_token %}
+                                <input type="hidden" name="company" value="{{company.pk}}" />
+                                <button class="follow_now"><i class="icon ion-person-add"></i> Follow</button>
+                            </form>
+                        </span>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </section>
+
+        <!-- PRODUCTS AND POSTS -->
+
+        <section class="xl-products xl-user" id="xl-user">
+            <div class="xl-main-section" style="width: calc(45% + (27.5% - 10px));">
+                {% if categories %}
+                    <div class="xl-category-list">
+                        {% for category in categories %}
+                            <h3><a href="{% url 'single_category' category.company.name_dotted category.pk %}">{{category.name}}</a></h3>
+                            {% if products %}
+                                <div class="category-items" id="category-items{{category.pk}}">
+                                    <button class="xl-left-items"><i class="icon ion-chevron-left"></i></button>
+                                    <button class="xl-right-items"><i class="icon ion-chevron-right"></i></button>
+                                    <ul id="xl-category-carousel{{category.pk}}">
+                                        {% for product in products %}
+                                            {% if product.category == category.pk %}
+                                                <li data-src="{{product.image.url}}" data-responsive="{{product.image.url}}" data-sub-html="{% include 'product_data_html.html' %}">
+                                                    <div class="category-image">
+                                                        <img src="{{product.image.url}}" alt="{{product.product_name}}" />
+                                                    </div>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                <script type="text/javascript">$(document).ready(function(){slideCategory('#category-items{{category.pk}}'); $("#xl-category-carousel{{category.pk}}").lightGallery();})</script>
+                            {% else %}
+                                <p class="xl-error">THIS CATEGORY HAS NO PRODUCT</p>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="xl-error">YOU HAVE ANY CATEGORY</p>
+                {% endif %}
+            </div>
+
+            <div id="xl-else-wrapper-else">
+                <div class="xl-else-section" id="xl-else-section-1" style="display:none;">
+                    <div class="xl-store-about">
+                        <h3>About {{company.name}}</h3>
+                        <p><strong>Name :</strong> {{company.name}}</p>
+                        <p><strong>State :</strong> {{company.country.name}}</p>
+                        <p><strong>Town :</strong> {{company.town}}</p>
+                        <p><strong>Tel. Number :</strong> {{company.phone_number}}</p>
+                        <p><strong>Address :</strong> {% if company.address %} {{company.address}} {% else %} - {% endif %}</p>
+                        <p><strong>E-mail :</strong> <a href="mailto:{{company.email}}">{{company.email}}</a></p>
+                        {% if session_company == company.name_dotted %}
+                            <button type="button" id="open_edit_profile">Edit Profile</button>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="xl-else-section" id="xl-else-section-2">
+                    {% if session_company %}
+                        <h3>Trades</h3>
+                        <div class="xl-comp-cate">
+                            {% if company.get_trades %}
+                                <ul>
+                                    {% for trade in company.get_trades %}
+                                        <li>
+                                            <img src="{{trade.product.image.url}}"/>
+                                            <a href="{% url 'company_single_trade' trade.pk %}">{{trade.product.product_name}} <span class="username">with</span> {{trade.user.full_name}}</a>
+                                            <span><i class="icon ion-ios-arrow-right"></i></span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="xl-error">NO TRADE</p>
+                            {% endif %}
+                        </div>
+                    {% elif session_user %}
+                        <h3>Companies Categories</h3>
+                        <div class="xl-comp-cate">
+                            {% if category_comp %}
+                                <ul>
+                                    {% for company in category_comp %}
+                                        <li>
+                                            <img src="{{company.get_profile_image.url}}" alt="{{company.name_dotted}}" />
+                                            <a href="#">{{company.name}}</a>
+                                            <span><i class="icon ion-ios-arrow-right"></i></span>
+                                            {% if company.get_categories %}
+                                                <ul>
+                                                    {% for category in company.get_categories %}
+                                                        <li><a href="{% url 'single_category' company.name_dotted category.pk %}"><i class="icon ion-ios-star"></i> {{category.name}}</a></li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="xl-error">NO COMPANY YET</p>
+                            {% endif %}
+                        </div>
+                        <br/>
+                        <h3>Trades with {{company.name}}</h3>
+                        <div class="xl-comp-cate">
+                            {% if trades %}
+                                <ul>
+                                    {% for trade in trades %}
+                                        <li>
+                                            <img src="{{trade.product.image.url}}"/>
+                                            <a href="{% url 'user_single_trade' trade.pk %}">{{trade.product.product_name}} <span class="username">({{trade.status}})</span></a>
+                                            <span><i class="icon ion-ios-arrow-right"></i></span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="xl-error">NO TRADE</p>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <h3>Companies Categories</h3>
+                        <div class="xl-comp-cate">
+                            {% if category_comp %}
+                                <ul>
+                                    {% for company in category_comp %}
+                                        <li>
+                                            <img src="{{company.get_profile_image.url}}" alt="{{company.name_dotted}}" />
+                                            <a href="#">{{company.name}}</a>
+                                            <span><i class="icon ion-ios-arrow-right"></i></span>
+                                            {% if company.get_categories %}
+                                                <ul>
+                                                    {% for category in company.get_categories %}
+                                                        <li><a href="{% url 'single_category' company.name_dotted category.pk %}"><i class="icon ion-ios-star"></i> {{category.name}}</a></li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="xl-error">NO COMPANY YET</p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </body>
+</html>

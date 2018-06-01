@@ -1,0 +1,17 @@
+<div class="xl-add-category">
+    <h2>Advertise Product</h2>
+    <form id="advertise_product" enctype="multipart/form-data" method="post" action="{% url 'advertise_product' product.pk %}" >
+        {% csrf_token %}
+        <span id="click_input_add_files"><i class="icon ion-ios-videocam"></i> Add Advertisment Video</span>
+        {{advertisment_form}}
+        <button type="submit" style="background:lightgreen;">Save</button>
+        <button type="button" style="background:red;" id="close_advertise-product">Cancel</button>
+    </form>
+    <script type="text/javascript">
+        hideLoadLinkSpinner();
+        CKEDITOR.replace('id_advertisment_text');
+        $("#close_advertise-product").click(function(){
+            $(".mfp-close").click();
+        });
+    </script>
+</div>

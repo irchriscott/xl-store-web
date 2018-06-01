@@ -1,0 +1,153 @@
+{% load humanize %}
+{% load tz %}
+{% if session_user %}
+    <div class="xl-market-start">
+        <h1>Welcome to {{company.name}} Market</h1>
+        <p>Here will be a E-commerce motto and Other</p>
+        <div class="xl-market-last">
+            {% if status == "created" or status == "accepted" or status == "finished" %}
+                <h3>Last Shopping Cart : {{shopping.saved_date|date:'M. d, Y'}}</h3>
+                <div class="xl-ms-product-list" style="margin-top:15px; margin-bottom: 10px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if items %}
+                                {% for item in items %}
+                                    <tr>
+                                        <td>{{item.product.product_code}}</td>
+                                        <td>{{item.product.product.product_name}}</td>
+                                        <td>{{item.product.product.price|intword}} {{currency}}</td>
+                                        <td>{{item.quantity}}</td>
+                                        <td>{{item.total|intword}} {{currency}}</td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" style="padding:7px 0;"><p style="color:red; padding-top:11px;">NO PRODUCT IN CART</p></td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                    <p style="font-size:20px; margin-top:10px; color:#333; text-align:left;"><strong>Total : </strong>{{total|intword}} {{currency}}</p>
+                </div>
+                {% if status == "finished" %}
+                    <button type="button" data-url="{% url 'load_market_products' market.key shopping.pk %}?last_option=suspend" class="start_or_keep_shopping">Suspend</button>
+                {% elif status == "accepted" %}
+                {% else %}
+                    <button type="button" style="background:green;" data-url="{% url 'load_market_products' market.key shopping.pk %}?last_option=continue" class="start_or_keep_shopping">Continue</button>
+                    <button type="button" data-url="{% url 'load_market_products' market.key shopping.pk %}?last_option=suspend" class="start_or_keep_shopping">Suspend</button>
+                    <button type="button" style="background:#f79b9b;" data-url="{% url 'load_market_products' market.key shopping.pk %}?last_option=abbort" class="start_or_keep_shopping">Abbort</button>
+                {% endif %}
+            {% else %}
+                <button type="button" data-url="{% url 'load_market_products' market.key none %}?last_option=create" class="start_or_keep_shopping">Start Shopping</button>
+            {% endif %}
+        </div>
+        <script type="text/javascript">
+            $(".start_or_keep_shopping").click(function(){
+                var products_url = $(this).attr("data-url");
+                $("#loading_await_market").show();
+                load_market_product(products_url);
+            });
+        </script>
+    </div>
+    {% if status == "created" or status == "accepted" or status == "finished" %}
+        <button class="xl-finish-cart" data-pay-url="{% url 'pay_shopping_cart' shopping.pk %}" data-market-status="{{market.status}}" data-user="{{user.pk}}"  id="finish_shopping_cart" data-finish-url="{% url 'finish_shopping_cart' shopping.pk %}" data-href="{% url 'ecommerce_user_start' user.pk %}?key={{market.key}}" data-cart-url="{% url 'load_current_cart_json' shopping.pk %}" style="margin-top:0;">
+            {% if status == "created" %}
+            Finish Cart
+            {% elif status == "accepted" %}
+            Pay Cart
+            {% else %}
+            Ask Order Acceptance
+            {%  endif %}
+        </button>
+        <section class="xl-search-modal" style="left:0;" id="finish_pay_cart_bill">
+            <div class="xl-ms-add-product-modal" style="margin-top:calc((100vh - 404px) / 2);">
+                <h2>Pay & Finish Shopping Cart</h2>
+                <br/>
+                <form method="POST" action="" id="finish_pay_cart_form">
+                    <div class="xl-finish-pay-cart xl-ms-input-add">
+                        {% csrf_token %}
+                        <label>Total Net :</label>
+                        <input type="number" disabled name="total_net" value="{{total}}" />
+                        <label>Other Charges :</label>
+                        <input type="number" disabled name="other_charges" value="3000" />
+                        <label>Curreny :</label>
+                        <input type="text" disabled name="currency" value="{{currency}}" />
+                        <label>Select Payment Mode :</label>
+                        <select name="payment_mode">
+                            <option value="paypal">PayPal</option>
+                            <option value="mobile">Mobile Money</option>
+                        </select>
+                        <p class="delivery_mode"><input type="checkbox" name="delivery" /> Delivery Mode</p>
+                        <button style="background:lightgreen;" type="submit">Submit</button>
+                        <button type="button" id="close_finish_pay_cart" style="background:red;">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+        <script type="text/javascript">$("#finish_shopping_cart").finishShoppingCart();</script>
+        <script type="text/javascript">
+            var host = 'localhost';
+            var port = '4000';
+            var socket = io(host + ':' + port);
+            var user = "{{user.pk}}";
+            var cart = "{{shopping.pk}}";
+
+            socket.on("orderAccepted", function(data){
+                if(data.user.token == user && cart == data.id){
+                    $(".jconfirm-closeIcon").click();
+                    $("#finish_pay_cart_bill").fadeIn();
+                    showSuccessMessage("success", "Order Accepted Successfully !!!");
+                }
+            });
+
+            socket.on("orderDeclined", function(data){
+                if(data.user.token == user && cart == data.id){
+                    $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:"Your Order has been Declined. Current Status: SUSPENDED",type: 'red'});
+                    $(".jconfirm-closeIcon").click();
+                    load_market_product("{% url 'ecommerce_user_start' user.pk %}?key="+data.key);
+                }
+            });
+
+            $("#close_finish_pay_cart").click(function () {
+                $("#finish_pay_cart_bill").fadeOut();
+            });
+
+            $("#finish_pay_cart_form").submit(function(e){
+                e.preventDefault();
+                var data = new FormData($(this)[0]);
+                var delivery = $("#finish_pay_cart_form input[name=delivery]").is(":checked") ? true : false
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'pay_shopping_cart' shopping.pk %}",
+                    data: {
+                        'other_charges': $("#finish_pay_cart_form input[name=other_charges]").val(),
+                        'delivery': delivery,
+                        'payment_mode': $("#finish_pay_cart_form select[name=payment_mode]").val(),
+                        'csrfmiddlewaretoken': $("#finish_pay_cart_form input[name=csrfmiddlewaretoken]").val()
+                    },
+                    success: function(response){
+                        if (response == "paid"){
+                            load_market_product("{% url 'ecommerce_user_start' user.pk %}?key={{market.key}}");
+                        } else {
+                            $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:response,type: 'red'});
+                        }
+                    },
+                    error: function(error){
+                        showErrorMessage("finish_shopping_cart", error);
+                    }
+                });
+            });
+        </script>
+    {% endif %}
+{% else %}
+    <p class="xl-error">User Session Required</p>
+{% endif %}

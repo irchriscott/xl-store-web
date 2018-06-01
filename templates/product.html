@@ -1,0 +1,262 @@
+{% load staticfiles %}
+{% include 'css.html' %}
+{% load tz %}
+{% load humanize %}
+    <body>
+        {% include 'header.html' %}
+        <section class="xl-navbar-down">
+            <div class="xl-navbar-content" style="width:597px; margin: auto;">
+                <ul>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" class="activate menu-list" title="{{company.get_sum_products}} Products"><a href="{% url 'comp_profile_2' company.name_dotted %}">Products <span>{{company.get_sum_products}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" class="menu-list" title="{{company.get_sum_posts}} Posts"><a href="{% url 'comp_posts' company.name_dotted %}">Posts <span>{{company.get_sum_posts}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" class="menu-list" title="{{company.get_sum_categories}} Categories"><a href="{% url 'comp_categories' company.name_dotted %}">Categories <span>{{company.get_sum_categories}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" class="menu-list" title="{{company.get_sum_advertisments}} Advertisements"><a href="{% url 'comp_advertisments' company.name_dotted %}">Advertisements <span>{{company.get_sum_advertisments}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" class="menu-list" title="{{company.get_sum_followers}} Followers"><a href="{% url 'comp_followers' company.name_dotted %}">Followers <span>{{company.get_sum_followers}}</span></a></li>
+                </ul>
+            </div>
+        </section>
+        {% if session_company == product.company.name_dotted %}
+            <section class="zoom-anim-dialog mfp-hide" id="xl-edit-product">
+                <div class="xl-add-product">
+                    <h2>Edit Product</h2>
+                    <form action="{% url 'edit_single_product' product.pk %}" method="POST">
+                        {% csrf_token %}
+                        {{edit_product}}
+                        <button type="submit" style="background:lightgreen;">Save</button>
+                        <button type="button" style="background:red;" id="close_edit_product">Cancel</button>
+                    </form>
+                </div>
+                <script type="text/javascript">
+                    CKEDITOR.replace('id_description_edit');
+                </script>
+            </section>
+            {% if other_pictures %}{% else %}
+                <section class="zoom-anim-dialog mfp-hide" id="xl-upload_pictures">
+                    <div class="xl-add-category" style="width:50%">
+                        <h2>Upload Other Pictures</h2>
+                        <form id="upload_pictures" enctype="multipart/form-data" method="post" action="{% url 'upload_product_images' product.pk %}" >
+                            {% csrf_token %}
+                            <span id="click_input_add_files"><i class="icon ion-images"></i> Add Pictures</span>
+                            {{more_images_form}}
+                            <div class="images-upload-preview" id="images-upload-preview"></div>
+                            <button type="submit" style="background:lightgreen;">Save</button>
+                            <button type="button" style="background:red;" id="close_upload_others">Cancel</button>
+                        </form>
+                    </div>
+                </section>
+            {% endif %}
+            {% if product_advertisment %}{% else %}
+                <section class="zoom-anim-dialog mfp-hide" id="xl-advertise-product">
+                    <div class="xl-add-category">
+                        <h2>Advertise Product</h2>
+                        <form id="advertise_product" enctype="multipart/form-data" method="post" action="{% url 'advertise_product' product.pk %}" >
+                            {% csrf_token %}
+                            <span id="click_input_add_files"><i class="icon ion-ios-videocam"></i> Add Advertisment Video</span>
+                            {{advertisment_form}}
+                            <button type="submit" style="background:lightgreen;">Save</button>
+                            <button type="button" style="background:red;" id="close_advertise-product">Cancel</button>
+                        </form>
+                        <script type="text/javascript">CKEDITOR.replace('id_advertisment_text')</script>
+                    </div>
+                </section>
+            {% endif %}
+        {% endif %}
+
+        {% if product_advertisment %}
+            <div class="xl-advertisment-modal zoom-anim-dialog mfp-hide" id="xl-advertisment-modal">
+                {% for advertisment in product_advertisment %}
+                    <h3>Advertisement for {{advertisment.product.product_name}}</h3>
+                    <div class="xl-advertisment-video">
+                        <video id="advertisment_video" controls preload="auto">
+                            <source src="{{advertisment.video.url}}" />
+                        </video>
+                        <script type="text/javascript">plyr.setup('#advertisment_video');</script>
+                        <p>{{advertisment.advertisment_text|safe}}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- PRODUCTS AND POSTS -->
+
+        <section class="xl-products" style="margin-top:130px;">
+            <div class="xl-main-section">
+                {% if not_owner == 0 %}
+                <div class="xl-single-product">
+                    <div class="xl-poster-single">
+                        <div class="img-profile">
+                            <img src='{{product.company.profile_image.url}}' alt='{{product.company.name}}' class='poster-image' />
+                        </div>
+                        <div class="profile-detail">
+                            <h3><a href="{% url 'comp_profile' product.company.name_dotted %}">{{product.company.name}}</a></h3>
+                            <p><span><i class="icon ion-ios-settings-strong"></i><a href="{% url 'single_category' product.company.name_dotted product.category %}">{{category_product.name}}</a></span><span><i class="icon ion-ios-clock-outline"></i><span id='post-date-main{{product.pk}}' data-time="{{product.posted_date|date:'Y-m-d H:i:s'}}"></span></span></p>
+                        </div>
+                        <div class="post-menu">
+                            <span id="see_menu" title="See Menu" data-id="-menu"><i class="icon ion-chevron-down"></i></span>
+                            <div class="menu-items" id="menu-items-menu">
+                                <ul>
+                                    {% if session_company == product.company.name_dotted %}
+                                    <li><a href="#"><i class="icon ion-ios-trash"></i>Delete Item</a></li>
+                                    <li><a id="open_edit_product" href="{% url 'get_edit_single_product' product.pk %}"><i class="icon ion-ios-compose"></i>Edit Product</a></li>
+                                    {% if other_pictures %}{% else %}<li><a id="open_upload_others" href="{% url 'get_upload_product_images' product.pk %}"><i class="icon ion-images"></i>Upload Pictures</a></li>{% endif %}
+                                    {% if product_advertisment %}{% else %}<li><a id="open_add_advertisment" href="{% url 'get_advertise_product' product.pk %}"><i class="icon ion-ios-videocam"></i>Advertise</a></li>{% endif %}
+                                    {% endif %}
+                                    {% if product_advertisment %}<li><a id="open_advertisment" href="{% url 'get_product_advertisment' product.pk %}"><i class="icon ion-ios-videocam"></i>Advertisement</a></li>{% endif %}
+                                    {% if session_company %}{% elif session_user %}
+                                    {% if product.get_interess %}
+                                        {% if user.pk in product.get_interess %}
+                                            <li><a href="{% url 'start_product_trade' product.pk %}"><i class="icon ion-ios-chatboxes"></i> Trade</a></li>
+                                        {% else %}
+                                            <li><a class="interess_general_product interess_general_product_else{{product.pk}}" data-product={{product.pk}} data-url="{% url 'user_interess_product' %}">{% csrf_token %}<i class="icon ion-ios-cart"></i>Interest</a></li>
+                                        {% endif %}
+                                    {% else %}
+                                        <li><a class="interess_general_product interess_general_product_else{{product.pk}}" data-product={{product.pk}} data-url="{% url 'user_interess_product' %}">{% csrf_token %}<i class="icon ion-ios-cart"></i>Interest</a></li>
+                                    {% endif %}{% endif %}
+                                    <li><a href="#"><i class="icon ion-ios-redo"></i>Share Product</a></li>
+                                    <li><a href="#"><i class="icon ion-ios-information"></i>Report Item</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="xl-product-detail">
+                        <div class="product-img">
+                            <a id="product_main_link" class="product-main-image" href="{{product.image.url}}" title="{{product.product_name}}" data-company="{{product.company.name}}">
+                                <img id="product_main_image" data-zoom-image="{{product.image.url}}" src="{{product.image.url}}" alt="{{product.product_name}}" />
+                            </a>
+                        </div>
+                        <div class="product-details-all">
+                            <h2>{{product.product_name}}</h2>
+                            <span class="price"><i class="icon ion-ios-pricetags"></i> {{product.price|intword}} {{product.currency}}</span>
+                            <div class="details">{% autoescape on %}{{product.product_description|safe}}{% endautoescape %}</div>
+                        </div>
+                    </div>
+                    {% if other_pictures %}
+                        <div class="xl-product-more-img">
+                            <h4>More Images</h4>
+                            <ul class="other-images-popup">
+                                {% for pictures in other_pictures %}
+                                <li style="width:calc((100% - (2 * {{other_pictures_count}}px) - (10 * {{other_pictures_count_else}}px)) / {{other_pictures_count}})"><a class="product_else_image" href="{{pictures.image.url}}" title="{{product.product_name}}" data-company="{{product.company.name}}"><img src="{{pictures.image.url}}" data-zoom-image="{{pictures.image.url}}" /></a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    <div class="xl-product-mentions">
+                        <ul>
+                            <li><span><i class="icon ion-ios-chatbubble"></i></span> <span>{{product.get_sum_comments}}</span></li>
+                            <li>
+                                <span class="after_interess{{product.pk}}">
+                                {% if session_company %}
+                                <span><i class="icon ion-ios-cart"></i></span>
+                                {% elif session_user %}
+                                {% if product.get_interess %}
+                                    {% if user.pk in product.get_interess %}
+                                        <span class="interessed"><i class="icon ion-ios-cart"></i></span>
+                                    {% else %}
+                                        <span class="interess_general_product interess_general_product{{product.pk}}" data-product={{product.pk}} data-url="{% url 'user_interess_product' %}"><i class="icon ion-ios-cart"></i></span>
+                                        {% csrf_token %}
+                                    {% endif %}
+                                {% else %}
+                                    <span class="interess_general_product interess_general_product{{product.pk}}" data-product={{product.pk}} data-url="{% url 'user_interess_product' %}"><i class="icon ion-ios-cart"></i></span>
+                                    {% csrf_token %}
+                                {% endif %}
+                                {% else %}
+                                <span class="login_first"><i class="icon ion-ios-cart"></i></span>
+                                {% endif %}
+                                </span>
+                                <span class="general_sum_interess{{product.pk}}">{{product.get_sum_interess}}</span>
+                            </li>
+                            {% if session_company %}
+                                <li><span><i class="icon ion-heart"></i></span> <span>{{product.get_sum_likes}}</span></li>
+                                <li><span><i class="icon ion-heart-broken"></i></span> <span>{{product.get_sum_dislikes}}</span></li>
+                            {% elif session_user %}
+                                {% if product.check_mention_like or product.check_mention_dislike %}
+                                    {% if session_profile.pk in product.check_mention_like %}
+                                        <li><span class="liked general_product_like general_product_like{{product.pk}}" data-product="{{product.pk}}" data-href="{% url 'user_like_dislike_product' %}"><i class="icon ion-heart"></i></span> <span class="product_sum_like{{product.pk}}">{{product.get_sum_likes}}</span></li>
+                                        <li><span class="general_product_dislike general_product_dislike{{product.pk}}" data-product="{{product.pk}}" data-href="{% url 'user_like_dislike_product' %}"><i class="icon ion-heart-broken"></i></span> <span class="product_sum_dislike{{product.pk}}">{{product.get_sum_dislikes}}</span></li>
+                                        {% csrf_token %}
+                                    {% elif session_profile.pk in product.check_mention_dislike %}
+                                        <li><span class="general_product_like general_product_like{{product.pk}}" data-product="{{product.pk}}" data-href="{% url 'user_like_dislike_product' %}"><i class="icon ion-heart"></i></span> <span class="product_sum_like{{product.pk}}">{{product.get_sum_likes}}</span></li>
+                                        <li><span class="disliked general_product_dislike general_product_dislike{{product.pk}}" data-product="{{product.pk}}" data-href="{% url 'user_like_dislike_product' %}"><i class="icon ion-heart-broken"></i></span> <span class="product_sum_dislike{{product.pk}}">{{product.get_sum_dislikes}}</span></li>
+                                        {% csrf_token %}
+                                    {% else %}
+                                        <li><span class="general_product_like general_product_like{{product.pk}}" data-product="{{product.pk}}" data-href="{% url 'user_like_dislike_product' %}"><i class="icon ion-heart"></i></span> <span class="product_sum_like{{product.pk}}">{{product.get_sum_likes}}</span></li>
+                                        <li><span class="general_product_dislike general_product_dislike{{product.pk}}" data-product="{{product.pk}}" data-href="{% url 'user_like_dislike_product' %}"><i class="icon ion-heart-broken"></i></span> <span class="product_sum_dislike{{product.pk}}">{{product.get_sum_dislikes}}</span></li>
+                                        {% csrf_token %}
+                                    {% endif %}
+                                {% else %}
+                                    <li><span class="general_product_like general_product_like{{product.pk}}" data-product="{{product.pk}}" data-href="{% url 'user_like_dislike_product' %}"><i class="icon ion-heart"></i></span> <span class="product_sum_like{{product.pk}}">{{product.get_sum_likes}}</span></li>
+                                    <li><span class="general_product_dislike general_product_dislike{{product.pk}}" data-product="{{product.pk}}" data-href="{% url 'user_like_dislike_product' %}"><i class="icon ion-heart-broken"></i></span> <span class="product_sum_dislike{{product.pk}}">{{product.get_sum_dislikes}}</span></li>
+                                    {% csrf_token %}
+                                {% endif %}
+                            {% else %}
+                                <li><span class="login_first"><i class="icon ion-heart"></i></span> <span>{{product.get_sum_likes}}</span></li>
+                                <li><span class="login_first"><i class="icon ion-heart-broken"></i></span> <span>{{product.get_sum_dislikes}}</span></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    <h3 class="xl-sum-comments">{{product.get_sum_comments}} Comments</h3>
+                    {% if session_company %}
+                    <div class='xl-comment-box'>
+                        <img src='{{company.profile_image.url}}' alt="{{company.name_dotted}}" />
+                        <form id='comment-form' method="post" comments-loader-url="{% url 'product_load_comment_main' product.pk %}" action="{% url 'product_add_comment' %}" data-product="{{product.pk}}">
+                            <span class="pointer-user"></span>
+                            {% csrf_token %}
+                            <textarea maxlength="300" id='comment-text' name="comment_text" placeholder='Enter Comment'></textarea>
+                            <button type='submit' id='submit-comment'>Submit Comment</button>
+                        </form>
+                    </div>
+                    {% elif session_user %}
+                    <div class='xl-comment-box'>
+                        <img src='{{user.profile_image.url}}' alt="{{user.user_name}}" />
+                        <form id='comment-form' method="post" comments-loader-url="{% url 'product_load_comment_main' product.pk %}" action="{% url 'product_add_comment' %}" data-product="{{product.pk}}">
+                            <span class="pointer-user"></span>
+                            {% csrf_token %}
+                            <textarea maxlength="300" id='comment-text' name="comment_text" placeholder='Enter Comment'></textarea>
+                            <button type='submit' id='submit-comment'>Submit Comment</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                    <div class="xl-comments-div">
+                        <div class="xl-loader" id="comment_loader"><img src="{% static 'images/loading.gif' %}" alt="loader"/></div>
+                        <span id="comments-list"></span>
+                        <script type="text/javascript">
+                            $(document).ready(function(){
+                                $("#comment_loader").show()
+                                loadProductComments("{% url 'product_load_comment_main' product.pk %}");
+                            });
+                        </script>
+                    </div>
+                </div>
+                {% else %}
+                    <p class="xl-error" style="white-space:normal;">{{not_owner}}</p>
+                {% endif %}
+            </div>
+
+            <div class="xl-else-section">
+                <h3>Similar Products</h3>
+                {% if similar_product %}
+                    {% for product in similar_product %}
+                        <div class="xl-similar-product">
+                            <a href="{% url 'single_product' product.company.name_dotted product.pk %}">
+                                <img src="{{product.image.url}}" alt="{{product.product_name}}" />
+                            </a>
+                            <h3><a href="{% url 'single_product' product.company.name_dotted product.pk %}">{{product.product_name}}</a></h3>
+                            <p class="company-name"><a href="{% url 'comp_profile' product.company.name_dotted %}">{{product.company.name}}</a></p>
+                            <p class="date">
+                                <span><i class="icon ion-ios-chatbubble"></i>{{product.get_sum_comments}}</span>
+                                <span><i class="icon ion-ios-cart"></i>{{product.get_sum_interess}}</span> - <span style="margin-left:10px;" id='post-date{{product.pk}}' data-time="{{product.posted_date|date:'Y-m-d H:i:s'}}"></span>
+                            </p>
+                        </div>
+                        <script type="text/javascript">$("#post-date{{product.pk}}").setTime();</script>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <div class="xl-else-section">
+                {% include 'includes/notification_full.html' %}
+            </div>
+        </section>
+        <script type="text/javascript">
+            $("#post-date-main{{product.pk}}").setTime();
+        </script>
+    </body>
+</html>

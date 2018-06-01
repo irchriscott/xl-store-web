@@ -1,0 +1,19 @@
+{% load staticfiles %}
+{% load humanize %}
+{% if products %}
+<ul style="border-top:1px solid #DDD">
+    {% for product in products %}
+         <li><a data-url="{% url 'managment_msp_single' product.pk month year %}" class="load_msp_product"><img src="{{product.product.image.url}}" /> <span>{{product.product.product_name}}</span><span class="xl-ms-arrow"><i class="icon ion-ios-arrow-right"></i></span></a></li>
+    {% endfor %}
+</ul>
+{% else %}
+    <p class="xl-error">NO PRODUCT IN STORE</p>
+{% endif %}
+
+<script type="text/javascript">
+    $(".load_msp_product").click(function(ev){
+        $("#msp_products_loader").show();
+        loadMSProductts($(this).attr('data-url'));
+        $(this).parent('li').addClass('activated').siblings().removeClass('activated');
+    });
+</script>

@@ -1,0 +1,108 @@
+{% load staticfiles %}
+{% load humanize %}
+<div class="xl-ms-product">
+    <div class="xl-ms-product-details other-div-very-different" style="width:50% !important;">
+        <div class="xl-ms-scroll-pane just-for-margins">
+            <h2>General Settings</h2>
+            <div class="xl-ul-title"><h4>Trade Settings</h4></div>
+            <ul>
+                <li>
+                    <a class="load_setting" data-url="{% url 'managment_msst_rpt' %}">
+                        <i class="icon ion-ios-cart"></i>
+                        <span class="prod-name">Reduce Product After Trade Agreement</span>
+                        <span class="float-side"><span id="trade-set">{{settings.reduce_after_trade_agreed}}</span></span>
+                    </a>
+                </li>
+                <li>
+                    <a class="load_setting" data-url="{% url 'managment_msst_aus' %}">
+                        <i class="icon ion-checkmark-round"></i>
+                        <span class="prod-name">Allow User To Succeed Trade</span>
+                        <span class="float-side"><span id="user-set">{{settings.allow_user_to_succeed}}</span></span>
+                    </a>
+                </li>
+                <div class="xl-ul-title"><h4>Managment System</h4></div>
+                <li>
+                    <a class="load_setting" data-url="{% url 'managment_msst_apb' %}">
+                        <i class="icon ion-printer"></i>
+                        <span class="prod-name">Always Print Bill</span>
+                        <span class="float-side"><span id="bill-set">{{settings.print_bill}}</span></span>
+                    </a>
+                </li>
+                <li>
+                    <a class="load_setting" data-url="{% url 'managment_msst_cur' %}">
+                        <i class="icon ion-cash"></i>
+                        <span class="prod-name">Currency</span>
+                        <span class="float-side"><span id="currency-set">{{settings.currency}}</span></span>
+                    </a>
+                </li>
+                <li>
+                    <a class="load_setting" data-url="{% url 'managment_msst_inter_p' %}">
+                        <i class="icon ion-android-globe"></i>
+                        <span class="prod-name">Internationalize Products</span>
+                        <span class="float-side"><span id="inter-set">{{settings.internationalize}}</span></span>
+                    </a>
+                </li>
+                <li id="">
+                    <a class="load_setting" data-url="{% url 'managment_msst_fam' %}">
+                        <i class="icon ion-android-checkbox-outline"></i>
+                        <span class="prod-name">Allow Free Access In Market</span>
+                        <span class="float-side"><span id="market-set">{{settings.access_market}}</span></span>
+                    </a>
+                </li>
+                <li>
+                    <a class="load_setting" data-url="{% url 'managment_msst_tam' %}">
+                        <i class="icon ion-clock"></i>
+                        <span class="prod-name">Set Time To Access Market</span>
+                        <span class="float-side"><span id="time-set">{{settings.time_market_access}} min</span></span>
+                    </a>
+                </li>
+                <li>
+                    <a class="load_setting" data-url="{% url 'managment_msst_mm_add' %}">
+                        <i class="icon ion-iphone"></i>
+                        <span class="prod-name">Mobile Money Numbers</span>
+                        <span class="float-side"><span id="mobile-set"></span></span>
+                    </a>
+                </li>
+                <div class="xl-ul-title"><h4>Other Settings</h4></div>
+                <li>
+                    <a class="load_setting" data-url="{% url 'managment_msst_com_prod' %}">
+                        <i class="icon ion-ios-chatbubble"></i>
+                        <span class="prod-name">Comment Products</span>
+                        <span class="float-side"><span id="comment-set">{{settings.comment_product}}</span></span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="xl-ms-product-inventory" style="overflow:hidden;">
+        <div id="msp_product_wrapper">
+            <h1>CONTENT WILL BE LOADED AFTER SELECTING A PARAMETTER</h1>
+            <div id="msp_products_loader" class="xl-loader" style="margin-top:60px;">
+                <img src="{% static 'images/loading.gif' %}" />
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    h1{font-size: 32px;text-align: center;color: #666;margin-top: calc(50vh - 143px);}
+    .other-div-very-different ul li{height: auto !important; padding-top: 3px !important; padding-bottom: 9px !important;}
+    .other-div-very-different ul li a .float-side{margin-top: 0px !important; margin-right: -8px;}
+    .other-div-very-different ul > li > a > i{float: left; margin-right: 6px; font-size: 20px; margin-top: 7px;}
+    .xl-ul-title{display: block; padding: 7px 5px; background: #ccc;}
+    .xl-ms-product .xl-ms-product-details{padding-right:4px !important;}
+    .just-for-margins{padding-right: 11px !important;}
+</style>
+<script type="text/javascript">
+    $(".xl-ms-scroll-pane, #msp_product_wrapper").slimScroll({
+        railVisible: true,
+        size:'7',
+        height:'calc(100vh - 150px)',
+        alwaysVisible: false
+    });
+    $(".load_setting").click(function(){
+        var url = $(this).attr("data-url");
+        $(this).parent("li").addClass("activated").siblings().removeClass("activated");
+        $("#trade_list_loader").show();
+        load_msp_products(url);
+    });
+</script>

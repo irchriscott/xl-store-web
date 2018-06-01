@@ -1,0 +1,79 @@
+<div class="xl-message-map" style="width:70%;">
+    <h2>Type of company you may be interessed in</h2>
+    {% if session_user %}
+        <div class="xl-company-categories-list">
+            {% if categories %}
+                <ul>
+                    {% for category in categories %}
+                        <li class="xl-category-all">
+                            <div class="xl-category-image">
+                                <img src="{{category.image.url}}" alt="{{category.name}}" />
+                            </div>
+                            <div class="xl-category-about">
+                                <div class="xl-about-content">
+                                    <h4><a href="{% url 'user_company_category' category.pk %}">{{category.name}}</a></h4>
+                                    <ul>
+                                        {% if category.get_category_users_list %}
+                                            {% if user.pk in category.get_category_users_list %}
+                                                <li><span class="liked"><i class="icon ion-heart"></i></span></li>
+                                            {% else %}
+                                                {% csrf_token %}
+                                                <li><span class="like_category"  data-category="{{category.pk}}"><i class="icon ion-heart"></i></span></li>
+                                            {% endif %}
+                                        {% else %}
+                                            {% csrf_token %}
+                                            <li data-category="{{category.pk}}" class="like_category"><i class="icon ion-heart"></i> Like</li>
+                                        {% endif %}
+                                        <li><i class="icon ion-ios-star"></i> <span>{{category.get_sum_category_companies}}</span></li>
+                                        <li><i class="icon ion-ios-person"></i> <span class="sum_users_{{category.pk}}">{{category.get_sum_category_users}}</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    {% else %}
+        <p class="xl-error">ONLY FOR USERS</p>
+    {% endif %}
+    <button id="direction">OK</button>
+    <button style="background:red;" id="close-dialog">CANCEL</button>
+    <script type="text/javascript">
+        hideLoadLinkSpinner();
+        $("#close-dialog").click(function(){
+            $(".mfp-close").click();
+        });
+
+        hoverImage("li.xl-category-all","div.xl-category-about");
+
+        $(document).ready(function(){
+            var height = $(".xl-category-image").height();
+            $(".xl-category-about").css('height', height - 24);
+        });
+
+        $(".like_category").click(function(){
+            var _this = $(this);
+            var category = $(this).attr("data-category");
+            var user_likes = parseInt($(".sum_users_" + category).text());
+            $.ajax({
+                type:"POST",
+                url:"{% url 'user_company_categories' %}",
+                data:{
+                    "category": category,
+                    "csrfmiddlewaretoken":$("input[name=csrfmiddlewaretoken]").val()
+                },
+                success: function(response){
+                    if (response == 'ok'){
+                        showSuccessMessage("success", "Category Liked !!!");
+                        $(".sum_users_" + category).text(user_likes + 1)
+                        _this.removeClass("like_category").addClass("liked");
+                    }
+                },
+                error: function(error){
+                    showErrorMessage("error", error);
+                }
+            });
+        });
+    </script>
+</div>

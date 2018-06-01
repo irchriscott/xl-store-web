@@ -1,0 +1,51 @@
+<div class="xl-message-map">
+    <div class="xl-map-container" id="map_container"></div>
+    <div class="message-else-menu" id="map_modes_menu">
+        <ul>
+            <li><a id="direct_walk"><i class="icon ion-android-walk"></i>By Walking</a></li>
+            <li><a id="direct_drive"><i class="icon ion-android-car"></i>By Driving</a></li>
+        </ul>
+    </div>
+    <button id="direction">DIRECTION</button>
+    <button id="view">GOOGLE MAPS</button>
+    <button style="background:red;" id="close-dialog">CANCEL</button>
+    <input type="hidden" id="latitude_else" />
+    <input type="hidden" id="longitude_else" />
+    <input type="hidden" id="search_else" />
+    <span><i class="icon ion-ios-navigate-outline"></i> <span id="distance_2" class="distance"></span></span>
+    <span style="margin-left: 10px;"><i class="icon ion-ios-clock-outline"></i> <span id="time"></span></span>
+    <span style="margin-left: 10px; display: none;" id="with_traffic"><i class="icon ion-ios-clock-outline"></i> <span id="time_drive_traffic"></span></span>
+    <script type="text/javascript">
+        $("#close-dialog").click(function(){
+            $(".mfp-close").click();
+        });
+        hideLoadLinkSpinner();
+        loadMapMessage('map_container','{{address}}', '{{longitude}}', '{{latitude}}');
+        $(document).ready(function(){
+            getUserCurrentLocation("latitude_else", "longitude_else", "search_else");
+            $("#view").click(function(){
+                var lat = '{{latitude}}';
+                var long = '{{longitude}}';
+                window.open('https://www.google.com/maps?q='+lat+','+ long+'', '_blank');
+            });
+            $("#direct_walk").click(function(){
+                drawRouteMap('{{latitude}}', '{{longitude}}', '{{address}}', 'map_container', '2', 'w');
+                $("#map_modes_menu").fadeOut();
+            });
+            $("#direct_drive").click(function(){
+                drawRouteMap('{{latitude}}', '{{longitude}}', '{{address}}', 'map_container', '2', 'd');
+                $("#map_modes_menu").fadeOut();
+            })
+            $("#direction").click(function(e){
+                e.stopPropagation();
+                $("#map_modes_menu").fadeIn();
+            });
+            $(window).click(function(){
+                $("#map_modes_menu").fadeOut();
+            });
+            $("#map_modes_menu").click(function(e){
+                e.stopPropagation();
+            });
+        });
+    </script>
+</div>

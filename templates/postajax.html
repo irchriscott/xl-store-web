@@ -1,0 +1,187 @@
+{% load staticfiles %}
+<section class="xl-post-ajax">
+    <div class="xl-post">
+        {% if post.poster_type == 'user' %}
+        <div class="poster">
+            <div class="poster-img">
+                <img src="{{post.user.get_profile_image.url}}" alt="{{post.user.user_name}}" />
+            </div>
+            <p class="poster-name"><a href="{% url 'user_profile' post.user.user_name %}">{{post.user.full_name}} <span class="username">@{{post.user.user_name}}</span></a></p>
+            <p class="date-time"><i class="icon ion-ios-clock-outline"></i> <span id="single_post_date{{post.pk}}" data-time="{{post.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+        </div>
+        {% elif post.poster_type == 'company' %}
+        <div class="poster">
+            <div class="poster-img">
+                <img src="{{post.company.get_profile_image.url}}" alt="{{post.company.name_dotted}}" />
+            </div>
+            <p class="poster-name"><a href="{% url 'comp_profile_2' post.company.name_dotted %}">{{post.company.name}}</a></p>
+            <p class="date-time"><i class="icon ion-ios-clock-outline"></i> <span id="single_post_date{{post.pk}}" data-time="{{post.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+        </div>
+        {% endif %}
+        <div class="post-content">
+            <span class="post-text">{{post.post_text|safe}}</span>
+            {% if post.post_file %}
+                {% if post.file_type == 'picture' %}
+                    <span class="post-image">
+                        <img src="{{post.post_file.url}}" alt="{{post.user.user_name}}" />
+                    </span>
+                {% elif post.file_type == 'video' %}
+                    <span class="post-video">
+                        <video controls preload="auto" id="single_post_video{{post.pk}}">
+                            <source src="{{post.post_file.url}}" />
+                        </video>
+                    </span>
+                    <script type="text/javascript">
+                        plyr.setup('#single_post_video{{post.pk}}');
+                    </script>
+                {% endif %}
+            {%  endif %}
+        </div>
+        <div class="xl-post-details">
+            <div class="post-mentions">
+                <ul>
+                    <li><span><i class="icon ion-ios-loop-strong"></i></span> <span>{{post.get_sum_replies}}</span></li>
+                    {% if session_user %}
+                        {% if post.check_mention_like or post.check_mention_dislike %}
+                            {% if session_profile.pk in post.check_mention_like %}
+                                <li><span class="liked general_post_like general_post_like{{post.pk}}" data-post="{{post.pk}}" data-href="{% url 'user_like_dislike_post' %}"><i class="icon ion-heart"></i></span> <span class="post_sum_like{{post.pk}}">{{post.get_sum_likes}}</span></li>
+                                <li><span class="general_post_dislike general_post_dislike{{post.pk}}" data-post="{{post.pk}}" data-href="{% url 'user_like_dislike_post' %}"><i class="icon ion-heart-broken"></i></span> <span class="post_sum_dislike{{post.pk}}">{{post.get_sum_dislikes}}</span></li>
+                                {% csrf_token %}
+                            {% elif session_profile.pk in post.check_mention_dislike %}
+                                <li><span class="general_post_like general_post_like{{post.pk}}" data-post="{{post.pk}}" data-href="{% url 'user_like_dislike_post' %}"><i class="icon ion-heart"></i></span> <span class="post_sum_like{{post.pk}}">{{post.get_sum_likes}}</span></li>
+                                <li><span class="disliked general_post_dislike general_post_dislike{{post.pk}}" data-post="{{ppost.pk}}" data-href="{% url 'user_like_dislike_post' %}"><i class="icon ion-heart-broken"></i></span> <span class="post_sum_dislike{{post.pk}}">{{post.get_sum_dislikes}}</span></li>
+                                {% csrf_token %}
+                            {% else %}
+                                <li><span class="general_post_like general_post_like{{post.pk}}" data-post="{{post.pk}}" data-href="{% url 'user_like_dislike_post' %}"><i class="icon ion-heart"></i></span> <span class="post_sum_like{{post.pk}}">{{post.get_sum_likes}}</span></li>
+                                <li><span class="general_post_dislike general_post_dislike{{post.pk}}" data-post="{{post.pk}}" data-href="{% url 'user_like_dislike_post' %}"><i class="icon ion-heart-broken"></i></span> <span class="post_sum_dislike{{post.pk}}">{{post.get_sum_dislikes}}</span></li>
+                                {% csrf_token %}
+                            {% endif %}
+                        {% else %}
+                            <li><span class="general_post_like general_post_like{{post.pk}}" data-post="{{post.pk}}" data-href="{% url 'user_like_dislike_post' %}"><i class="icon ion-heart"></i></span> <span class="post_sum_like{{post.pk}}">{{post.get_sum_likes}}</span></li>
+                            <li><span class="general_post_dislike general_post_dislike{{post.pk}}" data-post="{{post.pk}}" data-href="{% url 'user_like_dislike_post' %}"><i class="icon ion-heart-broken"></i></span> <span class="post_sum_dislike{{post.pk}}">{{post.get_sum_dislikes}}</span></li>
+                            {% csrf_token %}
+                        {% endif %}
+                    {% else %}
+                        <li><span><i class="icon ion-heart"></i></span> <span>{{post.get_sum_likes}}</span></li>
+                        <li><span><i class="icon ion-heart-broken"></i></span> <span>{{post.get_sum_dislikes}}</span></li>
+                    {% endif %}
+                    <li><span id="single_see_menu{{post.pk}}" data-id="-single-post"><i class="icon ion-chevron-down"></i></span></li>
+                </ul>
+            </div>
+            {% if session_user == post.user.user_name %}
+            <div class="menu-items" id="menu-items-single-post">
+            {% else %}
+            <div class="menu-items" id="menu-items-single-post">
+            {% endif %}
+                <ul>
+                    {% if session_user == post.user.user_name %}
+                    <li><a href="#"><i class="icon ion-ios-trash"></i>Delete</a></li>
+                    <li><a id="open_edit_post{{post.pk}}" href="{% url 'user_edit_post' post.pk %}"><i class="icon ion-ios-compose"></i>Edit</a></li>
+                    <script type="text/javascript">$("#open_edit_post{{post.pk}}").magnificPopup({type: 'ajax'});/*alignTop: true,overflowY: 'scroll'*/</script>
+                    {% elif session_company == post.company.name_dotted %}
+                    <li><a href="#"><i class="icon ion-ios-trash"></i>Delete</a></li>
+                    <li><a id="open_edit_post{{post.pk}}" href="{% url 'user_edit_post' post.pk %}"><i class="icon ion-ios-compose"></i>Edit</a></li>
+                    <script type="text/javascript">$("#open_edit_post{{post.pk}}").magnificPopup({type: 'ajax'});/*alignTop: true,overflowY: 'scroll'*/</script>
+                    {% endif %}
+                    <li><a href="#"><i class="icon ion-ios-redo"></i>Share</a></li>
+                    <li><a href="#"><i class="icon ion-ios-information"></i>Report</a></li>
+                </ul>
+            </div>
+            <script type="text/javascript">
+                $(document).ready(function() {
+                    $('.open_reply_post').magnificPopup({
+                        type: 'inline',
+                        fixedContentPos: false,
+                        fixedBgPos: true,
+                        overflowY: 'auto',
+                        closeBtnInside: true,
+                        preloader: false,
+                        midClick: true,
+                        removalDelay: 300,
+                        mainClass: 'my-mfp-zoom-in'
+                    });
+
+                    $("#single_see_menu{{post.pk}}").showMenu();
+                    textFunctions('.post-text');
+                    $(".general_post_like").productLike();
+                    $(".general_post_dislike").productDislike();
+                });
+            </script>
+        </div>
+    </div>
+    <h3 class="xl-sum-comments">{{post.get_sum_replies}} Replies</h3>
+    <div class="xl-comments-div">
+        <div class="xl-loader" id="comment_loader"><img src="{% static 'images/loading.gif' %}" alt="loader"/></div>
+        <span id="comments-list"></span>
+        <script type="text/javascript">
+            $(document).ready(function(){
+                $("#comment_loader").show();
+                loadProductComments("{% url 'user_load_post_replies' post.pk %}");
+            });
+        </script>
+    </div>
+    {% if session_company %}
+        <div class='xl-comment-box'>
+            <img src='{{company.get_profile_image.url}}' alt="{{company.name_dotted}}" />
+            <form id='reply-form' method="post" enctype="multipart/form-data" replies-loader-url="{% url 'user_load_post_replies' post.pk %}" action="{% url 'user_save_post_reply' post.pk %}" data-post="{{post.pk}}">
+                <span class="pointer-user"></span>
+                {% csrf_token %}
+                {{post_reply_form}}
+                <div class="xl-post-preview">
+                    <img id="preview_reply_image"/>
+                </div>
+                <button type='submit' id='submit-comment'>Submit Reply</button>
+                <span class="image_holder" id="image_holder"><i class="icon ion-ios-camera"></i> Image</span>
+            </form>
+        </div>
+        {% elif session_user %}
+        <div class='xl-comment-box'>
+            <img src='{{user.get_profile_image.url}}' alt="{{user.user_name}}" />
+            <form id='reply-form' method="post" enctype="multipart/form-data" replies-loader-url="{% url 'user_load_post_replies' post.pk %}" action="{% url 'user_save_post_reply' post.pk %}" data-post="{{post.pk}}">
+                <span class="pointer-user"></span>
+                {% csrf_token %}
+                {{post_reply_form}}
+                <div class="xl-post-preview">
+                    <img id="preview_reply_image"/>
+                </div>
+                <button type='submit' id='submit-comment'>Submit Reply</button>
+                <span class="image_holder" id="image_holder"><i class="icon ion-ios-camera"></i> Image</span>
+            </form>
+        </div>
+    {% endif %}
+    </div>
+    <script type="text/javascript">
+        autosize($("#id_reply_text"));
+        hideLoadLinkSpinner();
+        $("#image_holder").click(function(){
+            $("#id_reply_image").click();
+        });
+        $("#id_reply_image").change(function(){
+            previewReplyImage(this);
+        });
+        $("#reply-form").submit(function(ev){
+            ev.preventDefault()
+            var formData = new FormData($(this)[0]);
+            console.log(formData);
+            $.ajax({
+                type:'POST',
+                url:$(this).attr('action'),
+                data:formData,
+                processData: false,
+                async: false,
+                cache: false,
+                contentType: false,
+                success:function(success){
+                    $("#reply-form").get(0).reset();
+                    $("#preview_reply_image").hide()
+                    loadProductComments("{% url 'user_load_post_replies' post.pk %}");
+                    $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:'Post Replied Successfully !!!',type: 'green'});
+                    showSuccessMessage("post_reply", "Reply Added !!!");
+                },
+                error: function(error){
+                    showErrorMessage("post_reply", error);
+                }
+            });
+        });
+    </script>
+</section>

@@ -1,0 +1,14 @@
+<div class="xl-add-category">
+    <h2>Edit This Category</h2>
+    <form id="edit_category" method="post" action="{% url 'edit_single_category' category.pk  %}" >{% csrf_token %}
+        {{category_edit_form}}
+        <button type="submit" style="background:lightgreen;">Save</button>
+        <button type="button" style="background:red;" id="close_edit_category">Cancel</button>
+    </form>
+    <script type="text/javascript">
+        $("#close_edit_category").click(function(){
+            $(".mfp-close").click();
+        });
+        hideLoadLinkSpinner();
+    </script>
+</div>

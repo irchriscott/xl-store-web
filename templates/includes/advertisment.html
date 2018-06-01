@@ -1,0 +1,15 @@
+<div class="xl-advertisment-modal" id="xl-advertisment-modal">
+    {% for advertisment in product_advertisment %}
+        <h3>Advertisement for {{advertisment.product.product_name}}</h3>
+        <div class="xl-advertisment-video">
+            <video id="advertisment_video" controls preload="auto">
+                <source src="{{advertisment.video.url}}" />
+            </video>
+            <script type="text/javascript">plyr.setup('#advertisment_video');</script>
+            <p>{{advertisment.advertisment_text|safe}}</p>
+        </div>
+    {% endfor %}
+    <script type="text/javascript">
+        hideLoadLinkSpinner();
+    </script>
+</div>

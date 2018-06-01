@@ -1,0 +1,41 @@
+{% load staticfiles %}
+{% load humanize %}
+{% if session_user %}
+    <h2>Trades with {{company.name}}</h2>
+    <div class="xl-trades-list-else" id="products_trades">
+        {% if products %}
+            <ul>
+                {% for product in products %}
+                    <li id="trade_{{product.pk}}">
+                        <a href="{% url 'user_single_trade' product.pk %}">
+                            <img src="{{product.product.image.url}}" />
+                            <span class="prod-name">{{product.product.product_name}}</span>
+                            <span class="float-side"><span>{{product.get_sum_trade_messages}}</span><i class="icon ion-ios-arrow-right"></i></span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="xl-error">NO PRODUCT</p>
+        {% endif %}
+    </div>
+{% else %}
+    <p class="xl-error">YOU ARE NOT ALLOWED TO VISITE THIS PAGE</p>
+{% endif %}
+<script type="text/javascript">
+    $(".xl-trades-list-else").slimScroll({
+        railVisible: true,
+        size:'7',
+        height:'calc(100vh - 173px)',
+        alwaysVisible: false
+    });
+    $(document).ready(function(){
+        var trades = $("#products_trades").find("li")
+        var current_trade = parseInt("{{trade.pk}}")
+        for(var list = 0; list < trades.length; list ++){
+            if($(trades[list]).attr("id") == "trade_"+current_trade){
+                $(trades[list]).addClass("activated");
+            }
+        }
+    });
+</script>

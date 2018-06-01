@@ -1,0 +1,89 @@
+{% load staticfiles %}
+{% include '../css.html' %}
+    <body style="overflow: hidden;">
+        {% include '../header.html' %}
+        <section class="xl-navbar-down">
+            <div class="xl-navbar-content" style="width:595px; margin: auto;">
+                <ul>
+                    <li><a href="{% url 'managment_home' %}">Home</a></li>
+                    <li><a href="{% url 'managment_products' %}">Products</a></li>
+                    <li class="activate"><a href="{% url 'managment_managment' %}">Managment</a></li>
+                    <li><a href="{% url 'managment_get_bills' %}">Bills</a></li>
+                    <li><a href="{% url 'managment_msst' %}">Settings</a></li>
+                    <li><a id="open-logout-menu">Log Out</a></li>
+                    <div class="xl-ms-logout-menu" id="xl-ms-logout-menu">
+                        <ul>
+                            {% if teller_session == True %}
+                                <li><a href="{% url 'managment_mstl_logout' %}"><i class="icon ion-ios-locked"></i> As Teller</a></li>
+                            {% endif %}
+                            <li><a href="{% url 'managment_desactivate_admin' %}"><i class="icon ion-ios-locked"></i> As Admin</a></li>
+                            <li><a href="{% url 'managment_logout' %}"><i class="icon ion-ios-locked"></i> As M.S</a></li>
+                        </ul>
+                    </div>
+                </ul>
+            </div>
+        </section>
+        <section class="xl-ms-container" style="overflow-y:hidden;">
+            <div class="xl-ms-products-all" style="width:calc(100% - 50px);">
+                <div class="xl-ms-inventory-menu">
+                    <a href="{% url 'managment_msp' %}">
+                        <div class="xl-ms-inventory-menu-item">
+                            <span><i class="icon ion-ios-cart"></i></span>
+                            <h3>Product</h3>
+                            <p>Look at the evolution of each product, it sales and purchases and how it is influencing in the market</p>
+                        </div>
+                    </a>
+                    <a href="{% url 'managment_msd' %}">
+                        <div class="xl-ms-inventory-menu-item">
+                            <span><i class="icon ion-calendar"></i></span>
+                            <h3>Daily</h3>
+                            <p>Get daily sales and purchases, compare from other days or weeks and look for solutions for improuvment</p>
+                        </div>
+                    </a>
+                    <a href="{% url 'managment_msc' %}">
+                        <div class="xl-ms-inventory-menu-item">
+                            <span><i class="icon ion-ios-person"></i></span>
+                            <h3>Customers</h3>
+                            <p>Get customers's purchase and see if a disvount is needed for the next day and send emails for new upcoming events</p>
+                        </div>
+                    </a>
+                    <a href="#">
+                        <div class="xl-ms-inventory-menu-item xl-ms-no-margin">
+                            <span><i class="icon ion-pie-graph"></i></span>
+                            <h3>Analyses</h3>
+                            <p>Make analyses for your company to know how to improve your products and sales through many ways</p>
+                        </div>
+                    </a>
+                    <a href="{% url 'managment_msdt' %}">
+                        <div class="xl-ms-inventory-menu-item">
+                            <span><i class="icon ion-upload"></i></span>
+                            <h3>Data</h3>
+                            <p>Get all the data that you have and compare them to the actual facts like interess, trades and sales</p>
+                        </div>
+                    </a>
+                    <a href="{% url 'managment_mstl' %}">
+                        <div class="xl-ms-inventory-menu-item">
+                            <span><i class="icon ion-clipboard"></i></span>
+                            <h3>Teller</h3>
+                            <p>For companies who may have many employees and tellers, register and get tellers's data and performences here</p>
+                        </div>
+                    </a>
+                    <a href="{% url 'managment_msec' %}">
+                        <div class="xl-ms-inventory-menu-item">
+                            <span><i class="icon ion-android-laptop"></i></span>
+                            <h3>E-Commerce</h3>
+                            <p>You can allow users or customers to make their orders online and and bring to them their desired items.</p>
+                        </div>
+                    </a>
+                    <a href="{% url 'managment_msst' %}">
+                        <div class="xl-ms-inventory-menu-item xl-ms-no-margin">
+                            <span><i class="icon ion-android-settings"></i></span>
+                            <h3>Settings</h3>
+                            <p>Set up your managment system like paying licence key, changing password, setting up default tools for your store</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </body>
+</html>

@@ -1,0 +1,271 @@
+{% load staticfiles %}
+{% load humanize %}
+<div class="xl-ms-product">
+    <div class="xl-ms-product-details" style="width:40%; overflow-y:auto;">
+        <h2>Date : {{date}}</h2>
+        <div id="today_remport">
+            <table style="width:100%;">
+                <thead>
+                    <tr>
+                        <th>Customers</th>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                {% if day_products %}
+                    <tbody style="text-align:center;">
+                        {% for product in day_products %}
+                            <tr>
+                                <td>{{product.customers}}</td>
+                                <td>{% for p in products %}{% if p.pk == product.product %}{{p.product.product_name}}{% endif %}{% endfor %}</td>
+                                <td>{{product.quantities}}</td>
+                                <td>{{product.totals|intcomma}} {{setting.currency}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                {% endif %}
+                <tfoot>
+                    <tr>
+                        <th style="text-align:left;" colspan="2">Customers</th>
+                        <td style="text-align:right;" colspan="2">{{customers}}</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align:left;" colspan="2">Total</th>
+                        <td style="text-align:right;" colspan="2">{{total_paid|intcomma}} {{setting.currency}}</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align:left;" colspan="2">Discount</th>
+                        <td style="text-align:right;" colspan="2">{{discount|intcomma}} {{setting.currency}}</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align:left;" colspan="2">Total Net</th>
+                        <td style="text-align:right;" colspan="2">{{total_net|intcomma}} {{setting.currency}}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div style="margin-top:15px;">
+            <button id="print_day_report" style="background:#00c6d7;">Print Report</button>
+            {% if month or year %}
+                <button style="background:#999; margin-bottom:20px;" id="see_day_chart" href="{% url 'managment_msd_month_chart' month year %}">See Items Chart</button>
+            {% else %}
+                <button style="background:#999; margin-bottom:20px;" id="see_day_chart" href="{% url 'managment_msd_single_chart' date %}">See Items Chart</button>
+            {% endif %}
+        </div>
+    </div>
+    <div class="xl-ms-product-inventory">
+        <h2>Details</h2>
+        <div id="today_details">
+            <table style="width:100%;">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Image</th>
+                        <th>Details</th>
+                        <th>Total</th>
+                        <th>Discount</th>
+                        <th>Total Net</th>
+                    </tr>
+                </thead>
+                <tbody style="text-align:center;">
+                    {% if customers_detail %}
+                        {% for bill in customers_detail %}
+                            <tr class="single_bill_tr" id="open_single_bill{{bill.pk}}" href="{% url 'managment_get_single_bill' bill.pk %}" style="cursor:pointer;">
+                                <td>{{bill.receipt_number}}</td>
+                                <td>
+                                    {% if bill.user %}
+                                        {% if bill.user.profile_image %}
+                                            <img style="width:40px;" src="{{bill.user.profile_image.url}}" />
+                                        {% else %}
+                                            <img style="width:40px;" src="{% static 'images/default_user.jpg' %}" />
+                                        {% endif %}
+                                    {% else %}
+                                        <img style="width:40px;" src="{% static 'images/default_user.jpg' %}" />
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if bill.user %}
+                                        <strong>{{bill.user.full_name}}</strong>
+                                        <!--<span style="display:block;">{{bill.user.email}}</span>-->
+                                    {% else %}
+                                        <strong>{{bill.username}}</strong>
+                                        <!--<span style="display:block;">{{bill.email}}</span>-->
+                                    {% endif %}
+                                </td>
+                                <td>{{bill.total_paid|intcomma}} {{setting.currency}}</td>
+                                <td>{{bill.discount|intcomma}} {{setting.currency}}</td>
+                                <td>{{bill.total_net|intcomma}} {{setting.currency}}</td>
+                            </tr>
+                            <script type="text/javascript">
+                                $("#open_single_bill{{bill.pk}}").magnificPopup({type: 'ajax'});
+                            </script>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        <div class="xl-ms-totals" style="text-align:center; margin-bottom:20px;">
+            <button id="print_day_details">Print Report</button>
+        </div>
+    </div>
+</div>
+
+<div id="dayliy_report" style="display:none;">
+    <div style="width:calc(100% - 30px); background:#eee; border:2px solid #00c6d7; padding:15px; font-family: Avenir,'Avenir Next','Helvetica Neue','Segoe UI',Helvetica,Arial,sans-serif;">
+        <div>
+			<h2>{{company.company.name}}</h2>
+			<p style="margin-top:-12px;"><strong>Email : </strong>{{company.company.email}}</p>
+			<p style="margin-top:-12px;"><strong>Address : </strong>{{company.company.address}}</p>
+			<p style="margin-top:-12px;"><strong>Phone Number : </strong>{{company.company.phone_number}}</p>
+            <p style="float:right; margin-top:-110px;"><strong>Date : </strong>{{today}}</p>
+		</div>
+        <h3 style="padding-bottom: 10px; text-transform:uppercase; border-bottom: 1px solid #DDD; font-size: 18px; text-align: center;">REPORT OF {{date}}</h3>
+        <table style="width: 100%; font-size: 13px; border-collapse: collapse; border-spacing: 0;">
+            <thead>
+                <tr style="text-align:center; text-transform: uppercase; font-size:14px; ">
+                    <th style="padding-bottom: 7px; border-bottom: 2px solid #333;">Customers</th>
+                    <th style="padding-bottom: 7px; border-bottom: 2px solid #333;">Product</th>
+                    <th style="padding-bottom: 7px; border-bottom: 2px solid #333;">Quantity</th>
+                    <th style="padding-bottom: 7px; border-bottom: 2px solid #333;">Total</th>
+                </tr>
+            </thead>
+            {% if day_products %}
+                <tbody style="text-align:center;">
+                    {% for product in day_products %}
+                        <tr style="cursor: default;">
+                            <td style="border-bottom: 1px solid #bbb; text-align: center; padding: 8px 0; font-size: 15px;">{{product.customers}}</td>
+                            <td style="border-bottom: 1px solid #bbb; text-align: center; padding: 8px 0; font-size: 15px;">{% for p in products %}{% if p.pk == product.product %}{{p.product.product_name}}{% endif %}{% endfor %}</td>
+                            <td style="border-bottom: 1px solid #bbb; text-align: center; padding: 8px 0; font-size: 15px;">{{product.quantities}}</td>
+                            <td style="border-bottom: 1px solid #bbb; text-align: center; padding: 8px 0; font-size: 15px;">{{product.totals|intcomma}} {{setting.currency}}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            {% endif %}
+            <tfoot>
+                <tr>
+                    <th style="text-align:left;" colspan="2">Customers</th>
+                    <td style="text-align:right;" colspan="2">{{customers}}</td>
+                </tr>
+                <tr>
+                    <th style="text-align:left;" colspan="2">Total</th>
+                    <td style="text-align:right;" colspan="2">{{total_paid|intcomma}} {{setting.currency}}</td>
+                </tr>
+                <tr>
+                    <th style="text-align:left;" colspan="2">Discount</th>
+                    <td style="text-align:right;" colspan="2">{{discount|intcomma}} {{setting.currency}}</td>
+                </tr>
+                <tr>
+                    <th style="text-align:left;" colspan="2">Total Net</th>
+                    <td style="text-align:right;" colspan="2">{{total_net|intcomma}} {{setting.currency}}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<div id="daily_details_report" style="display:none;">
+    <div style="width:calc(100% - 30px); background:#eee; border:2px solid #00c6d7; padding:15px; font-family: Avenir,'Avenir Next','Helvetica Neue','Segoe UI',Helvetica,Arial,sans-serif;">
+        <div>
+			<h2>{{company.company.name}}</h2>
+			<p style="margin-top:-12px;"><strong>Email : </strong>{{company.company.email}}</p>
+			<p style="margin-top:-12px;"><strong>Address : </strong>{{company.company.address}}</p>
+			<p style="margin-top:-12px;"><strong>Phone Number : </strong>{{company.company.phone_number}}</p>
+            <p style="float:right; margin-top:-110px;"><strong>Date : </strong>{{today}}</p>
+		</div>
+        <h3 style="padding-bottom: 10px; text-transform:uppercase; border-bottom: 1px solid #DDD; font-size: 18px; text-align: center;">DETAILED REPORT OF {{date}}</h3>
+        <table style="width: 100%; font-size: 13px; border-collapse: collapse; border-spacing: 0;">
+            <thead>
+                <tr style="text-align:center; text-transform: uppercase; font-size:14px; ">
+                    <th style="padding-bottom: 7px; border-bottom: 2px solid #333;">No</th>
+                    <th style="padding-bottom: 7px; border-bottom: 2px solid #333;">Image</th>
+                    <th style="padding-bottom: 7px; border-bottom: 2px solid #333;">Details</th>
+                    <th style="padding-bottom: 7px; border-bottom: 2px solid #333;">Total</th>
+                    <th style="padding-bottom: 7px; border-bottom: 2px solid #333;">Discount</th>
+                    <th style="padding-bottom: 7px; border-bottom: 2px solid #333;">Total Net</th>
+                </tr>
+            </thead>
+            <tbody style="text-align:center;">
+                {% if customers_detail %}
+                    {% for bill in customers_detail %}
+                        <tr style="cursor:pointer;">
+                            <td style="border-bottom: 1px solid #bbb; text-align: center; padding: 8px 0; font-size: 15px;">{{bill.receipt_number}}</td>
+                            <td style="border-bottom: 1px solid #bbb; text-align: center; padding: 8px 0; font-size: 15px;">
+                                {% if bill.user %}
+                                    {% if bill.user.profile_image %}
+                                        <img style="width:40px;" src="{{bill.user.profile_image.url}}" />
+                                    {% else %}
+                                        <img style="width:40px;" src="{% static 'images/default_user.jpg' %}" />
+                                    {% endif %}
+                                {% else %}
+                                    <img style="width:40px;" src="{% static 'images/default_user.jpg' %}" />
+                                {% endif %}
+                            </td>
+                            <td style="border-bottom: 1px solid #bbb; text-align: center; padding: 8px 0; font-size: 15px;">
+                                {% if bill.user %}
+                                    <strong>{{bill.user.full_name}}</strong>
+                                {% else %}
+                                    <strong>{{bill.username}}</strong>
+                                {% endif %}
+                            </td>
+                            <td style="border-bottom: 1px solid #bbb; text-align: center; padding: 8px 0; font-size: 15px;">{{bill.total_paid|intcomma}} {{setting.currency}}</td>
+                            <td style="border-bottom: 1px solid #bbb; text-align: center; padding: 8px 0; font-size: 15px;">{{bill.discount|intcomma}} {{setting.currency}}</td>
+                            <td style="border-bottom: 1px solid #bbb; text-align: center; padding: 8px 0; font-size: 15px;">{{bill.total_net|intcomma}} {{setting.currency}}</td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(".xl-ms-product-inventory").slimScroll({
+        railVisible: true,
+        size:'7',
+        height:'calc(100vh - 150px)',
+        alwaysVisible: false
+    });
+
+    $("#see_day_chart").magnificPopup({type: 'ajax'});
+    $("#print_day_report").click(function(){
+        printReportDay();
+    });
+    $("#print_day_details").click(function(){
+        printDetailsDay();
+    });
+
+    function printReportDay() {
+        var report = document.getElementById("dayliy_report");
+        var report_content = window.open('', '', 'height=500', 'width=1200');
+        report_content.document.write('<html><head><title>Today Report</title><body>');
+        report_content.document.write(report.innerHTML);
+        report_content.document.write('</body></html>');
+        report_content.document.close();
+        setTimeout(function () {
+            report_content.print();
+        });
+        return false;
+    }
+
+    function downloadInnerHtml(filename, elId) {
+        var elHtml = document.getElementById(elId).innerHTML;
+        var link = document.createElement('a');
+        link.setAttribute('download', filename);
+        link.setAttribute('href', 'data:' + 'text/doc' + ';charset=utf-8,' + encodeURIComponent(elHtml));
+        link.click();
+    }
+
+    function printDetailsDay() {
+        var report = document.getElementById("daily_details_report");
+        var report_content = window.open('', '', 'height=500', 'width=1200');
+        report_content.document.write('<html><head><title>Today Details</title><body>');
+        report_content.document.write(report.innerHTML);
+        report_content.document.write('</body></html>');
+        report_content.document.close();
+        setTimeout(function () {
+            report_content.print();
+        });
+        return false;
+    }
+</script>

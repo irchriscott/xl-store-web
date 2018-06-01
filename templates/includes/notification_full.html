@@ -1,0 +1,222 @@
+{% load staticfiles %}
+{% if session_company %}
+<h3>Notifications</h3>
+{% if company.get_notifications %}
+<div class="xl-notification-list">
+    <ul>
+        {% for notification in company.get_notifications %}
+            {% if notification.about == 'like' %}
+                <li>
+                    <a id="open_post_not{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">
+                        <img src="{{notification.user.profile_image.url}}" alt="{{notification.user.user_name}}" />
+                        <p class="xl-not-content"><a id="open_post_not_else{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">{{notification.user.full_name}} <span class="username">@{{notification.user.user_name}}</span></a> has liked your post</p>
+                        <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                    </a>
+                </li>
+            {% elif notification.about == 'dislike' %}
+                <li>
+                    <a id="open_post_not{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">
+                        <img src="{{notification.user.profile_image.url}}" alt="{{notification.user.user_name}}" />
+                        <p class="xl-not-content"><a id="open_post_not_else{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">{{notification.user.full_name}} <span class="username">@{{notification.user.user_name}}</span></a> has disliked your post</p>
+                        <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                    </a>
+                </li>
+            {% elif notification.about == 'reply' %}
+                <li>
+                    <a id="open_post_not{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">
+                        <img src="{{notification.user.profile_image.url}}" alt="{{notification.user.user_name}}" />
+                        <p class="xl-not-content"><a id="open_post_not_else{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">{{notification.user.full_name}} <span class="username">@{{notification.user.user_name}}</span></a> has replied your post</p>
+                        <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                    </a>
+                </li>
+            {% elif notification.about == 'company_tagged' %}
+                <li>
+                    <a id="open_post_not{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">
+                        <img src="{{notification.user.profile_image.url}}" alt="{{notification.user.user_name}}" />
+                        <p class="xl-not-content"><a id="open_post_not_else{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">{{notification.user.full_name}} <span class="username">@{{notification.user.user_name}}</span></a> has mentioned you in {% if notification.user.gender == 'Male' %}his{% else %}her{% endif %} post</p>
+                        <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                    </a>
+                </li>
+            {% elif notification.about == 'company_product_tagged' %}
+                <li>
+                    <a id="open_post_not{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">
+                        <img src="{{notification.user.profile_image.url}}" alt="{{notification.user.user_name}}" />
+                        <p class="xl-not-content"><a id="open_post_not_else{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">{{notification.user.full_name}} <span class="username">@{{notification.user.user_name}}</span></a> has mentioned your product in {% if notification.user.gender == 'Male' %}his{% else %}her{% endif %} post</p>
+                        <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                    </a>
+                </li>
+            {% elif notification.about == 'reply_reply' %}
+                <li>
+                    <a id="open_post_not{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">
+                        <img src="{{notification.user.profile_image.url}}" alt="{{notification.user.user_name}}" />
+                        <p class="xl-not-content"><a id="open_post_not_else{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">{{notification.user.full_name}} <span class="username">@{{notification.user.user_name}}</span></a> has replied your reply</p>
+                        <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                    </a>
+                </li>
+            {% elif notification.about == 'comment_reply' %}
+                <li>
+                    <a href="categories.html">
+                        <img src="{{notification.user.profile_image.url}}" alt="{{notification.user.user_name}}" />
+                        <p class="xl-not-content"><a>{{notification.user.full_name}} <span class="username">@{{notification.user.user_name}}</span></a> has replied your comment</p>
+                        <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                    </a>
+                </li>
+            {% elif notification.about == 'comment' %}
+                <li>
+                    <a href="{% url 'single_product' notification.concern.name_dotted notification.notification_id %}">
+                        <img src="{{notification.user.profile_image.url}}" alt="{{notification.user.user_name}}" />
+                        <p class="xl-not-content"><a href="{% url 'single_product' notification.concern.name_dotted notification.notification_id %}">{{notification.user.full_name}} <span class="username">@{{notification.user.user_name}}</span></a> has commented on your product</p>
+                        <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                    </a>
+                </li>
+            {% elif notification.about == 'like_product' %}
+                <li>
+                    <a href="{% url 'single_product' notification.concern.name_dotted notification.notification_id %}">
+                        <img src="{{notification.user.profile_image.url}}" alt="{{notification.user.user_name}}" />
+                        <p class="xl-not-content"><a href="{% url 'single_product' notification.concern.name_dotted notification.notification_id %}">{{notification.user.full_name}} <span class="username">@{{notification.user.user_name}}</span></a> has liked your product</p>
+                        <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                    </a>
+                </li>
+            {% elif notification.about == 'dislike_product' %}
+                <li>
+                    <a href="{% url 'single_product' notification.concern.name_dotted notification.notification_id %}">
+                        <img src="{{notification.user.profile_image.url}}" alt="{{notification.user.user_name}}" />
+                        <p class="xl-not-content"><a href="{% url 'single_product' notification.concern.name_dotted notification.notification_id %}">{{notification.user.full_name}} <span class="username">@{{notification.user.user_name}}</span></a> has commented on your product</p>
+                        <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                    </a>
+                </li>
+            {% elif notification.about == 'interess' %}
+                <li>
+                    <a href="{% url 'single_product' notification.concern.name_dotted notification.notification_id %}">
+                        <img src="{{notification.user.profile_image.url}}" alt="{{notification.user.user_name}}" />
+                        <p class="xl-not-content"><a href="{% url 'single_product' notification.concern.name_dotted notification.notification_id %}">{{notification.user.full_name}} <span class="username">@{{notification.user.user_name}}</span></a> is interested in your product</p>
+                        <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                    </a>
+                </li>
+            {% elif notification.about == 'follow' %}
+                <li>
+                    <a href="{% url 'user_profile' notification.user.user_name %}">
+                        <img src="{{notification.user.profile_image.url}}" alt="{{notification.user.user_name}}" />
+                        <p class="xl-not-content"><a href="{% url 'user_profile' notification.user.user_name %}">{{notification.user.full_name}} <span class="username">@{{notification.user.user_name}}</span></a> has started following you</p>
+                        <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                    </a>
+                </li>
+            {% endif %}
+            <script type="text/javascript">$("#open_post_not{{notification.pk}}, #open_post_not_else{{notification.pk}}").magnificPopup({type: 'ajax'}); $("#not_date{{notification.pk}}").setTime();</script>
+        {% endfor %}
+    </ul>
+</div>
+{% else %}
+    <p class="xl-error">NO NOTIFICATION</p>
+{% endif %}
+{% elif session_user %}
+<h3>Notifications</h3>
+    {% if session_profile.get_notifications %}
+    <div class="xl-notification-list">
+        <ul>
+            {% for notification in session_profile.get_notifications %}
+                {% if notification.notification_maker == 'user' %}
+                    {% if notification.about == 'like' %}
+                        <li>
+                            <a id="open_post_not{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">
+                                <img src="{{notification.user.profile_image.url}}" alt="{{notification.user.user_name}}" />
+                                <p class="xl-not-content"><a id="open_post_not_else{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">{{notification.user.full_name}} <span class="username">@{{notification.user.user_name}}</span></a> has liked your post</p>
+                                <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                            </a>
+                        </li>
+                    {% elif notification.about == 'dislike' %}
+                        <li>
+                            <a id="open_post_not{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">
+                                <img src="{{notification.user.profile_image.url}}" alt="{{notification.user.user_name}}" />
+                                <p class="xl-not-content"><a id="open_post_not_else{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">{{notification.user.full_name}} <span class="username">@{{notification.user.user_name}}</span></a> has disliked your post</p>
+                                <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                            </a>
+                        </li>
+                    {% elif notification.about == 'user_tagged' %}
+                        <li>
+                            <a id="open_post_not{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">
+                                <img src="{{notification.user.profile_image.url}}" alt="{{notification.user.user_name}}" />
+                                <p class="xl-not-content"><a id="open_post_not_else{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">{{notification.user.full_name}} <span class="username">@{{notification.user.user_name}}</span></a> has mentioned you in {% if notification.user.gender == 'Male' %}his{% else %}her{% endif %} post</p>
+                                <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                            </a>
+                        </li>
+                    {% elif notification.about == 'reply' %}
+                        <li>
+                            <a id="open_post_not{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">
+                                <img src="{{notification.user.profile_image.url}}" alt="{{notification.user.user_name}}" />
+                                <p class="xl-not-content"><a id="open_post_not_else{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">{{notification.user.full_name}} <span class="username">@{{notification.user.user_name}}</span></a> has replied your post</p>
+                                <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                            </a>
+                        </li>
+                    {% elif notification.about == 'reply_reply' %}
+                        <li>
+                            <a id="open_post_not{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">
+                                <img src="{{notification.user.profile_image.url}}" alt="{{notification.user.user_name}}" />
+                                <p class="xl-not-content"><a id="open_post_not_else{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">{{notification.user.full_name}} <span class="username">@{{notification.user.user_name}}</span></a> has replied your reply</p>
+                                <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                            </a>
+                        </li>
+                    {% elif notification.about == 'comment_reply' %}
+                        <li>
+                            <a href="categories.html">
+                                <img src="{{notification.user.profile_image.url}}" alt="{{notification.user.user_name}}" />
+                                <p class="xl-not-content"><a>{{notification.user.full_name}} <span class="username">@{{notification.user.user_name}}</span></a> has replied your comment</p>
+                                <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                            </a>
+                        </li>
+                    {% elif notification.about == 'follow' %}
+                        <li>
+                            <a href="{% url 'user_posts' notification.user.user_name %}">
+                                <img src="{{notification.user.profile_image.url}}" alt="{{notification.user.user_name}}" />
+                                <p class="xl-not-content"><a href="{% url 'user_posts' notification.user.user_name %}">{{notification.user.full_name}} <span class="username">@{{notification.user.user_name}}</span></a> started following you</p>
+                                <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                            </a>
+                        </li>
+                    {% endif %}
+                {% elif notification.notification_maker == 'company' %}
+                    {% if notification.about == 'reply' %}
+                        <li>
+                            <a id="open_post_not{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">
+                                <img src="{{notification.company.profile_image.url}}" alt="{{notification.company.name_dotted}}" />
+                                <p class="xl-not-content"><a id="open_post_not_else{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">{{notification.company.name}} </a> has replied your post</p>
+                                <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                            </a>
+                        </li>
+                    {% elif notification.about == 'user_tagged' %}
+                        <li>
+                            <a id="open_post_not{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">
+                                <img src="{{notification.company.profile_image.url}}" alt="{{notification.company.name_dotted}}" />
+                                <p class="xl-not-content"><a id="open_post_not_else{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">{{notification.company.name}} </a> has mentioned you in his post</p>
+                                <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                            </a>
+                        </li>
+                    {% elif notification.about == 'reply_reply' %}
+                        <li>
+                            <a id="open_post_not{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">
+                                <img src="{{notification.company.profile_image.url}}" alt="{{notification.company.name_dotted}}" />
+                                <p class="xl-not-content"><a id="open_post_not_else{{notification.pk}}" href="{% url 'single_post_ajax' notification.notification_id %}">{{notification.company.name}} </a> has replied your reply</p>
+                                <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                            </a>
+                        </li>
+                    {% elif notification.about == 'comment_reply' %}
+                        <li>
+                            <a href="categories.html">
+                                <img src="{{notification.company.profile_image.url}}" alt="{{notification.company.name_dotted}}" />
+                                <p class="xl-not-content"><a>{{notification.company.name}} </a> has replied your comment</p>
+                                <p class="xl-not-date-time"><i class="fa fa-clock-o"></i> <span id="not_date{{notification.pk}}" data-time="{{notification.posted_date|date:'Y-m-d H:i:s'}}"></span></p>
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endif %}
+                <script type="text/javascript">
+                    $("#open_post_not{{notification.pk}}, #open_post_not_else{{notification.pk}}").magnificPopup({type: 'ajax'});
+                    $("#not_date{{notification.pk}}").setTime();
+                </script>
+            {% endfor %}
+        </ul>
+    </div>
+    {% else %}
+    <p class="xl-error">NO NOTIFICATION</p>
+    {% endif %}
+{% else %}
+{% endif %}

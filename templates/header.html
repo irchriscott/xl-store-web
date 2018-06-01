@@ -1,0 +1,341 @@
+{% load staticfiles %}
+<header class="xl-navbar-container">
+    <input type="hidden" id="gen_lat" />
+    <input type="hidden" id="gen_lon" />
+    <input type="hidden" id="gen_address" />
+    <div class="xl-navbar">
+        <div class="xl-navbar-left">
+            <div class="show-right-nav">
+                <button type="button" id="show-hide-nav"><i class="icon ion-navicon"></i></button>
+            </div>
+            <div class="xl-logo">
+                <h2><a href="/">Xl-Store</a></h2>
+            </div>
+            <div class="xl-user-nav">
+                {% if session_company %}
+                    <ul>
+                        <li title="Messages" data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" class="icon"><a href="#"><i class="icon ion-ios-chatboxes-outline"></i></a>
+                            <span>{{company.get_sum_trades}}</span>
+                        </li>
+                        <li title="Notifications" data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" class="icon"><a href="#"><i class="icon ion-ios-bell-outline"></i></a>
+                            <span>{{company.get_sum_notification}}</span>
+                        </li>
+                    </ul>
+                {% elif session_user %}
+                    <ul>
+                        <li title="Messages" data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" class="icon"><a href="#"><i class="icon ion-ios-chatboxes-outline"></i></a>
+                            <span>{{session_profile.get_sum_trades}}</span>
+                        </li>
+                        <li title="Notifications" data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" class="icon"><a href="#"><i class="icon ion-ios-bell-outline"></i></a>
+                            <span>{{session_profile.get_sum_notification}}</span>
+                        </li>
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+        <div class="xl-navbar-logo">
+            <div class="xl-store-logo">
+                <img src="{% static 'images/store.png' %}" id="header_image" />
+            </div>
+        </div>
+        <div class="xl-navbar-right">
+            <div class="xl-user-nav">
+                <ul>
+                    {% if session_company %}
+                        <li title="Search" data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" class="icon"><a id="open-search-modal"><i class="icon ion-ios-search"></i></a></li>
+                        <li title="New Post" data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" class="icon"><a id="open_publish_post" href="{% url 'user_save_post' %}"><i class="icon ion-ios-compose-outline"></i></a></li>
+                        <li title="New Product" data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" class="icon"><a id="open_newprod_modal" href="{% url 'comp_add_product' %}"><i class="icon ion-ios-upload-outline"></i></li>
+                        <li class="picture" data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" title="{{company.name}}"><a id="show-user-options"><img src="{{ company.get_profile_image.url }}" /></a></li>
+                        <li title="Settings" data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" class="icon"><a href="#"><i class="icon ion-ios-gear-outline"></i></a></li>
+                        <div class="xl-navbar-user-options" id="xl-navbar-user-options" style="margin-left:10px !important;">
+                            <div class="xl-session-user">
+                                <a href="{% url 'comp_profile' company.name_dotted  %}"><h3>{{company.name}}</h3><span>@{{company.name_dotted}}</span></a>
+                            </div>
+                            <ul>
+                                <li><a href="{% url 'comp_profile' company.name_dotted  %}"><i class="icon ion-ios-person"></i>Profile</a></li>
+                                <li><a href="{% url 'comp_profile_2' company.name_dotted %}"><i class="icon ion-ios-cart"></i>Products</a></li>
+                                <li><a href="{% url 'comp_categories' company.name_dotted %}"><i class="icon ion-ios-settings-strong"></i>Categories</a></li>
+                                <li><a href="{% url 'comp_advertisments' company.name_dotted %}"><i class="icon ion-ios-videocam"></i>Advertisements</a></li>
+                                <li><a href="{% url 'comp_followers' company.name_dotted %}"><i class="icon ion-ios-people"></i>Followers</a></li>
+                                <li><a href="{% url 'logout_comp' %}"><i class="icon ion-ios-locked"></i>Logout</a></li>
+                            </ul>
+                        </div>
+                    {% elif session_user %}
+                        <li title="Search" data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" class="icon"><a id="open-search-modal"><i class="icon ion-ios-search"></i></a></li>
+                        <li title="New Post" data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" class="icon"><a id="open_publish_post" href="{% url 'user_save_post' %}"><i class="icon ion-ios-compose-outline"></i></a></li>
+                        <li class="picture" data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" title="{{session_profile.user_name}}"><a id="show-user-options"><img src="{{ session_profile.get_profile_image.url }}" alt="{{session_profile.user_name}}" /></a></li>
+                        <li title="Settings" data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" class="icon"><a href="#"><i class="icon ion-ios-gear-outline"></i></a></li>
+                        <div class="xl-navbar-user-options" id="xl-navbar-user-options">
+                            <div class="xl-session-user">
+                                <a href="{% url 'user_profile' session_profile.user_name %}"><h3>{{session_profile.full_name}}</h3><span>@{{session_profile.user_name}}</span></a>
+                            </div>
+                            <ul>
+                                <li><a href="{% url 'user_profile' session_profile.user_name %}"><i class="icon ion-ios-person"></i>Profile</a></li>
+                                <li><a href="{% url 'user_interess' session_profile.user_name  %}"><i class="icon ion-ios-cart"></i>Interests</a></li>
+                                <li><a href="{% url 'user_companies' session_profile.user_name %}"><i class="icon ion-ios-star"></i>Companies</a></li>
+                                <li><a href="{% url 'logout_user' %}"><i class="icon ion-ios-locked"></i>Logout</a></li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <li title="Search" data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" class="icon"><a id="open-search-modal"><i class="icon ion-ios-search"></i></a></li>
+                        <li class="button"><a id="show-user-options"><button type="button">Login</button></a></li>
+                        <li title="Settings" data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-away" data-tippy-arrow="true" class="icon"><a href="#"><i class="icon ion-ios-gear-outline"></i></a></li>
+                        <div class="xl-navbar-user-options" id="xl-navbar-user-options">
+                            <ul>
+                                <li><a href="{% url 'login_comp'  %}"><i class="icon ion-ios-locked"></i>Login as Company</a></li>
+                                <li><a href="{% url 'login_user' %}"><i class="icon ion-ios-locked"></i>Login as User</a></li>
+                            </ul>
+                        </div>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- SEARCH CONTAINER -->
+
+<section class="xl-search-modal" id="xl-search-modal">
+    <div class="xl-search-container">
+        <div class="xl-search-div">
+            <div class="xl-logo">
+                <h2><a href="/">Xl-Store</a></h2>
+            </div>
+            <div class="search-form">
+                <span class="search"><i class="icon ion-ios-search"></i></span>
+                <form id="xl-search-form" method="post">
+                    <input type="search" id="xl-store-search" placeholder="Searh here in xlstore.com" autocomplete="off"/>
+                </form>
+                <span class="close" id="close-searh-modal"><i class="icon ion-ios-close-empty"></i></span>
+            </div>
+        </div>
+        <div class="xl-search-result">
+            <div class="xl-search-menu">
+                <ul>
+                    <li class="activated"><a data-href="#products">Products</a></li>
+                    <li><a data-href="#companies">Companies</a></li>
+                    <li><a data-href="#users">Users</a></li>
+                </ul>
+            </div>
+            <div class="xl-search-term">
+                <p><strong>Searching for </strong><span id="searh_term"></span><p>
+            </div>
+            <div class="xl-search-data" id="xl-search-data">
+                <div class="xl-search-data-container activated" id="products">
+                    <ul></ul>
+                </div>
+                <div class="xl-search-data-container" id="companies">
+                    <ul></ul>
+                </div>
+                <div class="xl-search-data-container" id="users">
+                    <ul></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- LEFT NAVIGATION -->
+
+<section class="xl-leftnav" id="xl-leftnav">
+    <div class="xl-leftnav-content" id="xl-leftnav-content">
+        <div class="xl-leftnav-items">
+            <ul>
+                <li><a href="{% url 'home' %}"><i class="icon ion-ios-home"></i><p>Home</p></a></li>
+                {% if session_company %}
+                <li><a href="{% url 'comp_profile' company.name_dotted %}"><i class="icon ion-ios-person"></i><p>Profil</p></a></li>
+                {% elif session_user %}
+                <li><a href="{% url 'user_posts' session_profile.user_name %}"><i class="icon ion-ios-person"></i><p>Profil</p></a></li>
+                {% endif %}
+                <li><a href="{% url 'products' %}"><i class="icon ion-ios-cart"></i><p>Products</p></a></li>
+                <li><a href="{% url 'posts' %}"><i class="icon ion-ios-compose"></i><p>Posts</p></a></li>
+            </ul>
+        </div>
+        <h4>My Data</h4>
+        {% if session_company %}
+            <div class="xl-leftnav-items">
+                <ul>
+                    <li><a href="#"><i class="icon ion-ios-cart"></i><p>Products</p><span>{{company.get_sum_products}}</span></a></li>
+                    <li><a href="#"><i class="icon ion-ios-compose"></i><p>Posts</p><span>{{company.get_sum_posts}}</span></a></li>
+                    <li><a href="#"><i class="icon ion-ios-flag"></i><p>Advertisments</p></a><span>{{company.get_sum_advertisments}}</span></li>
+                    <li><a href="#"><i class="icon ion-ios-chatbubble"></i><p>Comments</p><span>{{company.get_sum_comments}}</span></a></li>
+                    <li><a href="#"><i class="icon ion-ios-loop-strong"></i><p>Replies</p><span>{{company.get_sum_replies}}</span></a></li>
+                    <li><a href="{% url 'company_all_trades' %}"><i class="icon ion-ios-chatboxes"></i><p>Trades</p><span>{{company.get_sum_trades}}</span></a></li>
+                </ul>
+            </div>
+        {% elif session_user %}
+            <div class="xl-leftnav-items">
+                <ul>
+                    <li><a href="#"><i class="icon ion-heart"></i><p>Likes</p><span>{{session_profile.get_sum_likes}}</span></a></li>
+                    <li><a href="#"><i class="icon ion-heart-broken"></i><p>Dislikes</p><span>{{session_profile.get_sum_dislikes}}</span></a></li>
+                    <li><a href="#"><i class="icon ion-ios-compose"></i><p>Posts</p></a><span>{{session_profile.get_sum_posts}}</span></li>
+                    <li><a href="#"><i class="icon ion-ios-cart"></i><p>Interests</p><span>{{session_profile.get_sum_interess}}</span></a></li>
+                    <li><a href="#"><i class="icon ion-ios-chatbubble"></i><p>Comments</p><span>{{session_profile.get_sum_comments}}</span></a></li>
+                    <li><a href="#"><i class="icon ion-ios-loop-strong"></i><p>Replies</p><span>{{session_profile.get_sum_replies}}</span></a></li>
+                    <li><a href="{% url 'user_company_categories' %}" id="load_follow_categories"><i class="icon ion-ios-star"></i><p>Categories</p><span>{{session_profile.get_sum_categories}}</span></a></li>
+                    <li><a href="{% url 'user_all_trades' %}"><i class="icon ion-ios-chatboxes"></i><p>Trades</p><span>{{session_profile.get_sum_trades}}</span></a></li>
+                    <li><a href="{% url 'user_company_bills_carts_all' %}" id="load_user_carts_and_bills"><i class="icon ion-clipboard"></i><p>Bills & Carts</p><span>12</span></a></li>
+                </ul>
+            </div>
+        {% else %}
+        {% endif %}
+        {% if session_company %}
+        <h4>Categories</h4>
+        <div class="xl-leftnav-items">
+            {% if company.get_categories %}
+            <ul>
+                {% for category in company.get_categories %}
+                <li>
+                    <a href="{% url 'single_category' category.company.name_dotted category.pk  %}">
+                        <i class="icon ion-ios-star"></i>
+                        <p>{{category.name}}</p>
+                        <span>{{category.get_sum_products}}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="xl-error">NO CATEGORY</p>
+            {% endif %}
+        </div>
+        <a class="xl-managment-link" href="{% url 'managment_welcome' %}">Open {{compant.name}} Managment </a>
+        {% elif session_user %}
+        <h4>Following Cie</h4>
+        <div class="xl-leftnav-items">
+            {% if session_profile.get_companies %}
+            <ul>
+                {% for company in session_profile.get_companies %}
+                <li>
+                    <a href="{% url 'comp_profile' company.company.name_dotted %}">
+                        <img src="{{company.company.get_profile_image.url}}" alt="{{company.company.name_dotted}}" />
+                        <p>{{company.company.name}}</p>
+                        <span>{{company.company.get_sum_products}}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="xl-error">NO COMPANY</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+<a id="load_comoany_cart" style="display:none;">LOAD COMPANY CART<a>
+{% include 'includes/server_messages.html' %}
+{% if session_company %}
+    <script type="text/javascript">
+        var host = 'localhost';
+        var port = '4000';
+        var socket = io(host + ':' + port);
+
+        iziToast.settings({
+            close: true,
+            progressBar: true,
+            progressBarEasing: 'ease',
+        });
+
+        function deny_access_market(data){
+            $.get('/ecommerce/mc/market/company/access/' + data.key + '/disallow/', function(response){
+                showSuccessMessage(data.user.username, "Market Access Denied !!!");
+                socket.emit("denyAccess", data);
+            });
+        }
+
+        socket.on("askAccessMarket", function(data){
+            var company = "{{company.pk}}";
+            if(company == data.company.id){
+                iziToast.show({
+                    id: data.user.token,
+                    theme: 'dark',
+                    icon: 'icon ion-ios-information',
+                    title: data.user.name,
+                    message: 'Want To Access Your Market',
+                    position: 'bottomRight',
+                    transitionIn: 'flipInX',
+                    transitionOut: 'flipOutX',
+                    progressBarColor: '#00c6d7',
+                    image: "http://127.0.0.1:8000/media/" + data.user.profile_image,
+                    imageWidth: 70,
+                    timeout: 60000,
+                    layout: 2,
+                    onClosing: function(){},
+                    onClosed: function(instance, toast, closedBy){
+                        deny_access_market(data);
+                    },
+                    iconColor: '#00c6c7',
+                    buttons: [
+                        ['<button>Allow</button>', function (instance, toast) {
+                            instance.hide({ transitionOut: 'flipOutX' }, toast);
+                            $.get('/ecommerce/mc/market/company/access/' + data.key + '/allow/?status=allow', function(response){
+                                socket.emit("allowAccess", JSON.parse(response));
+                                var jresponse = JSON.parse(response);
+                                instance.hide({ transitionOut: 'flipOutX' }, toast);
+                                showSuccessMessage(jresponse.user.username, "Market Access Allowed !!!");
+                            });
+                        }, true],
+                        ['<button>Deny</button>', function (instance, toast) {
+                            deny_access_market(data);
+                            instance.hide({ transitionOut: 'flipOutX' }, toast);
+                        }],
+                        ['<button>VIP</button>', function (instance, toast) {
+                            $.get('/ecommerce/mc/market/company/access/' + data.key + '/allow/?status=vip', function(response){
+                                socket.emit("allowAccess", JSON.parse(response));
+                                instance.hide({ transitionOut: 'flipOutX' }, toast);
+                                showSuccessMessage(data.user.username, "Market Access Allowed !!!");
+                            });
+                        }]
+                    ]
+                });
+            }
+        });
+
+        socket.on("cartFinished", function(data){
+            var company = "{{company.pk}}";
+
+            if(company == data.company.id){
+                iziToast.show({
+                    id: data.user.token,
+                    theme: 'dark',
+                    icon: 'icon ion-ios-information',
+                    title: data.user.name,
+                    message: 'Has finished a cart. Accept or Decline',
+                    position: 'bottomRight',
+                    transitionIn: 'flipInX',
+                    transitionOut: 'flipOutX',
+                    progressBarColor: '#00c6d7',
+                    image: "http://127.0.0.1:8000/media/" + data.user.profile_image,
+                    imageWidth: 70,
+                    timeout: 60000,
+                    layout: 2,
+                    onClosing: function(){},
+                    onClosed: function(instance, toast, closedBy){
+                        $.ajax({
+                            type:'GET',
+                            url:'/managment/mms_c/ec/customer/' + data.id + '/accept_or_decline/?status=suspended',
+                            data: {},
+                            success: function(response){
+                                if(response == "ok"){
+                                    socket.emit("declineOrder", data);
+                                    showSuccessMessage("success", "Order Declined Successfully !!!");
+                                } else {
+                                    showErrorMessage("error", response);
+                                }
+                            }
+                        });
+                    },
+                    iconColor: '#00c6c7',
+                    buttons: [
+                        ['<button>VIEW SHOPPING CART</button>', function (instance, toast) {
+                            instance.hide({ transitionOut: 'flipOutX' }, toast);
+                            $("#load_comoany_cart").magnificPopup({type:'ajax'});
+                            $("#load_comoany_cart").attr("href", "/ecommerce/mc/market/cart/"+ data.id +"/load/company/");
+                            $("#load_comoany_cart").click();
+                        }, true]
+                    ]
+                });
+            }
+        })
+    </script>
+{% endif %}

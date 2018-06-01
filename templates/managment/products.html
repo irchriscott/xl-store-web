@@ -1,0 +1,139 @@
+{% load staticfiles %}
+{% load humanize %}
+{% include '../css.html' %}
+    <body style="overflow: hidden;">
+        {% include '../header.html' %}
+        <section class="xl-navbar-down">
+            <div class="xl-navbar-content" {% if admin_session == True %} style="width:595px; margin:auto;"{% elif teller_session == True %} style="width:551px; margin:auto;" {% else %} style="width:516px; margin:auto;" {% endif %}>
+                <ul>
+                    <li><a href="{% url 'managment_home' %}">Home</a></li>
+                    <li class="activate"><a href="{% url 'managment_products' %}">Products</a></li>
+                    {% if admin_session == True %}
+                        <li><a href="{% url 'managment_managment' %}">Managment</a></li>
+                        <li><a href="{% url 'managment_get_bills' %}">Bills</a></li>
+                        <li><a href="{% url 'managment_msst' %}">Settings</a></li>
+                        <li><a id="open-logout-menu">Log Out</a></li>
+                        <div class="xl-ms-logout-menu" id="xl-ms-logout-menu">
+                            <ul>
+                                {% if teller_session == True %}
+                                    <li><a href="{% url 'managment_mstl_logout' %}"><i class="icon ion-ios-locked"></i> As Teller</a></li>
+                                {% endif %}
+                                <li><a href="{% url 'managment_desactivate_admin' %}"><i class="icon ion-ios-locked"></i> As Admin</a></li>
+                                <li><a href="{% url 'managment_logout' %}"><i class="icon ion-ios-locked"></i> As M.S</a></li>
+                            </ul>
+                        </div>
+                    {% elif teller_session == True %}
+                        <li><a href="{% url 'managment_get_bills' %}">Bills</a></li>
+                        <li><a id="open-admin-password" href="#admin-password">Activate Admin</a></li>
+                        <li><a id="open-logout-menu">Log Out</a></li>
+                        <div class="xl-ms-logout-menu" id="xl-ms-logout-menu">
+                            <ul>
+                                <li><a href="{% url 'managment_mstl_logout' %}"><i class="icon ion-ios-locked"></i> As Teller</a></li>
+                                <li><a href="{% url 'managment_logout' %}"><i class="icon ion-ios-locked"></i> As M.S</a></li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <li><a id="open-admin-password" href="#admin-password">Activate Admin</a></li>
+                        <li><a id="open-teller-login" href="#teller-login">Login Teller</a></li>
+                        <div class="zoom-anim-dialog mfp-hide" id="teller-login">
+                            <div class="xl-ms-add-product-modal">
+                                <h2>Login Teller</h2>
+                                <br/>
+                                <form action="{% url 'managment_mstl_login' %}" method="POST">
+                                    <div class='xl-ms-input-add'>
+                                        {% csrf_token %}
+                                        <label>Enter Username :</label>
+                                        <input type="text" name="teller_username" placeholder="Enter Username" required="required" />
+                                        <label>Enter Password :</label>
+                                        <input type="password" name="teller_password" placeholder="Enter Password" required="required" />
+                                        <button style="background:lightgreen;" type="submit">Login</button>
+                                        <button style="background:red;" type="button" id="close-teller-login">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    {% endif %}
+                </ul>
+                <div class="zoom-anim-dialog mfp-hide" id="admin-password">
+                    <div class="xl-ms-add-product-modal">
+                        <h2>Activate Admin</h2>
+                        <br/>
+                        <form action="{% url 'managment_activate_admin' %}" method="POST">
+                            <div class='xl-ms-input-add'>
+                                {% csrf_token %}
+                                <label>Enter Password :</label>
+                                <input type="password" name="admin_password" placeholder="Enter Password" required="required" />
+                                <button style="background:lightgreen;" type="submit">Activate</button>
+                                <button style="background:red;" type="button" id="close-admin-password">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    $("#open-admin-password, #open-teller-login").magnificPopup({
+                        type: 'inline',
+                        fixedContentPos: false,
+                        fixedBgPos: true,
+                        overflowY: 'auto',
+                        closeBtnInside: true,
+                        preloader: false,
+                        midClick: true,
+                        removalDelay: 300,
+                        mainClass: 'my-mfp-zoom-in'
+                    });
+                    $("#close-admin-password, #close-teller-login").click(function(){
+                        $(".mfp-close").click();
+                    });
+                </script>
+            </div>
+        </section>
+        <section class="xl-ms-container">
+            <div class="xl-ms-products-all" style="width:73%;">
+                <h3>Products in Store</h3>
+                {% if admin_session == True %}
+                    <span id="add_product" class="add_products"><i class="icon ion-ios-cart"></i><i class="icon ion-ios-plus-empty"></i> ADD</span>
+                    <div id="xl-add-product-menu" class="xl-add-product-menu">
+                        <ul>
+                            <li><a href="{% url 'managment_add_product' %}" id="open_add_product"><i class="icon ion-ios-plus-empty"></i> Fresh Add</a></li>
+                            <li><a href="{% url 'managment_add_from_product' %}" id="open_add_from_product"><i class="icon ion-ios-cart"></i> From Products</a></li>
+                        </ul>
+                        <script type="text/javascript">
+                            $("#add_product").click(function(ev){
+                                ev.stopPropagation();
+                                $("#xl-add-product-menu").fadeIn();
+                            });
+                            $("#xl-add-product-menu").click(function(ev){
+                                ev.stopPropagation();
+                            });
+                            $("#open_add_product, #open_add_from_product").magnificPopup({type: 'ajax'})
+                        </script>
+                    </div>
+                {% endif %}
+                <div id="xl-ms-product-wrapper">
+                    <div id="xl-ms-product-loader" class="xl-loader" style="margin-top:40px;">
+                        <img src="{% static 'images/loading.gif' %}" />
+                    </div>
+                    <script type="text/javascript">
+                        $("#xl-ms-product-loader").show();
+                        loadMSProductts("{% url 'managment_products_all' %}");
+                    </script>
+                </div>
+            </div>
+            <div class="xl-ms-current-bill xl-ms-categories" style="width: calc(27% - 80px);">
+                <div class="xl-ms-scoll-pane">
+                    <h2>Categories</h2>
+                    {% if categories %}
+                    <ul>
+                        <li class="activated"><a data-url="{% url 'managment_products_all' %}" class="load_msp_category"><i class="icon ion-ios-star"></i> <span>All</span><span class="xl-ms-arrow"><i class="icon ion-ios-arrow-right"></i></span></a></li>
+                        {% for category in categories %}
+                             <li><a data-url="{% url 'managment_products_category' category.pk %}" class="load_msp_category"><i class="icon ion-ios-star"></i> <span>{{category.name}}</span><span class="xl-ms-arrow"><i class="icon ion-ios-arrow-right"></i></span></a></li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                        <p class="xl-error">NO CATEGORIES</p>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </body>
+</html>

@@ -1,0 +1,107 @@
+{% load staticfiles %}
+{% load humanize %}
+<h3>Use E-Commerce PayPal</h3>
+<div class="xl-ms-setting">
+    <p>{{text|safe}}</p>
+    <input type="checkbox" id="use-paypal-service" {% if setting.use_paypal == True %}checked{% endif %} />
+    {% csrf_token %}
+    <p id="use-value" style="margin-top:10px;">{{setting.use_paypal}}</p>
+    <input type="password" id="ms-password-auth" placeholder="Enter MS Password" />
+    {% if setting.paypal is not None %}
+    <p><strong>PayPal Account : </strong>{{setting.paypal}}</p>
+    {% endif %}
+    <button id="save-paypal-set" style="margin-right: 10px;">Save</button>
+    <button id="open-add-paypal-account" {% if setting.use_paypal == False %}disabled{% endif %} style="margin-right: 10px; background:#00c6d7;">Add Account</button>
+    <button style="background:red;">Cancel</button>
+    <section class="xl-search-modal" style="left:0;" id="add-paypal-account">
+        <div class="xl-ms-add-product-modal" style="margin-top:calc((100vh - 206px) / 2);">
+            <h2>Add PayPal Account</h2>
+            <br/>
+            <form method="POST">
+                <div class='xl-ms-input-add' style="text-align: left !important;">
+                    {% csrf_token %}
+                    <label>Enter PayPal Email :</label>
+                    <input type="email" id="paypal_email" placeholder="Enter PayPal Email" required="required" />
+                    <button style="background:lightgreen;" id="submit-add-paypal-account" type="button">Add</button>
+                    <button type="button" id="close-add-paypal-account" style="background:red;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </section>
+    <script type="text/javascript">
+        $("#open-add-paypal-account").click(function(){
+            $("#add-paypal-account").fadeIn();
+        });
+        $("#close-add-paypal-account").click(function(){
+            $("#add-paypal-account").fadeOut();
+        });
+
+        var csrf_token = $("input[name=csrfmiddlewaretoken]").val();
+
+        $("#submit-add-paypal-account").click(function(e){
+            e.preventDefault();
+            var paypal_account = $("#paypal_email").val();
+
+            if(paypal_account != ""){
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'add_paypal_settings' %}",
+                    data: {
+                        'account': paypal_account,
+                        'csrfmiddlewaretoken': csrf_token
+                    },
+                    success: function(response){
+                        if (response == 'ok'){
+                            $("#add-paypal-account").fadeOut();
+                            load_msp_products("{% url 'use_paypal_settings' %}");
+                            $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:'Setting Changed Successfully !!!',type: 'green'});
+                        } else {
+                            load_msp_products("{% url 'use_paypal_settings' %}");
+                            $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:response,type: 'red'});
+                        }
+                    },
+                    error: function(error){
+                        load_msp_products("{% url 'use_paypal_settings' %}");
+                        showErrorMessage("error", error);
+                    }
+                });
+            } else {
+                $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:"PayPal Email Cant Be Empty !!!",type: 'red'});
+            }
+        });
+        var checkbox = document.querySelector('#use-paypal-service');
+        var init = new Switchery(checkbox);
+
+        checkbox.onchange = function(){
+            document.getElementById("use-value").innerHTML = capitalize(checkbox.checked);
+        }
+
+        $("#save-paypal-set").click(function(e){
+            e.preventDefault();
+            var setting = capitalize(checkbox.checked);
+            var password = $("#ms-password-auth").val();
+            var url = "{% url 'use_paypal_settings' %}";
+            $.ajax({
+                type:"POST",
+                url:url,
+                data:{
+                    'setting':setting,
+                    'password':password,
+                    'csrfmiddlewaretoken':csrf_token
+                },
+                success:function(res){
+                    if(res == 'ok'){
+                        $("#trade_list_loader").show();
+                        load_msp_products(url);
+                        $("#paypal-set").text(setting)
+                        $("#open-add-account").removeAttr("disabled");
+                        $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:'Setting Changed Successfully !!!',type: 'green'});
+                    } else{
+                        load_msp_products(url);
+                        $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:res,type: 'red'});
+                    }
+                }
+            });
+        });
+    </script>
+</div>

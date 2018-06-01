@@ -1,0 +1,125 @@
+{% load staticfiles %}
+{% load humanize %}
+<div class="xl-ms-product-list">
+    <table>
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                {% if admin_session == True or teller_session == True %}<th>Options</th>{% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% if products %}
+                {% for product in products %}
+                    <tr>
+                        <td>{{product.product_code}}</td>
+                        <td><img src="{{product.product.image.url}}" /></td>
+                        <td>{{product.product.product_name}}</td>
+                        <td>{{product.product.price|intword}} {{setting.currency}}</td>
+                        <td>{{product.stock}}</td>
+                        {% if admin_session == True or teller_session == True %}
+                        <td>
+                            {% csrf_token %}
+                            <button style="width:130px; background:#00c6d7;" id="add-one-to-cart{{product.pk}}"><i class="icon ion-ios-cart"></i> Add Cart</button>
+                            <button style="background:lightgreen;width:130px;" id="open-add-many-to-cart{{product.pk}}" href="#add_many_to_cart_{{product.pk}}"><i class="icon ion-ios-cart"></i><i class="icon ion-ios-plus-empty"></i> Add Cart Q.</button>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% if admin_session == True or teller_session == True %}
+                        <div class="xl-ms-add-product-modal zoom-anim-dialog mfp-hide" id="add_many_to_cart_{{product.pk}}">
+                            <h2>Enter Quantity</h2>
+                            <br/>
+                            <form method="POST">
+                                <div class='xl-ms-input-add'>
+                                    {% csrf_token %}
+                                    <input type="hidden" name="product" value="{{product.pk}}" />
+                                    <label>Enter Product Quantity :</label>
+                                    <input type="number" min="1" max="{{product.stock}}" id="quantity{{product.pk}}" placeholder="Enter Quantity" name="quantity" required="required" />
+                                    <button style="background:lightgreen;" id="submit-add-many-to-cart{{product.pk}}" type="button">Add</button>
+                                    <button type="button" class="close_post" style="background:red;">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                        <script type="text/javascript">
+
+                            $('#open-add-many-to-cart{{product.pk}}').magnificPopup({
+                                type: 'inline',
+                                fixedContentPos: false,
+                                fixedBgPos: true,
+                                overflowY: 'auto',
+                                closeBtnInside: true,
+                                preloader: false,
+                                midClick: true,
+                                removalDelay: 300,
+                                mainClass: 'my-mfp-zoom-in'
+                            });
+
+                            $("#add-one-to-cart{{product.pk}}").click(function(){
+                                $.ajax({
+                                    type:'POST',
+                                    url:"{% url 'managment_add_item_to_bill' %}",
+                                    data:{
+                                        'product':'{{product.pk}}',
+                                        'quantity':'1',
+                                        'csrfmiddlewaretoken':$("input[name=csrfmiddlewaretoken]").val()
+                                    },
+                                    success:function(success){
+                                        loadMSCurrentBill("{% url 'managment_load_bill' %}");
+                                        loadMSProductts("{% url 'managment_products_cart' %}");
+                                        if(success == 'failed'){
+                                            $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:'Stock Low Than That Quantity !!!',type: 'red'});
+                                        }else if(success == 'negative'){
+                                            $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:'Quantity cant be a negative number !!!',type: 'red'});
+                                        } else {
+                                            showSuccessMessage("success", "Item Added !!!");
+                                        }
+                                    },
+                                    error: function(error){
+                                        showErrorMessage("error", error);
+                                    }
+                                });
+                            });
+                            $("#submit-add-many-to-cart{{product.pk}}").click(function(){
+                                $.ajax({
+                                    type:'POST',
+                                    url:"{% url 'managment_add_item_to_bill' %}",
+                                    data:{
+                                        'product':'{{product.pk}}',
+                                        'quantity':$("#quantity{{product.pk}}").val(),
+                                        'csrfmiddlewaretoken':$("input[name=csrfmiddlewaretoken]").val()
+                                    },
+                                    success:function(success){
+                                        loadMSCurrentBill("{% url 'managment_load_bill' %}");
+                                        loadMSProductts("{% url 'managment_products_cart' %}");
+                                        $(".mfp-close").click();
+                                        if(success == 'failed'){
+                                            $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:'Stock Low Than That Quantity !!!',type: 'red'});
+                                        }else if(success == 'negative'){
+                                            $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:'Quantity cant be a negative number !!!',type: 'red'});
+                                        } else {
+                                            showSuccessMessage("success", "Item Added !!!");
+                                        }
+                                    },
+                                    error: function(error){
+                                        showErrorMessage("error", error);
+                                    }
+                                });
+                            })
+                        </script>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <!--<p class="xl-error">NO PRODUCT IN THE SYSTEM</p>-->
+            {% endif %}
+        </tbody>
+    </table>
+    <script type="text/javascript">
+        $(".close_post").click(function(){
+            $(".mfp-close").click();
+        });
+    </script>
+</div>

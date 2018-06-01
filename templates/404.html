@@ -1,0 +1,25 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Error 404 - Page Not Found</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" href="{% static 'css/main_style.css' %}" />
+    </head>
+    <body style="background:#FFF;">
+        <div class="xl-404-500-error-page">
+            <div class="xl-error-content">
+                <div class="xl-error-img">
+                    <img src="{% static 'images/404.jpg' %}" />
+                </div>
+                <div class="xl-error-details">
+                    <h1>HOLY SHIT !!!!</h1>
+                    <h3>{404 - Page Not Found}</h3>
+                    <p>It seems like the page you want to reach out to doent exist or has been deleted or you are not allowed to get it ....</p>
+                    <h4>Sorry !!!</h4>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

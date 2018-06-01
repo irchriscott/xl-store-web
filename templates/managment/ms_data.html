@@ -1,0 +1,54 @@
+{% load staticfiles %}
+{% load humanize %}
+{% include '../css.html' %}
+    <body style="overflow: hidden;">
+        {% include '../header.html' %}
+        <section class="xl-navbar-down">
+            <div class="xl-navbar-content" style="width:595px; margin: auto;">
+                <ul>
+                    <li><a href="{% url 'managment_home' %}">Home</a></li>
+                    <li><a href="{% url 'managment_products' %}">Products</a></li>
+                    <li class="activate"><a href="{% url 'managment_managment' %}">Managment</a></li>
+                    <li><a href="{% url 'managment_get_bills' %}">Bills</a></li>
+                    <li><a href="{% url 'managment_msst' %}">Settings</a></li>
+                    <li><a id="open-logout-menu">Log Out</a></li>
+                    <div class="xl-ms-logout-menu" id="xl-ms-logout-menu">
+                        <ul>
+                            {% if teller_session == True %}
+                                <li><a href="{% url 'managment_mstl_logout' %}"><i class="icon ion-ios-locked"></i> As Teller</a></li>
+                            {% endif %}
+                            <li><a href="{% url 'managment_desactivate_admin' %}"><i class="icon ion-ios-locked"></i> As Admin</a></li>
+                            <li><a href="{% url 'managment_logout' %}"><i class="icon ion-ios-locked"></i> As M.S</a></li>
+                        </ul>
+                    </div>
+                </ul>
+            </div>
+        </section>
+        <section class="xl-ms-container">
+            <div class="xl-ms-products-all" style="width:73%;">
+                <div id="xl-ms-product-wrapper">
+                    <div id="xl-ms-product-loader" class="xl-loader" style="margin-top:40px;">
+                        <img src="{% static 'images/loading.gif' %}" />
+                    </div>
+                    <script type="text/javascript">
+                        $("#xl-ms-product-loader").show();
+                        loadMSProductts("{% url 'managment_products_all' %}");
+                    </script>
+                </div>
+            </div>
+            <div class="xl-ms-current-bill xl-ms-categories" style="width: calc(27% - 80px);">
+                <div class="xl-ms-scoll-pane">
+                    <h2>Data</h2>
+                    <ul>
+                        <li class="activated"><a data-url="{% url 'managment_products_all' %}" class="load_msp_category"><i class="icon ion-ios-cart"></i> <span>Products</span><span class="xl-ms-arrow"><span style="padding:0 4px; background:#DDD; margin-right:5px; border-radius:3px;">{{company.get_ms_products}}</span><i class="icon ion-ios-arrow-right"></i></span></a></li>
+                        <li><a data-url="#" class="load_msp_category"><i class="icon ion-ios-compose"></i> <span>Posts</span><span class="xl-ms-arrow"><span style="padding:0 4px; background:#DDD; margin-right:5px; border-radius:3px;">{{company.get_sum_posts}}</span><i class="icon ion-ios-arrow-right"></i></span></a></li>
+                        <li><a data-url="#" class="load_msp_category"><i class="icon ion-ios-chatbubble"></i> <span>Comments</span><span class="xl-ms-arrow"><span style="padding:0 4px; background:#DDD; margin-right:5px; border-radius:3px;">{{company.get_sum_comments}}</span><i class="icon ion-ios-arrow-right"></i></span></a></li>
+                        <li><a data-url="#" class="load_msp_category"><i class="icon ion-ios-loop-strong"></i> <span>Replies</span><span class="xl-ms-arrow"><span style="padding:0 4px; background:#DDD; margin-right:5px; border-radius:3px;">{{company.get_sum_replies}}</span><i class="icon ion-ios-arrow-right"></i></span></a></li>
+                        <li><a data-url="{% url 'managment_msdt_interess' %}" class="load_msp_category"><i class="icon ion-ios-cart"></i> <span>Interests</span><span class="xl-ms-arrow"><span style="padding:0 4px; background:#DDD; margin-right:5px; border-radius:3px;">{{company.get_sum_interess}}</span><i class="icon ion-ios-arrow-right"></i></span></a></li>
+                        <li><a data-url="{% url 'managment_msdt_trades' %}" class="load_msp_category"><i class="icon ion-ios-chatboxes"></i> <span>Trades</span><span class="xl-ms-arrow"><span style="padding:0 4px; background:#DDD; margin-right:5px; border-radius:3px;">{{company.get_sum_trades}}</span><i class="icon ion-ios-arrow-right"></i></span></a></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </body>
+</html>

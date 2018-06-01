@@ -1,0 +1,13 @@
+{% if messages %}
+    {% for message in messages %}
+        {% if message.tags == 'success' %}
+            <script type="text/javascript">
+                $.alert({theme:'material',title:'Success',icon:'icon ion-checkmark-circled',content:'{{message}}',type: 'green'});
+            </script>
+        {% elif message.tags == 'error' %}
+            <script type="text/javascript">
+                $.alert({theme:'material',title:'Error',icon:'icon ion-close-circled',content:'{{message}}',type: 'red'});
+            </script>
+        {% endif %}
+    {% endfor %}
+{% endif %}

@@ -1,0 +1,22 @@
+{% load staticfiles %}
+{% load humanize %}
+{% if tellers %}
+<ul style="border-top:1px solid #DDD">
+    {% for teller in tellers %}
+         <li><a data-url="{% url 'managment_mstl_single_teller' teller.pk %}" class="load_msp_product"><img src="{{teller.teller_image.url}}" /> <span>{{teller.full_name}}</span><span class="xl-ms-arrow"><i class="icon ion-ios-arrow-right"></i></span></a></li>
+    {% endfor %}
+</ul>
+{% else %}
+    <p class="xl-error">NO TELLER</p>
+{% endif %}
+
+<button href="{% url 'managment_mstl_add' %}" id="add_new_teller" style="width:100%; margin-top:10px; padding:5px 0; font-size:17px; color:#FFF; text-align:center; background:#00C6D7;">ADD TELLER</button>
+
+<script type="text/javascript">
+    $(".load_msp_product").click(function(ev){
+        $("#msp_products_loader").show();
+        loadMSProductts($(this).attr('data-url'));
+        $(this).parent('li').addClass('activated').siblings().removeClass('activated');
+    });
+    $("#add_new_teller").magnificPopup({type:'ajax'});
+</script>

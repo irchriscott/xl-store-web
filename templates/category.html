@@ -1,0 +1,110 @@
+{% load staticfiles %}
+{% include 'css.html' %}
+{% load tz %}
+{% load humanize %}
+    <body>
+        {% include 'header.html' %}
+        <section class="xl-navbar-down">
+            <div class="xl-navbar-content" style="width:597px; margin: auto;">
+                <ul>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="menu-list" title="{{company.get_sum_products}} Products"><a href="{% url 'comp_profile_2' company.name_dotted %}">Products <span>{{company.get_sum_products}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="menu-list" title="{{company.get_sum_posts}} Posts"><a href="{% url 'comp_posts' company.name_dotted %}">Posts <span>{{company.get_sum_posts}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="activate menu-list" title="{{company.get_sum_categories}} Categories"><a href="{% url 'comp_categories' company.name_dotted %}">Categories <span>{{company.get_sum_categories}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="menu-list" title="{{company.get_sum_advertisments}} Advertisements"><a href="{% url 'comp_advertisments' company.name_dotted %}">Advertisements <span>{{company.get_sum_advertisments}}</span></a></li>
+                    <li data-tippy-arrowtransform="scale(0.75)" data-tippy-animation="shift-toward" data-tippy-arrow="true" class="menu-list" title="{{company.get_sum_followers}} Followers"><a href="{% url 'comp_followers' company.name_dotted %}">Followers <span>{{company.get_sum_followers}}</span></a></li>
+                </ul>
+            </div>
+            {% if session_company == company.name_dotted %}
+                <div class="xl-navbar-buttons">
+                    <button id="open_edit_category" href="{% url 'get_edit_single_category' category.pk %}" style="display:inline-block;" type="button">Edit Category</button>
+                </div>
+            {% endif %}
+        </section>
+
+        {% if session_company == company.name_dotted %}
+            <section class="zoom-anim-dialog mfp-hide" id="xl-edit-category">
+                <div class="xl-add-category">
+                    <h2>Edit This Category</h2>
+                    <form id="edit_category" method="post" action="{% url 'edit_single_category' category.pk  %}" >{% csrf_token %}
+                        {{category_edit_form}}
+                        <button type="submit" style="background:lightgreen;">Save</button>
+                        <button type="button" style="background:red;" id="close_edit_category">Cancel</button>
+                    </form>
+                </div>
+            </section>
+        {% endif %}
+
+        <!-- PRODUCTS AND POSTS -->
+        <section class="xl-products" style="margin-top:130px;">
+            <div class="xl-main-section">
+                {% if not_owner == 0 %}
+                <div class="xl-single-category">
+                    <div class="category-overview">
+                        <h2>{{category.name}} ({{product_category_count}})</h2>
+                        <p class="category-description">{{category.description}}</p>
+                    </div>
+                    {% if product_category %}
+                        {% for product in product_category %}
+                            <div class="xl-product-category" id="xl-product-category{{product.pk}}">
+                                <div class="product-image"><a id="open_product_ajax{{product.pk}}" href="{% url 'single_product_ajax' product.pk %}"><img src="{{product.image.url}}" alt="{{product.product_name}}"/></a></div>
+                                <script type="text/javascript">$("#open_product_ajax{{product.pk}}").magnificPopup({type: 'ajax'});</script>
+                                <span class="interess_after_else{{product.pk}}">
+                                    {% if session_company %}
+                                        <button class="interess"><i class="icon ion-ios-cart"></i> Interest</button>
+                                    {% elif session_user %}
+                                        {% if product.get_interess %}
+                                            {% for interess in product.get_interess %}
+                                                {% if interess == user.pk %}
+                                                    <button class="interess" style="background:lightgreen;" type="button"><i class="icon ion-checkmark-round"></i> Interested</button>
+                                                {% else %}
+                                                    <button class="interess interess_general_product interess_product_else{{product.pk}}" data-product="{{product.pk}}" data-url="{% url 'user_interess_product' %}">{% csrf_token %}<i class="icon ion-ios-cart"></i> Interest</button>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% else %}
+                                            <button class="interess interess_general_product interess_product_else{{product.pk}}" data-product="{{product.pk}}" data-url="{% url 'user_interess_product' %}">{% csrf_token %}<i class="icon ion-ios-cart"></i> Interest</button>
+                                        {% endif %}
+                                    {% else %}
+                                        <button class="login_first" type="button"><i class="icon ion-ios-cart"></i> Interest</button>
+                                    {% endif %}
+                                </span>
+                                <div class="product-description">
+                                    <div class="description-content">
+                                        <h3><a href="{% url 'single_product' product.company.name_dotted product.pk %}">{{product.product_name}}</a></h3>
+                                        <span class="price"><i class="icon ion-ios-pricetags"></i> {{product.price|intword}} {{product.currency}}</span>
+                                        <p class="comment-interess">
+                                            <span><i class="icon ion-ios-chatbubble"></i> {{product.get_sum_comments}}</span>
+                                            <span><i class="icon ion-ios-cart"></i> {{product.get_sum_interess}}</span> <span style="margin-left:10px;" class="date" id='post-date{{product.pk}}' data-time="{{product.posted_date|date:'Y-m-d H:i:s'}}"></span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <script type="text/javascript">
+                                $(document).ready(function(){sizeCategory('#xl-product-category{{product.pk}}')})
+                                $("#post-date{{product.pk}}").setTime();
+                            </script>
+                        {% endfor %}
+                    {% else %}
+                        <p class="xl-error">NO PRODUCT YET</p>
+                    {% endif %}
+                </div>
+                {% else %}
+                    <p class="xl-error" style="white-space:normal;">{{not_owner}}</p>
+                {% endif %}
+            </div>
+
+            <div class="xl-else-section">
+                <h3>Other Categories</h3>
+                <div class="xl-comp-cate">
+                    <ul>
+                        {% for category in category.company.get_categories %}
+                            <li> <a href="{% url 'single_category' category.company.name_dotted category.pk %}"><i class="icon ion-ios-star"></i> {{category.name}}</a><span><i class="icon ion-ios-arrow-right"></i></span></li>
+                        {% endfor  %}
+                    </ul>
+                </div>
+            </div>
+            <div class="xl-else-section">
+                {% include 'includes/notification_full.html' %}
+            </div>
+        </section>
+    </body>
+</html>
