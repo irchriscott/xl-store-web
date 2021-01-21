@@ -16,7 +16,7 @@
     "mysql": "^2.15.0",
     "read-blob": "^1.1.0",
     "simple-peer": "^8.3.0",
-    "socket.io": "^2.0.4"
+    "socket.io": "^2.4.0"
   },
   "devDependencies": {
     "nodemon": "^1.17.1"
