@@ -50,7 +50,7 @@ pygal-maps-world==1.0.2
 PyMeta3==0.5.1
 pyOpenSSL==17.5.0
 pytz==2017.2
-PyYAML==3.12
+PyYAML==5.4
 rcssmin==1.0.6
 requests==2.18.1
 rjsmin==1.0.12
