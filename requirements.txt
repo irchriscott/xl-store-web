@@ -1,7 +1,7 @@
 argh==0.26.2
 asn1crypto==0.24.0
 attrs==17.2.0
-autobahn==17.8.1
+autobahn==20.12.3
 Automat==0.6.0
 backports-abc==0.5
 certifi==2017.4.17
