@@ -60,7 +60,7 @@ sphinx-me==0.3
 tornado==4.5.1
 Twisted==17.5.0
 txaio==2.8.1
-urllib3==1.21.1
+urllib3==1.26.5
 watchdog==0.8.3
 websocket-client==0.46.0
 zope.interface==4.4.2
