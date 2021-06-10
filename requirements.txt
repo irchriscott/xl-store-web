@@ -10,7 +10,7 @@ chardet==3.0.4
 constantly==15.1.0
 coolname==0.2.1
 cryptography==2.1.4
-Django==1.11.2
+Django==2.2.24
 django-appconf==1.0.2
 django-cachebuster==0.2.1
 django-compressor==2.1.1
